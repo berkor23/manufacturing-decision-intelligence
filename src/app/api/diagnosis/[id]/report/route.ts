@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getReportService } from "@/application/wiring";
 
+// LLM (Ollama, gerekirse tünel üzerinden) yavaş olabilir; Vercel'in varsayılan
+// 10sn fonksiyon limitini 60sn'ye çıkar (Hobby üst sınırı).
+export const maxDuration = 60;
+
 // POST /api/diagnosis/{id}/report — sonuçlanmış teşhisten rapor üret
 export async function POST(
   _req: Request,

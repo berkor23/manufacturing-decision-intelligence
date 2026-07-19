@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getWorkspaceService } from "@/application/wiring";
 
+// LLM (Ollama, gerekirse tünel üzerinden) yavaş olabilir; Vercel varsayılan
+// 10sn limitini 60sn'ye çıkar (Hobby üst sınırı).
+export const maxDuration = 60;
+
 // POST /api/workspace/{id}/report — doldurulan adımlardan profesyonel rapor üret
 export async function POST(
   _req: Request,

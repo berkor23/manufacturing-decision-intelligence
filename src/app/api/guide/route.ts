@@ -3,6 +3,10 @@ import { z } from "zod";
 import { getGuideService } from "@/application/wiring";
 import { METHODOLOGIES } from "@/domain/diagnosis";
 
+// LLM (Ollama, gerekirse tünel üzerinden) yavaş olabilir; Vercel varsayılan
+// 10sn limitini 60sn'ye çıkar (Hobby üst sınırı).
+export const maxDuration = 60;
+
 const bodySchema = z.object({
   methodology: z.enum(METHODOLOGIES),
   question: z.string().min(1, "Soru boş olamaz."),

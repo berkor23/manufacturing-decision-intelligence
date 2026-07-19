@@ -21,7 +21,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="tr" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         <a href="#main-content" className="skip-link">Ana içeriğe geç</a>
-        {process.env.NEXT_PUBLIC_DEMO === "1" && <DemoBanner />}
+        {process.env.NEXT_PUBLIC_DEMO === "1" && (
+          <DemoBanner aiEnabled={(process.env.AI_PROVIDER ?? "ollama").toLowerCase() !== "none"} />
+        )}
         <SiteHeader signedIn={signedIn} adminAvailable={adminAvailable} />
         <div id="main-content" className="flex flex-1 flex-col" tabIndex={-1}>{children}</div>
         <footer className="no-print border-t border-slate-200/60 py-6 text-center text-xs text-slate-400 dark:border-slate-800/60">
