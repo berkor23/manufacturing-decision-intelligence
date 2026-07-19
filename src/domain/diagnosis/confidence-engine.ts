@@ -1,7 +1,7 @@
 // Confidence Engine — skorları güven dağılımına (softmax) çevirir. SAF.
 //
 // UYARI: Bu yüzdeler başta *göreli güven*tir, kalibre olasılık değil
-// (bkz. ARCHITECTURE.md §6). Kalibrasyon Faz 6'da yapılacaktır.
+// (bkz. docs/ARCHITECTURE.md §6). Kalibrasyon Faz 6'da yapılacaktır.
 
 import { Methodology, METHODOLOGIES } from "./methodologies";
 

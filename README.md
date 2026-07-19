@@ -93,7 +93,7 @@ flowchart TD
 | `src/app/api/`          | Thin route handlers. |
 | `src/proxy.ts`          | Auth gate (Next 16 uses `proxy`, not `middleware`). |
 
-Full architecture contract: [`ARCHITECTURE.md`](ARCHITECTURE.md) · Plan & phases: [`PLAN.md`](PLAN.md)
+Full architecture contract: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · Plan & phases: [`docs/PLAN.md`](docs/PLAN.md)
 
 ### Tech stack
 
@@ -197,7 +197,7 @@ kapıları, yatay yayılım sihirbazları ve Problem-DNA benzerliği birinci sı
 Temiz / hexagonal mimari; bağımlılıklar içeri doğru. Domain çekirdeğinde **LLM ve DB yoktur.**
 Katman tablosu ve diyagram için yukarıdaki [English](#architecture) bölümüne bakın.
 
-Mimari sözleşmesi: [`ARCHITECTURE.md`](ARCHITECTURE.md) · Plan ve fazlar: [`PLAN.md`](PLAN.md)
+Mimari sözleşmesi: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · Plan ve fazlar: [`docs/PLAN.md`](docs/PLAN.md)
 
 ### Yerel çalıştırma
 

@@ -1,7 +1,7 @@
 // Soru bağlamsallaştırma — DETERMİNİSTİK (LLM'siz).
 // Sorunun ANLAMI sabit (FEATURE_META teması); sadece problemin süreç/alan adını
 // metinden saptayıp soruya bağlam olarak ekleriz. Böylece doğallık artar ama
-// anlam asla kaymaz (bkz. ARCHITECTURE.md §7 tartışması).
+// anlam asla kaymaz (bkz. docs/ARCHITECTURE.md §7 tartışması).
 
 // Yaygın Türkçe üretim süreci/alan terimleri (temel biçim).
 const PROCESS_TERMS = [

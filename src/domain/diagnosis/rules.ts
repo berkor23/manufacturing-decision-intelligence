@@ -3,7 +3,7 @@
 // hiçbir kuralı tetiklemez (bu yüzden onları sorarız).
 //
 // Ağırlıklar (1 zayıf, 2 orta, 3 güçlü) birer KONFİGÜRASYONdur; golden-case
-// suiti kalkanı altında ileride kalibre edilecektir (bkz. ARCHITECTURE.md §16).
+// suiti kalkanı altında ileride kalibre edilecektir (bkz. docs/ARCHITECTURE.md §16).
 
 import {
   StructuredProblem,

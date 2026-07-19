@@ -4,7 +4,7 @@
 **önce problemi teşhis et, doğru metodolojiyi öner (FMEA/KT/RCA/8D/PDCA/DMAIC),
 sonra uçtan uca uygulat.** SaaS değil; tek kiracılı iç araç.
 
-Mimari sözleşme: `ARCHITECTURE.md` · Plan ve fazlar: `PLAN.md` · Vizyon: `Manufacturing_Decision_Intelligence_Platform.md`
+Mimari sözleşme: `docs/ARCHITECTURE.md` · Plan ve fazlar: `docs/PLAN.md` · Vizyon: `docs/Manufacturing_Decision_Intelligence_Platform.md`
 
 **Kimlik:** AI chatbot değil, **Decision-Engine merkezli** bir teşhis motoru. Kararı LLM değil, saf/deterministik domain motoru verir. LLM yalnızca anlama/soru/rapor.
 

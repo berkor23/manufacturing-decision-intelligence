@@ -7,7 +7,7 @@
 // ve hatta yeni bir rakip hipotez ekleyip entropiyi artırabilir (negatif IG).
 // Bu platoyu aşmak için: IG sıfıra yakınken STATİK TEŞHİS ÖNCELİĞİNE düşeriz
 // (bir alanın kurallarda aldığı en büyük ağırlık) — böylece eşleşik kuralların
-// kilidini açan yüksek etkili alanlar sorulur. (bkz. ARCHITECTURE.md §7)
+// kilidini açan yüksek etkili alanlar sorulur. (bkz. docs/ARCHITECTURE.md §7)
 
 import {
   StructuredProblem,
