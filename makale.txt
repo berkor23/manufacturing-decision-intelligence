@@ -1,0 +1,54 @@
+Yanlış Problem İçin Doğru Metodoloji Yoktur
+Bir fabrikada aynı problem için üç farklı ekipten üç farklı öneri geldiğini düşünün:
+
+Kalite Mühendisi: "8D açalım."
+
+Lean Mühendisi: "A3 hazırlayalım."
+
+Six Sigma Black Belt: "DMAIC projesi yapalım."
+
+Üretim Müdürü: "Önce kök nedeni bulalım."
+
+Aslında hepsi haklı olabilir; ama aynı anda hepsi yanlış da olabilir. Çünkü problem çözmede en kritik karar, hangi yöntemi kullanacağınız değil, önce problemin hangi sınıfa girdiğini anlamaktır. Yanlış problem için doğru metodoloji diye bir şey yoktur.
+
+Problemin doğasına göre seçilmesi gereken doğru yaklaşımlar şu şekilde sınıflandırılabilir:
+
+1. Henüz Problem Yok, Ama Risk Var mı? (FMEA)
+Eğer soru "Bu süreç gelecekte hangi koşullarda başarısız olabilir?" ise kullanılacak yöntem FMEA'dır. Çünkü FMEA'nın amacı geçmişi açıklamak değildir; gelecekte oluşabilecek hata türlerini, etkilerini ve nedenlerini öngörerek önleyici kontroller geliştirmektir. FMEA, yangın çıktıktan sonra değil, yangın ihtimali varken devreye girer.
+
+2. Problem Yeni mi Başladı? (Kepner-Tregoe)
+Sistem uzun zamandır sorunsuz çalışıyor, ancak bir gün aniden bozulduysa ilk soru "Ne değişti?" olmalıdır. Burada en güçlü yaklaşım Kepner-Tregoe Problem Analizi'dir. Birçok üretim problemi, sistemde meydana gelen bir değişiklikle (yeni tedarikçi, yeni operatör, yeni yazılım, yeni kalıp veya yeni parametre) başlar. Kepner-Tregoe problemi ezbere çözmez; önce bu değişikliği bulur.
+
+3. Problem Var, Ama Gerçek Neden Bilinmiyor mu? (RCA)
+Artık sistem bozulmuş, hurda oluşmuş, müşteri şikâyeti gelmiş veya makine durmuştur. Soru artık "Gerçek kök neden nedir?" halini almıştır. Bu aşamada RCA (Kök Neden Analizi) devreye girer. 5 Neden, Balık Kılçığı, Hata Ağacı Analizi gibi araçlar kullanılır. Amaç suçlu bulmak değil, sistemi bozan nedeni ortaya çıkarmaktır.
+
+4. Problem Müşteriyi Etkiliyor mu? (8D)
+Artık yalnızca teknik analiz yeterli değildir; çünkü müşteri etkilenmiştir. Koruma faaliyeti, kalıcı düzeltici faaliyet, doğrulama ve standartların güncellenmesi gerekir. Burada en uygun yaklaşım 8D'dir. Çünkü 8D yalnızca kök nedeni bulmaz, problemin tekrar etmesini engelleyecek yönetim disiplinini de kurar.
+
+5. Süreci Adım Adım Geliştirmek mi İstiyorsunuz? (PDCA ve A3)
+Ortada büyük bir kriz yoktur ancak mevcut performans da yeterli değildir. Standart belirlenmiştir ve şimdi öğrenerek ilerlemek hedeflenmektedir. Burada PDCA ve A3 Düşüncesi en güçlü araçlardır. PDCA sürekli öğrenmenin ritmini belirlerken, A3 bu öğrenmeyi görünür hâle getiren düşünme disiplinidir. Toyota'nın başarısı da yalnızca araçlarında değil, bu düşünme biçimini her seviyeye yayabilmesindedir.
+
+6. Problem Karmaşık ve Veri Yoğun mu? (DMAIC)
+Bazen problem gözle görülemez, varyasyon yüksektir ve birden fazla değişken aynı anda sonucu etkiler. İlişkiler sezgiyle açıklanamaz. İşte burada DMAIC (Tanımla, Ölç, Analiz et, İyileştir, Kontrol et) devreye girer. İstatistiksel analizler, hipotez testleri, regresyon, deney tasarımı ve proses yeterlilik çalışmalarıyla değişkenlik azaltılır. DMAIC, problemi çözmekle kalmaz; bilimsel olarak doğrulanmasını sağlar.
+
+Aynı Fabrikada Bu Yöntemler Nasıl Birlikte Çalışır?
+Aslında bu araçlar birbirinin alternatifi değildir; bir operasyonun yaşam döngüsünü birlikte yönetirler:
+
+FMEA sorar: "Ne yanlış gidebilir?" (Problem oluşur)
+
+Kepner-Tregoe sorar: "Tam olarak ne değişti?" (Problemin sınırları belirlenir)
+
+RCA sorar: "Gerçek kök neden nedir?" (Müşteri etkilenir)
+
+8D sorar: "Bu problemi güvence altına alarak nasıl kalıcı biçimde ortadan kaldıracağız?" (Süreç yeniden tasarlanır)
+
+PDCA ve A3 sorar: "Bu çözümü nasıl standartlaştıracak ve organizasyona nasıl öğreteceğiz?" (Süreç hâlâ değişkendir)
+
+DMAIC sorar: "Bu varyasyonu verilerle nasıl azaltacağız?"
+
+Araç Seçmeyin, Problem Tipini Seçin
+Bir cerrahın elindeki neşter, tomografi cihazının alternatifi değildir. Bir yangın tüpü de deprem yönetmeliğinin yerine geçmez. Her aracın doğru kullanıldığı bir zaman ve bağlam vardır; problem çözme metodolojileri de böyledir.
+
+FMEA, 8D, RCA, Kepner-Tregoe, A3, PDCA ve DMAIC... Bunların hiçbiri diğerinden üstün değildir, çünkü hepsi farklı bir soruya cevap vermek için geliştirilmiştir. Operasyonel mükemmellik, en fazla araç bilen organizasyon olmak değil; doğru problemi tanımlayıp, doğru zamanda doğru metodolojiyi seçebilen organizasyon olmaktır.
+
+İyi mühendisler araç kullanır. İyi yöneticiler metodoloji seçer. Büyük organizasyonlar ise, önce problemi sınıflandırır; sonra yöntemi belirler.

@@ -1,0 +1,46 @@
+// Manufacturing Diagnosis Engine — kalıcılık şeması.
+//
+// Yaklaşım: her aggregate (Conversation, RCA, Workspace) tek satırda `data: Json`
+// (Postgres jsonb) olarak saklanır. Repository get/save desenine birebir uyar,
+// ilişkisel eşleme karmaşıklığı ve hata riski olmadan kalıcılık sağlar.
+// Not: jsonb sorgulanabilir; ileride dashboard/öğrenme (Faz 6) için gerekirse
+// daha zengin ilişkisel modele geçilebilir.
+//
+// Uygulama in-memory ile de çalışır (PERSISTENCE=memory). Prisma yolu için:
+// PERSISTENCE=prisma + DATABASE_URL + `npx prisma migrate dev`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConversationRecord {
+  id        String   @id
+  status    String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model RcaRecord {
+  id        String   @id
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkspaceRecord {
+  id           String   @id
+  methodology  String
+  data         Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([methodology])
+}

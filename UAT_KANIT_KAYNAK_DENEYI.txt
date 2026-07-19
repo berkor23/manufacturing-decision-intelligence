@@ -1,0 +1,6 @@
+UAT saha doğrulama kaydı
+Vaka: Hat 3 robotik kaynak taşıyıcı braket çatlağı
+Deney: Revizyon B fikstürü ile A/B karşılaştırması
+Revizyon B: 50 parçada 7 çatlak
+Revizyon A: 50 parçada 0 çatlak
+Sonuç: Fikstür baskı pabucu geometrisi çatlak oluşumuyla nedensel olarak doğrulandı.
