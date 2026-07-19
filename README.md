@@ -12,6 +12,9 @@ The key design choice: **the decision is made by a pure, deterministic domain en
 the LLM.** The language model is used only for *understanding* free text, *asking* natural
 questions and *writing* reports. This makes every recommendation explainable and reproducible.
 
+**🔗 Live demo:** _deploy sonrası buraya `https://<proje>.vercel.app` linkini koy_ ·
+kurulum: [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md)
+
 ![Landing](docs/assets/01-landing.png)
 
 **Not:** Türkçe açıklama için [aşağıya](#türkçe) inin.
