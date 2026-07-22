@@ -1,0 +1,1263 @@
+<title>Manufacturing Decision Intelligence — Portföy Vitrini</title>
+<style>
+  :root {
+    --paper:      #EEF1F2;
+    --panel:      #F7F9FA;
+    --panel-2:    #FFFFFF;
+    --ink:        #16202A;
+    --ink-soft:   #47565F;
+    --ink-faint:  #7A8792;
+    --line:       #D2DADE;
+    --line-soft:  #E1E7EA;
+    --accent:     #0E5C72;
+    --accent-br:  #12768F;
+    --good:       #2E7D57;
+    --warn:       #B0741A;
+    --bad:        #BF3B2E;
+    --grid:       rgba(14, 92, 114, 0.05);
+
+    --mono: ui-monospace, "Cascadia Code", "Cascadia Mono", "Consolas", "SFMono-Regular", "Roboto Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --w: 1080px;
+    --r: 3px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:     #0C1317;
+      --panel:     #10191E;
+      --panel-2:   #142027;
+      --ink:       #E7EEF1;
+      --ink-soft:  #A7B4BC;
+      --ink-faint: #6C7B84;
+      --line:      #26343C;
+      --line-soft: #1C282F;
+      --accent:    #3AA6C2;
+      --accent-br: #55BBD6;
+      --good:      #4FB07E;
+      --warn:      #D69A3C;
+      --bad:       #E06152;
+      --grid:      rgba(58, 166, 194, 0.06);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#EEF1F2; --panel:#F7F9FA; --panel-2:#FFFFFF; --ink:#16202A; --ink-soft:#47565F;
+    --ink-faint:#7A8792; --line:#D2DADE; --line-soft:#E1E7EA; --accent:#0E5C72; --accent-br:#12768F;
+    --good:#2E7D57; --warn:#B0741A; --bad:#BF3B2E; --grid:rgba(14,92,114,0.05);
+  }
+  :root[data-theme="dark"] {
+    --paper:#0C1317; --panel:#10191E; --panel-2:#142027; --ink:#E7EEF1; --ink-soft:#A7B4BC;
+    --ink-faint:#6C7B84; --line:#26343C; --line-soft:#1C282F; --accent:#3AA6C2; --accent-br:#55BBD6;
+    --good:#4FB07E; --warn:#D69A3C; --bad:#E06152; --grid:rgba(58,166,194,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: var(--w); margin: 0 auto; padding: 0 24px; }
+
+  /* ---- type ---- */
+  h1, h2, h3 { text-wrap: balance; margin: 0; letter-spacing: -0.02em; font-weight: 650; }
+  h1 { font-size: clamp(2.1rem, 5.4vw, 3.5rem); line-height: 1.04; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.12; }
+  h3 { font-size: 1.06rem; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  a { color: var(--accent-br); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { font-weight: 650; color: var(--ink); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .lead { font-size: clamp(1.05rem, 2vw, 1.24rem); color: var(--ink-soft); line-height: 1.5; }
+  .measure { max-width: 60ch; }
+
+  /* ---- structure ---- */
+  section { padding: clamp(56px, 8vw, 100px) 0; border-top: 1px solid var(--line-soft); }
+  .sec-head { display: flex; flex-direction: column; gap: 14px; margin-bottom: 40px; }
+  .sec-num {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em;
+    color: var(--ink-faint); text-transform: uppercase;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 26px;
+  }
+  .panel-2 { background: var(--panel-2); }
+
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 860px) { .g3, .g4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.02em;
+    padding: 5px 10px; border: 1px solid var(--line); border-radius: 100px;
+    color: var(--ink-soft); background: var(--panel-2);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+  /* =================== HERO =================== */
+  .hero { padding-top: clamp(48px, 9vw, 96px); padding-bottom: clamp(40px, 6vw, 72px); border-top: none; }
+  .hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center; }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 36px; } }
+  .hero h1 { margin: 20px 0 22px; }
+  .hero .kw { color: var(--accent); }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+
+  .titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0; margin-bottom: 8px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .brandmark { display: flex; align-items: center; gap: 12px; }
+  .brandmark .glyph {
+    width: 30px; height: 30px; flex: none; border: 1.5px solid var(--accent); border-radius: 4px;
+    display: grid; place-items: center; color: var(--accent);
+    font-family: var(--mono); font-weight: 600; font-size: 0.9rem;
+  }
+  .brandmark b { font-weight: 600; letter-spacing: -0.01em; }
+  .brandmark span { color: var(--ink-faint); font-family: var(--mono); font-size: 0.74rem; }
+  .theme-toggle {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    background: none; border: 1px solid var(--line); color: var(--ink-soft);
+    padding: 7px 12px; border-radius: 100px; cursor: pointer;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* instrument card in hero */
+  .instr { padding: 20px; }
+  .instr-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 16px;
+  }
+  .instr-head .live { display: inline-flex; align-items: center; gap: 6px; color: var(--good); }
+  .instr-head .live .dot { background: var(--good); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  .scenario {
+    font-size: 0.9rem; color: var(--ink-soft); line-height: 1.45;
+    padding: 11px 13px; border-left: 2px solid var(--accent); background: var(--panel-2);
+    border-radius: 0 var(--r) var(--r) 0; margin-bottom: 20px;
+  }
+  .scenario b { color: var(--ink); }
+
+  .bar-row { display: grid; grid-template-columns: 128px 1fr 52px; align-items: center; gap: 12px; margin: 9px 0; }
+  .bar-row .name { font-family: var(--mono); font-size: 0.78rem; color: var(--ink-soft); }
+  .bar-track { height: 8px; background: var(--line-soft); border-radius: 100px; overflow: hidden; }
+  .bar-fill { height: 100%; width: 0; border-radius: 100px; transition: width 1.1s cubic-bezier(.22,.61,.36,1); }
+  .bar-row .pct { font-family: var(--mono); font-size: 0.78rem; text-align: right; font-variant-numeric: tabular-nums; }
+  .lead-row .name, .lead-row .pct { color: var(--accent); font-weight: 600; }
+
+  .entropy {
+    margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  }
+  .entropy .label { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
+  .entropy .val { font-family: var(--mono); font-size: 1.5rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .entropy .val small { font-size: 0.8rem; color: var(--ink-faint); }
+  .entropy .delta { font-family: var(--mono); font-size: 0.74rem; color: var(--good); }
+
+  /* =================== THESIS =================== */
+  .versus { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; align-items: stretch; }
+  @media (max-width: 720px) { .versus { grid-template-columns: 1fr; } }
+  .versus .col { padding: 26px; }
+  .versus .col.bad-col { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r) 0 0 var(--r); }
+  .versus .col.good-col { background: var(--panel-2); border: 1px solid var(--accent); border-radius: 0 var(--r) var(--r) 0; }
+  @media (max-width: 720px) {
+    .versus .col.bad-col { border-radius: var(--r) var(--r) 0 0; }
+    .versus .col.good-col { border-radius: 0 0 var(--r) var(--r); border-top: none; }
+  }
+  .versus .arrow {
+    display: grid; place-items: center; padding: 0 4px; color: var(--accent);
+    font-family: var(--mono); font-size: 1.4rem;
+  }
+  @media (max-width: 720px) { .versus .arrow { padding: 10px; transform: rotate(90deg); } }
+  .versus h3 { margin-bottom: 6px; }
+  .versus .tag { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .versus ul { margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .versus li { font-size: 0.94rem; color: var(--ink-soft); padding-left: 22px; position: relative; line-height: 1.45; }
+  .versus li::before { position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: 0.85rem; }
+  .bad-col li::before { content: "✕"; color: var(--bad); }
+  .good-col li::before { content: "→"; color: var(--good); }
+
+  /* =================== LOOP =================== */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin-top: 8px; }
+  .flow-step {
+    flex: 1 1 150px; padding: 16px; border: 1px solid var(--line); border-radius: var(--r);
+    background: var(--panel); display: flex; flex-direction: column; gap: 7px; min-width: 0;
+  }
+  .flow-step .k { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  .flow-step .t { font-weight: 600; font-size: 0.95rem; }
+  .flow-step .d { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.4; }
+  .flow-step.pure { border-style: solid; border-color: var(--accent); }
+  .flow-step .badge { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--ink-faint); text-transform: uppercase; margin-top: auto; }
+
+  .trace { margin-top: 22px; padding: 22px; }
+  .trace-head { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 16px; }
+  .trace-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .trace-node {
+    font-family: var(--mono); font-size: 0.8rem; padding: 7px 12px;
+    border: 1px solid var(--line); border-radius: 100px; background: var(--panel);
+    color: var(--ink-soft);
+  }
+  .trace-node b { color: var(--ink); font-weight: 600; }
+  .trace-arrow { color: var(--accent); font-family: var(--mono); }
+  .trace-concl {
+    font-family: var(--mono); font-size: 0.82rem; padding: 7px 14px; border-radius: 100px;
+    background: var(--accent); color: #fff; font-weight: 600; letter-spacing: 0.01em;
+  }
+  :root[data-theme="dark"] .trace-concl { color: #06121a; }
+  @media (prefers-color-scheme: dark) { .trace-concl { color: #06121a; } }
+
+  /* =================== METHODOLOGIES =================== */
+  .meth-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 900px) { .meth-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .meth-grid { grid-template-columns: 1fr; } }
+  .meth {
+    border: 1px solid var(--line); border-radius: var(--r); padding: 16px; background: var(--panel);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .meth .code {
+    font-family: var(--mono); font-weight: 600; font-size: 0.86rem; color: var(--accent);
+    letter-spacing: 0.01em;
+  }
+  .meth .full { font-size: 0.82rem; color: var(--ink); font-weight: 550; }
+  .meth .sig { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); line-height: 1.4; margin-top: auto; }
+  .meth .sig b { color: var(--ink-soft); font-weight: 600; }
+
+  /* FMEA mini table */
+  .fmea { margin-top: 22px; overflow-x: auto; }
+  table.rpn { border-collapse: collapse; width: 100%; font-size: 0.84rem; min-width: 480px; }
+  table.rpn caption { text-align: left; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 12px; }
+  table.rpn th, table.rpn td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line-soft); }
+  table.rpn th { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; }
+  table.rpn td { color: var(--ink-soft); }
+  table.rpn td.num { font-family: var(--mono); text-align: center; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .ap { font-family: var(--mono); font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 100px; }
+  .ap.h { color: var(--bad); border: 1px solid var(--bad); }
+  .ap.m { color: var(--warn); border: 1px solid var(--warn); }
+  .ap.l { color: var(--good); border: 1px solid var(--good); }
+
+  /* =================== ENGINEERING =================== */
+  .eng-card h3 { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .eng-card h3 .n { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); }
+  .eng-card p { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.5; }
+  .eng-card code {
+    font-family: var(--mono); font-size: 0.82rem; background: var(--panel-2);
+    border: 1px solid var(--line-soft); padding: 1px 6px; border-radius: 3px; color: var(--accent-br);
+  }
+
+  .arch {
+    margin-top: 22px; padding: 24px; display: flex; flex-direction: column; gap: 10px; align-items: center;
+  }
+  .arch-layer {
+    width: 100%; max-width: 620px; padding: 13px 18px; border: 1px solid var(--line); border-radius: var(--r);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--panel);
+  }
+  .arch-layer .lname { font-family: var(--mono); font-size: 0.82rem; color: var(--ink); font-weight: 600; }
+  .arch-layer .ldesc { font-size: 0.8rem; color: var(--ink-faint); text-align: right; }
+  .arch-layer.core { border-color: var(--accent); border-width: 1.5px; background: var(--panel-2); }
+  .arch-layer.core .lname { color: var(--accent); }
+  .arch-caption { font-size: 0.82rem; color: var(--ink-faint); text-align: center; margin-top: 6px; font-family: var(--mono); }
+  .arch-inward { color: var(--accent); font-family: var(--mono); font-size: 0.9rem; line-height: 1; }
+
+  /* =================== EXECUTION =================== */
+  .lifecycle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+  .lc-node {
+    font-family: var(--mono); font-size: 0.78rem; padding: 8px 14px; border-radius: var(--r);
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink-soft); letter-spacing: 0.02em;
+  }
+  .lc-node.closed { border-color: var(--good); color: var(--good); }
+  .lc-node.reopen { border-color: var(--warn); color: var(--warn); }
+  .lc-arrow { color: var(--ink-faint); font-family: var(--mono); }
+
+  .feat-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+  .feat { display: flex; gap: 12px; align-items: flex-start; }
+  .feat .fm { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); flex: none; padding-top: 2px; letter-spacing: 0.04em; }
+  .feat .ft { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.45; }
+  .feat .ft b { color: var(--ink); }
+
+  /* =================== VALUE =================== */
+  .value-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 620px) { .value-grid { grid-template-columns: 1fr; } }
+  .value h3 { margin-bottom: 8px; }
+  .value p { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.5; }
+  .value .metric { font-family: var(--mono); font-size: 1.9rem; color: var(--accent); font-weight: 600; letter-spacing: -0.02em; }
+
+  /* =================== LIMITS =================== */
+  .limits { border-left: 2px solid var(--warn); }
+  .spec-row {
+    display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 14px 0;
+    border-bottom: 1px solid var(--line-soft); align-items: start;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  @media (max-width: 560px) { .spec-row { grid-template-columns: 1fr; gap: 4px; } }
+  .spec-row .sk { font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); }
+  .spec-row .sv { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.5; }
+  .spec-row .sv b { color: var(--ink); }
+
+  /* =================== FOOTER =================== */
+  footer { border-top: 1px solid var(--line); padding: 44px 0 60px; }
+  .foot-grid { display: flex; flex-wrap: wrap; gap: 28px; justify-content: space-between; align-items: flex-start; }
+  .foot-stat { display: flex; flex-direction: column; gap: 3px; }
+  .foot-stat .fv { font-family: var(--mono); font-size: 1.35rem; color: var(--ink); font-weight: 600; }
+  .foot-stat .fl { font-size: 0.78rem; color: var(--ink-faint); }
+  .stack-line { font-family: var(--mono); font-size: 0.78rem; color: var(--ink-soft); line-height: 1.9; }
+  .stack-line span { color: var(--ink-faint); }
+
+  /* =================== 05 · PLAYBOOK EXPLORER =================== */
+  .explain { font-size: 0.92rem; color: var(--ink-soft); line-height: 1.55; }
+  .part-label {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 6px;
+  }
+  .part { margin-top: 40px; }
+  .part > h3 { margin-bottom: 8px; }
+
+  .mtabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 22px; }
+  .mtab {
+    font-family: var(--mono); font-size: 0.76rem; padding: 7px 13px; border: 1px solid var(--line);
+    border-radius: 100px; background: var(--panel); color: var(--ink-soft); cursor: pointer;
+    letter-spacing: 0.01em; transition: border-color .15s, color .15s, background .15s;
+  }
+  .mtab:hover { border-color: var(--accent); color: var(--accent); }
+  .mtab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  :root[data-theme="dark"] .mtab[aria-selected="true"] { color: #06121a; }
+  @media (prefers-color-scheme: dark) { .mtab[aria-selected="true"] { color: #06121a; } }
+  :root[data-theme="light"] .mtab[aria-selected="true"] { color: #fff; }
+
+  .pb-intro {
+    font-size: 0.94rem; color: var(--ink-soft); line-height: 1.5; margin-bottom: 20px;
+    padding: 14px 16px; border-left: 2px solid var(--accent); background: var(--panel);
+    border-radius: 0 var(--r) var(--r) 0;
+  }
+  .pb-intro b { color: var(--ink); }
+
+  .stepmap { display: flex; flex-direction: column; gap: 12px; }
+  .step {
+    display: grid; grid-template-columns: auto 1fr; gap: 16px; padding: 18px;
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--panel);
+  }
+  .step .idx {
+    font-family: var(--mono); font-size: 0.8rem; font-weight: 600; color: #fff; background: var(--accent);
+    min-width: 36px; height: 34px; padding: 0 6px; border-radius: 6px; display: grid; place-items: center; flex: none;
+  }
+  :root[data-theme="dark"] .step .idx { color: #06121a; }
+  @media (prefers-color-scheme: dark) { .step .idx { color: #06121a; } }
+  :root[data-theme="light"] .step .idx { color: #fff; }
+  .step .sname { font-weight: 650; font-size: 1rem; letter-spacing: -0.01em; }
+  .step .sobj { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.45; margin-top: 4px; }
+  .step .flabel { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 14px 0 8px; }
+  .fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 620px) { .fields { grid-template-columns: 1fr; } }
+  .fld {
+    display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; border: 1px solid var(--line-soft);
+    border-radius: var(--r); background: var(--panel-2); min-width: 0;
+  }
+  .fld .fl { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; font-weight: 550; color: var(--ink); line-height: 1.3; }
+  .fbadge {
+    font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 100px; border: 1px solid var(--line); color: var(--ink-faint);
+    flex: none; white-space: nowrap;
+  }
+  .fbadge.tbl { color: var(--accent); border-color: var(--accent); }
+  .fbadge.tool { color: var(--warn); border-color: var(--warn); }
+  .fld .cols { display: flex; flex-wrap: wrap; gap: 5px; }
+  .col-chip { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-soft); background: var(--panel); border: 1px solid var(--line-soft); padding: 2px 7px; border-radius: 3px; }
+
+  .statechain { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+  .state { font-family: var(--mono); font-size: 0.74rem; padding: 6px 12px; border-radius: 100px; border: 1px solid var(--line); color: var(--ink-faint); }
+  .state.prog { border-color: var(--warn); color: var(--warn); }
+  .state.done { border-color: var(--good); color: var(--good); }
+  .state-arrow { color: var(--ink-faint); font-family: var(--mono); }
+
+  /* worked example */
+  .anatomy { padding: 0; overflow: hidden; }
+  .anatomy .a-top { padding: 20px 22px; border-bottom: 1px solid var(--line-soft); }
+  .anatomy .a-top .sname { font-weight: 650; font-size: 1.08rem; }
+  .anatomy .a-guide { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.5; margin-top: 8px; }
+  .anatomy .a-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+  .wfield { border: 1px solid var(--line-soft); border-radius: var(--r); overflow: hidden; }
+  .wfield .wf-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; background: var(--panel); font-size: 0.82rem; font-weight: 550; }
+  .wfield .wf-v { padding: 11px 12px; font-size: 0.86rem; color: var(--ink-soft); line-height: 1.5; }
+  .ai-note {
+    display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px dashed var(--accent);
+    border-radius: var(--r); background: var(--panel-2);
+  }
+  .ai-note .tag { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); flex: none; padding-top: 2px; }
+  .ai-note p { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.5; }
+  .ai-note b { color: var(--ink); }
+
+  /* mini 5-why */
+  .fivewhy { display: flex; flex-direction: column; gap: 0; }
+  .fw-row { display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 0.84rem; }
+  .fw-row:last-child { border-bottom: none; }
+  .fw-row .lvl { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); }
+  .fw-row .q { color: var(--ink-soft); }
+  .fw-row.root .q { color: var(--ink); font-weight: 550; }
+  .fw-root-tag { font-family: var(--mono); font-size: 0.66rem; color: var(--good); border: 1px solid var(--good); border-radius: 100px; padding: 2px 8px; white-space: nowrap; }
+
+  /* FMEA S·O·D anatomy */
+  .fm-row { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.5; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); }
+  .fm-row b { color: var(--ink); }
+  .sod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .sod-grid { grid-template-columns: 1fr; } }
+  .sod { border: 1px solid var(--line-soft); border-top-width: 3px; border-radius: var(--r); padding: 14px; background: var(--panel-2); }
+  .sod.s { border-top-color: var(--bad); }
+  .sod.o { border-top-color: var(--warn); }
+  .sod.d { border-top-color: var(--accent); }
+  .sod .sl { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); display: block; }
+  .sod .sn { font-family: var(--mono); font-size: 2rem; font-weight: 600; color: var(--ink); display: block; line-height: 1.1; margin: 4px 0 6px; font-variant-numeric: tabular-nums; }
+  .sod .sr { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.4; }
+  .rpn-calc { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+  .rpn-calc .rk { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .rpn-calc .eq { font-family: var(--mono); font-size: 0.95rem; color: var(--ink-soft); }
+  .rpn-calc .rpn-val { font-family: var(--mono); font-size: 1.8rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .rpn-calc .ap { margin-left: auto; }
+  .rescore { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--ink-soft); }
+  .rescore .rs { padding: 8px 12px; border: 1px solid var(--line-soft); border-radius: var(--r); background: var(--panel); }
+  .rescore .rs b { color: var(--ink); }
+
+  /* report doc */
+  .doc { border: 1px solid var(--line); border-radius: var(--r); background: var(--panel-2); overflow: hidden; }
+  .doc-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); background: var(--panel); font-family: var(--mono); font-size: 0.7rem; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .doc-body { padding: 24px 26px; }
+  .doc h4 { font-size: 1.1rem; margin: 0 0 2px; letter-spacing: -0.01em; }
+  .doc .subtitle { font-family: var(--mono); font-size: 0.74rem; color: var(--ink-faint); }
+  .doc .exec { font-size: 0.9rem; color: var(--ink-soft); line-height: 1.55; padding: 14px 16px; background: var(--panel); border-radius: var(--r); border: 1px solid var(--line-soft); margin: 16px 0 4px; }
+  .doc .exec .lbl { display: block; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .doc-sec { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin: 22px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line-soft); }
+  .doc-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .doc-list li { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.45; padding-left: 18px; position: relative; }
+  .doc-list li::before { content: "—"; position: absolute; left: 0; color: var(--ink-faint); }
+  .doc-list li b { color: var(--ink); font-weight: 600; }
+  .mini-actions { overflow-x: auto; margin-top: 4px; }
+  .mini-actions table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 420px; }
+  .mini-actions th, .mini-actions td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line-soft); }
+  .mini-actions th { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; }
+  .mini-actions td { color: var(--ink-soft); }
+  .mini-actions .st-open { color: var(--warn); font-family: var(--mono); font-size: 0.76rem; }
+  .mini-actions .st-done { color: var(--good); font-family: var(--mono); font-size: 0.76rem; }
+
+  .extras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+  @media (max-width: 760px) { .extras { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .extras { grid-template-columns: 1fr; } }
+  .extra { padding: 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+  .extra .et { font-weight: 600; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; }
+  .extra .et .fm { font-family: var(--mono); color: var(--accent); }
+  .extra .ed { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.4; margin-top: 5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar-fill { transition: none !important; }
+    .instr-head .live .dot { animation: none; }
+    * { scroll-behavior: auto; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="titlebar">
+    <div class="brandmark">
+      <div class="glyph">Δ</div>
+      <div>
+        <b>Manufacturing Decision Intelligence</b><br>
+        <span>portföy vitrini · endüstri mühendisliği</span>
+      </div>
+    </div>
+    <button class="theme-toggle" id="tt" aria-label="Tema değiştir">tema</button>
+  </div>
+</div>
+
+<!-- ===================== HERO ===================== -->
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Karar destek motoru · üretim &amp; kalite</span>
+        <h1>Önce problemi <span class="kw">teşhis et</span>,<br>sonra doğru metodolojiyi seç.</h1>
+        <p class="lead measure">
+          Çoğu ekip problemi sınıflandırmadan araca sarılır — refleksle 8D açar, alışkanlıkla DMAIC başlatır.
+          Bu araç bunu tersine çevirir: problemi anlar, belirsizliği ölçülebilir biçimde daraltır, en çok bilgi
+          getiren soruyu sorar ve <b>kural tabanlı bir karar motoruyla</b> gerekçeli metodolojiyi önerir.
+          Kararı yapay zekâ değil, <b>sabit ve sınanabilir kurallar</b> verir.
+        </p>
+        <div class="hero-meta">
+          <span class="chip"><span class="dot" style="background:var(--accent)"></span> 14 metodoloji</span>
+          <span class="chip"><span class="dot" style="background:var(--good)"></span> kural tabanlı karar</span>
+          <span class="chip"><span class="dot" style="background:var(--warn)"></span> yapay zekâ yalnızca yardımcı</span>
+          <span class="chip">yerel &amp; ücretsiz yapay zekâ</span>
+        </div>
+      </div>
+
+      <!-- live instrument -->
+      <div class="panel panel-2 instr" id="instr">
+        <div class="instr-head">
+          <span>metodoloji güven sıralaması</span>
+          <span class="live"><span class="dot"></span> canlı</span>
+        </div>
+        <div class="scenario">
+          <b>Girdi:</b> “Müşteriden şikayet geldi, kök neden henüz bilinmiyor, kusur sahada görüldü.”
+        </div>
+        <div class="bars">
+          <div class="bar-row lead-row">
+            <span class="name">8D</span>
+            <span class="bar-track"><span class="bar-fill" data-w="84" style="background:var(--accent)"></span></span>
+            <span class="pct" data-pct="84">0%</span>
+          </div>
+          <div class="bar-row">
+            <span class="name">RCA</span>
+            <span class="bar-track"><span class="bar-fill" data-w="71" style="background:var(--accent-br)"></span></span>
+            <span class="pct" data-pct="71">0%</span>
+          </div>
+          <div class="bar-row">
+            <span class="name">Kepner–Tregoe</span>
+            <span class="bar-track"><span class="bar-fill" data-w="22" style="background:var(--ink-faint)"></span></span>
+            <span class="pct" data-pct="22">0%</span>
+          </div>
+          <div class="bar-row">
+            <span class="name">DMAIC</span>
+            <span class="bar-track"><span class="bar-fill" data-w="9" style="background:var(--ink-faint)"></span></span>
+            <span class="pct" data-pct="9">0%</span>
+          </div>
+          <div class="bar-row">
+            <span class="name">FMEA</span>
+            <span class="bar-track"><span class="bar-fill" data-w="4" style="background:var(--ink-faint)"></span></span>
+            <span class="pct" data-pct="4">0%</span>
+          </div>
+        </div>
+        <div class="entropy">
+          <span class="label">Kalan belirsizlik</span>
+          <span class="val"><span id="ent">2.13</span></span>
+          <span class="delta" id="entd">▼ soru başına azalır</span>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<!-- ===================== 01 THESIS ===================== -->
+<section id="thesis">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">01 — Temel tez</span>
+      <h2>Problemi sınıflandırmadan araç seçmek, en pahalı kalite hatasıdır.</h2>
+      <p class="lead measure">Yanlış metodoloji; kaybedilen zaman, kapanmayan kök neden ve tekrar eden kusur demektir. Bu araç, metodoloji seçimini bir <strong>teşhis kararı</strong> olarak ele alır: önce problemin karakterini belirler, sonra yöntemi ona göre seçer.</p>
+    </div>
+
+    <div class="versus">
+      <div class="col bad-col">
+        <span class="tag" style="color:var(--bad)">yaygın pratik</span>
+        <h3>Araç önce, teşhis sonra</h3>
+        <ul>
+          <li>“Müşteri var → hemen 8D” — oysa kök neden zaten biliniyorsa 8D fazla ağır.</li>
+          <li>Veri yokken DMAIC başlatmak → Measure fazında tıkanma.</li>
+          <li>Seçim gerekçesiz; denetimde “neden bu yöntem?” sorusuna cevap yok.</li>
+          <li>Kararı doğrudan yapay zekâya sormak → her seferinde farklı, izlenemez cevap.</li>
+        </ul>
+      </div>
+      <div class="arrow">→</div>
+      <div class="col good-col">
+        <span class="tag" style="color:var(--good)">bu araç</span>
+        <h3>Teşhis önce, araç sonuç</h3>
+        <ul>
+          <li>Problemin özniteliklerini çıkarır: kusur oluştu mu, müşteri etkilendi mi, kök neden biliniyor mu…</li>
+          <li>Kural tabanı her metodolojiyi puanlar; puanlar bir güven yüzdesine dönüşür.</li>
+          <li>Her öneri, tetiklenen kuralların <b>karar zincirini</b> taşır — denetlenebilir.</li>
+          <li>Aynı girdi → aynı sonuç; kişiye, güne veya modele göre değişmez.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 02 LOOP ===================== -->
+<section id="loop">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">02 — Adaptif teşhis döngüsü</span>
+      <h2>Rastgele soru sormaz — belirsizliği en çok azaltan soruyu sorar.</h2>
+      <p class="lead measure">Bir doktorun gereksiz tetkik istememesi gibi: her tur, cevabı <strong>kalan belirsizliği en çok azaltacak</strong> soruyu seçer. “Yeterince eminim” eşiğine gelince durur.</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step">
+        <span class="k">01 · anlama</span>
+        <span class="t">Metni anla</span>
+        <span class="d">Serbest metin, yapılandırılmış bilgilere çevrilir. Metinde delil yoksa alan <b>boş kalır</b> — yapay zekâ tahmin uydurmaz.</span>
+        <span class="badge">yapay zekâ · yardımcı</span>
+      </div>
+      <div class="flow-step pure">
+        <span class="k">02 · karar</span>
+        <span class="t">Kuralları değerlendir</span>
+        <span class="d">Sabit kurallar, bilinen bilgileri puanlar. Bilinmeyen bilgi hiçbir kuralı tetiklemez (bu yüzden sorulur).</span>
+        <span class="badge">kural tabanlı</span>
+      </div>
+      <div class="flow-step pure">
+        <span class="k">03 · ölçme</span>
+        <span class="t">Güveni hesapla</span>
+        <span class="d">Puanlar her metodoloji için bir güven yüzdesine çevrilir; kalan belirsizlik ölçülür.</span>
+        <span class="badge">kural tabanlı</span>
+      </div>
+      <div class="flow-step pure">
+        <span class="k">04 · soru seçimi</span>
+        <span class="t">En iyi soruyu seç</span>
+        <span class="d">Belirsizliği en çok azaltacak soruyu seçer; alakasız soru sorulmaz.</span>
+        <span class="badge">kural tabanlı</span>
+      </div>
+      <div class="flow-step">
+        <span class="k">05 · doğallaştırma</span>
+        <span class="t">Soruyu Türkçeye çevir</span>
+        <span class="d">Yapay zekâ soruyu akıcı Türkçeye çevirir; cevap tekrar anlaşılıp döngüye döner.</span>
+        <span class="badge">yapay zekâ · yardımcı</span>
+      </div>
+    </div>
+
+    <div class="panel trace">
+      <div class="trace-head">karar zinciri — sistem üretir, yapay zekâ yalnızca dile çevirir</div>
+      <div class="trace-chain">
+        <span class="trace-node">Kusur <b>oluştu</b></span>
+        <span class="trace-arrow">→</span>
+        <span class="trace-node">Müşteri <b>etkilendi</b></span>
+        <span class="trace-arrow">→</span>
+        <span class="trace-node">Kök neden <b>bilinmiyor</b></span>
+        <span class="trace-arrow">→</span>
+        <span class="trace-node">Tekrar <b>eden</b> değil</span>
+        <span class="trace-arrow">→</span>
+        <span class="trace-concl">∴ 8D · güven %84</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 03 METHODOLOGIES ===================== -->
+<section id="meth">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">03 — Metodoloji derinliği</span>
+      <h2>14 metodoloji, gerçek endüstri formlarını yansıtan playbook’larla.</h2>
+      <p class="lead measure">Her metodoloji bir tetikleyici sinyalle önerilir; seçildiğinde 8D için D1–D8, FMEA için S·O·D tablosu, KT için IS / IS-NOT matrisi gibi <strong>profesyonel şablon</strong> ile çalışma alanı açılır.</p>
+    </div>
+
+    <div class="meth-grid">
+      <div class="meth"><span class="code">FMEA</span><span class="full">Hata Türü ve Etkileri Analizi</span><span class="sig"><b>sinyal:</b> risk var, hata yok</span></div>
+      <div class="meth"><span class="code">8D</span><span class="full">8 Disiplin</span><span class="sig"><b>sinyal:</b> müşteri etkilendi</span></div>
+      <div class="meth"><span class="code">RCA</span><span class="full">Kök Neden Analizi · 5 Neden + Balık Kılçığı</span><span class="sig"><b>sinyal:</b> kök neden bilinmiyor</span></div>
+      <div class="meth"><span class="code">Kepner–Tregoe</span><span class="full">Problem Analizi · IS / IS-NOT</span><span class="sig"><b>sinyal:</b> yeni başlayan problem</span></div>
+      <div class="meth"><span class="code">DMAIC</span><span class="full">Define–Measure–Analyze–Improve–Control</span><span class="sig"><b>sinyal:</b> veri yoğun, varyasyon yüksek</span></div>
+      <div class="meth"><span class="code">PDCA / A3</span><span class="full">Planla–Uygula–Kontrol–Önlem</span><span class="sig"><b>sinyal:</b> sürekli iyileştirme</span></div>
+      <div class="meth"><span class="code">SPC</span><span class="full">İstatistiksel Proses Kontrol</span><span class="sig"><b>sinyal:</b> sürekli varyasyon izleme</span></div>
+      <div class="meth"><span class="code">DMADV</span><span class="full">Design for Six Sigma</span><span class="sig"><b>sinyal:</b> yeni tasarım / süreç</span></div>
+      <div class="meth"><span class="code">Poka-Yoke</span><span class="full">Hata Önleme</span><span class="sig"><b>sinyal:</b> insan hatası tekrar ediyor</span></div>
+      <div class="meth"><span class="code">5S</span><span class="full">Düzen &amp; Standartlaştırma</span><span class="sig"><b>sinyal:</b> çalışma alanı düzensizliği</span></div>
+      <div class="meth"><span class="code">TPM</span><span class="full">Toplam Üretken Bakım</span><span class="sig"><b>sinyal:</b> ekipman arıza kaynaklı</span></div>
+      <div class="meth"><span class="code">Yalın / VSM</span><span class="full">Değer Akış Haritalama</span><span class="sig"><b>sinyal:</b> israf / akış problemi</span></div>
+      <div class="meth"><span class="code">TOC</span><span class="full">Kısıtlar Teorisi</span><span class="sig"><b>sinyal:</b> darboğaz / kapasite kısıtı</span></div>
+      <div class="meth"><span class="code">SDCA</span><span class="full">Standardize–Do–Check–Act</span><span class="sig"><b>sinyal:</b> süreç kararsız, önce standart</span></div>
+      <div class="meth" style="border-style:dashed; justify-content:center; align-items:center;">
+        <span class="sig" style="text-align:center; margin:0;">tek karar kaynağı:<br><b>sabit kural tabanı</b></span>
+      </div>
+    </div>
+
+    <div class="panel fmea">
+      <table class="rpn">
+        <caption>Örnek — FMEA çalışma alanı · S·O·D → RPN → Aksiyon Önceliği (AP, AIAG-VDA)</caption>
+        <thead>
+          <tr><th>Hata türü</th><th>Etki</th><th>Ş (S)</th><th>O (O)</th><th>T (D)</th><th>RPN</th><th>AP</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kaynak dikişinde çatlak</td><td>Sahada kopma riski</td><td class="num">9</td><td class="num">4</td><td class="num">6</td><td class="num">216</td><td><span class="ap h">Yüksek</span></td></tr>
+          <tr><td>Yanlış tork değeri</td><td>Gevşeme, titreşim</td><td class="num">7</td><td class="num">3</td><td class="num">4</td><td class="num">84</td><td><span class="ap m">Orta</span></td></tr>
+          <tr><td>Yüzey çiziği</td><td>Görsel kusur</td><td class="num">3</td><td class="num">5</td><td class="num">2</td><td class="num">30</td><td><span class="ap l">Düşük</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 04 ENGINEERING ===================== -->
+<section id="eng">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">04 — Kararın sağlamlığı</span>
+      <h2>Bu aracın önerisine neden güvenilir?</h2>
+      <p class="lead measure">Çünkü kararı yapay zekâ değil, sabit kurallar verir — ve bu kurallar yüzlerce örnek senaryoyla sürekli sınanır. Aynı problem her zaman aynı gerekçeli öneriyi alır; kişiye, güne ya da modele göre kaymaz.</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel eng-card">
+        <h3><span class="n">A</span> Kararı kurallar verir, yapay zekâ değil</h3>
+        <p>Öneri, açıkça yazılmış kurallardan çıkar: “kusur oluştu ve müşteri etkilendiyse 8D’ye yüksek puan” gibi. Aynı problem her zaman aynı sonucu verir; yapay zekânın “uydurma” riski karar dışında tutulur.</p>
+      </div>
+      <div class="panel eng-card">
+        <h3><span class="n">B</span> En bilgilendirici soruyu sorar</h3>
+        <p>Sistem, cevabı en çok belirsizlik azaltacak soruyu bulup önce onu sorar — tıpkı gereksiz tetkik istemeyen bir doktor gibi. Yeterince emin olunca, gereksiz soru sormadan durur.</p>
+      </div>
+      <div class="panel eng-card">
+        <h3><span class="n">C</span> Yapay zekâ olmadan da çalışır</h3>
+        <p>Yapay zekâ yalnızca metni anlamak, soru yazmak ve rapor hazırlamak için. Tamamen kapatılsa bile karar motoru çalışmaya devam eder. Kullanılan yapay zekâ <b>yerel ve ücretsizdir</b>; veri dışarı çıkmaz, abonelik gerekmez.</p>
+      </div>
+      <div class="panel eng-card">
+        <h3><span class="n">D</span> Sürekli kanıtlanır</h3>
+        <p>Yüzlerce etiketli örnek senaryo hazırdır: “müşteri şikayeti + kök neden yok → 8D” gibi. Kurallar her değiştiğinde bu senaryolar otomatik kontrol edilir; sistem yanlışa kayarsa hemen görünür.</p>
+      </div>
+    </div>
+
+    <div class="panel arch">
+      <div class="arch-layer"><span class="lname">Yapay zekâ · metni anlama</span><span class="ldesc">yardımcı</span></div>
+      <div class="arch-layer"><span class="lname">Yapay zekâ · soru &amp; rapor yazma</span><span class="ldesc">yardımcı</span></div>
+      <span class="arch-inward">↓ besler</span>
+      <div class="arch-layer core"><span class="lname">KURAL TABANLI KARAR MOTORU</span><span class="ldesc">kararı verir · yapay zekâ olmadan çalışır</span></div>
+      <div class="arch-caption">Karar merkezde ve sabittir; yapay zekâ yalnızca çevrede, yardımcıdır.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 05 EXECUTION ===================== -->
+<section id="exec">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">05 — Metodolojiyi seçtik: sırada tam olarak ne var?</span>
+      <h2>Öneri bir başlangıçtır — asıl iş, doğru forma göre uçtan uca uygulamaktır.</h2>
+      <p class="lead measure">Metodoloji seçilince uygulama, o metodolojinin <strong>gerçek endüstri formunu</strong> yansıtan bir çalışma alanıyla açılır: sıralı adımlar, her adımın amacı ve doldurulacak <strong>yapılandırılmış alanlar</strong> (serbest not değil; gerçek bir 8D / FMEA / KT formu gibi). Aşağıdaki gezgin, koddaki playbook kataloğunun birebir kendisidir.</p>
+    </div>
+
+    <!-- PART A — interactive explorer -->
+    <div class="part">
+      <div class="part-label">A · Playbook gezgini</div>
+      <h3>Bir metodoloji seç — adımlarını ve alt-alanlarını gör</h3>
+      <div class="mtabs" id="pbTabs" role="tablist" aria-label="Metodoloji seçimi"></div>
+      <div class="pb-intro" id="pbIntro"></div>
+      <div class="stepmap" id="pbSteps"></div>
+      <p class="explain" style="margin-top:16px;">
+        Rozetler alan tipini gösterir: <span class="fbadge">metin</span> / <span class="fbadge">uzun metin</span> serbest;
+        <span class="fbadge tbl">tablo</span> yapılandırılmış satır-sütun; <span class="fbadge tool">5 neden</span>
+        <span class="fbadge tool">balık kılçığı</span> özel araçlar. Üçü de <b>aynı yapıyı</b> paylaşır — bu yüzden
+        kaydetme, doğrulama ve AI taslağı tek ve tutarlı yoldan akar.
+      </p>
+    </div>
+
+    <!-- PART B — anatomy of a step -->
+    <div class="part">
+      <div class="part-label">B · Bir adımın anatomisi</div>
+      <h3>İki örnek adım: nasıl doldurulur, nasıl sonuç üretir</h3>
+      <p class="explain measure" style="margin:8px 0 18px;">Her adım dört şeyi taşır: <b>amaç</b> (tek cümle), <b>profesyonel rehber</b> (nasıl çalışılır), <b>alanlar</b> (ne doldurulur) ve <b>durum</b>. Bir adım, kritik alanları kanıtla dolduğunda “tamamlandı” sayılır.</p>
+      <div style="font-family:var(--mono);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px;">Örnek 1 · 8D → D4 (Kök Nedeni Belirle)</div>
+
+      <div class="panel anatomy">
+        <div class="a-top">
+          <div class="sname">D4 — Kök Nedeni Belirle</div>
+          <div class="a-guide"><b>Amaç:</b> oluşma VE kaçış kök nedenlerini kanıtla doğrula. <b>Rehber:</b> iki soru birden — kusur neden <em>oluştu</em> ve kontrol sisteminden neden <em>kaçtı</em>? Her hipotezi veriyle test et; kök neden, “kaldırınca problem tekrarlanamıyor” olduğunda doğrulanmıştır.</div>
+        </div>
+        <div class="a-body">
+          <div class="wfield">
+            <div class="wf-h"><span>5 Neden zinciri</span><span class="fbadge tool">özel araç</span></div>
+            <div class="wf-v">
+              <div class="fivewhy">
+                <div class="fw-row"><span class="lvl">Neden 1</span><span class="q">Sahada kaynak dikişi çatladı</span><span></span></div>
+                <div class="fw-row"><span class="lvl">Neden 2</span><span class="q">Dikiş nüfuziyeti spek altında kaldı</span><span></span></div>
+                <div class="fw-row"><span class="lvl">Neden 3</span><span class="q">Kaynak akımı düşük ayarlandı</span><span></span></div>
+                <div class="fw-row root"><span class="lvl">Neden 4</span><span class="q">Akım limiti prosedürde tanımsız — operatöre bırakılmış</span><span class="fw-root-tag">kök neden</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wfield">
+            <div class="wf-h"><span>Kaçış kök nedeni (neden yakalanamadı?)</span><span class="fbadge">uzun metin</span></div>
+            <div class="wf-v">Ara kontrol yalnızca görsel; nüfuziyet tahribatsız test edilmiyordu, bu yüzden kaçak müşteriye ulaştı.</div>
+          </div>
+          <div class="ai-note">
+            <span class="tag">AI taslak</span>
+            <p><b>İsteğe bağlı yardımcı:</b> “AI taslak al” dersen, yapay zekâ bilgi tabanına dayanarak boş alanlara profesyonel bir ilk taslak yazar — ama <b>senin girdiğin veriyi asla ezmez</b> ve çıktı adımın formuna zorla uydurulur. Karar ve içerik sende; yapay zekâ yalnızca hızlandırır.</p>
+          </div>
+          <div>
+            <div class="step-label" style="font-family:var(--mono);font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;">Adım durumu</div>
+            <div class="statechain">
+              <span class="state">PENDING</span>
+              <span class="state-arrow">→</span>
+              <span class="state prog">IN_PROGRESS</span>
+              <span class="state-arrow">→</span>
+              <span class="state done">DONE — kök neden kanıtlandı</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin:26px 0 10px;">Örnek 2 · FMEA → Hata Modu Analizi (S·O·D → RPN)</div>
+      <div class="panel anatomy">
+        <div class="a-top">
+          <div class="sname">4 — Hata Modu Analizi · her hata modunu üç boyutta puanla</div>
+          <div class="a-guide"><b>Amaç:</b> her hata modunun riskini üç eksende değerlendir — <b>Şiddet (S)</b>: sonuç ne kadar ağır; <b>Olasılık (O)</b>: ne sıklıkla oluşur; <b>Tespit (D)</b>: mevcut kontrol yakalar mı (yüksek D = zor yakalanır). Risk önceliği <b>RPN = S × O × D</b>. Güvenlik/regülasyon etkili maddeler (S = 9–10) RPN'den bağımsız önceliklidir.</div>
+        </div>
+        <div class="a-body">
+          <div class="fm-row"><b>Hata modu:</b> kaynak dikişinde yetersiz nüfuziyet &nbsp;·&nbsp; <b>Etki:</b> sahada dikiş kopması, güvenlik riski &nbsp;·&nbsp; <b>Neden:</b> kaynak akımı spek altında &nbsp;·&nbsp; <b>Mevcut kontrol:</b> hat sonu görsel muayene</div>
+
+          <div class="sod-grid">
+            <div class="sod s"><span class="sl">Şiddet · S</span><span class="sn">9</span><span class="sr">Etki güvenlik/regülasyon sınıfında — en ağır sonuçlardan.</span></div>
+            <div class="sod o"><span class="sl">Olasılık · O</span><span class="sn">4</span><span class="sr">Ara sıra; akım limiti prosedürde tanımsız, operatöre bırakılmış.</span></div>
+            <div class="sod d"><span class="sl">Tespit · D</span><span class="sn">6</span><span class="sr">Görsel muayene nüfuziyeti göremez — zayıf yakalama.</span></div>
+          </div>
+
+          <div class="rpn-calc">
+            <span class="rk">RPN</span>
+            <span class="eq">S 9 × O 4 × D 6 =</span>
+            <span class="rpn-val">216</span>
+            <span class="ap h">Aksiyon Önceliği: Yüksek</span>
+          </div>
+
+          <div class="ai-note">
+            <span class="tag">doğru sıra</span>
+            <p><b>Riski nereden düşürürüz?</b> Önce <b>olasılığı (O)</b>: akım limitini prosedüre işle ve yanlış ayarı fiziksel olarak imkânsız kıl (poka-yoke). Sonra <b>tespiti (D)</b>: hat sonuna tahribatsız test ekle. <b>Şiddet (S) genelde ancak tasarım değişirse düşer</b> — bu yüzden etkiyi değil, olasılık ve tespiti hedefliyoruz.</p>
+          </div>
+
+          <div>
+            <div style="font-family:var(--mono);font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;">Aksiyon sonrası yeniden puanlama</div>
+            <div class="rescore">
+              <span class="rs">Öncesi · RPN <b>216</b> · <span class="ap h">Yüksek</span></span>
+              <span class="state-arrow">→</span>
+              <span class="rs">Sonrası · O 4→2, D 6→2, S <b>9</b> (değişmez) · RPN <b>36</b> · <span class="ap l">Düşük</span></span>
+            </div>
+            <p class="explain" style="margin-top:10px;">Etki (S) aynı kaldı — parça hâlâ güvenlik-kritik; ama artık hata çok daha seyrek oluşuyor ve oluşursa hemen yakalanıyor. FMEA canlı bir dokümandır: süreç değiştikçe yeniden puanlanır.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PART C — how we reach a conclusion -->
+    <div class="part">
+      <div class="part-label">C · Sonuca nasıl ulaşıyoruz</div>
+      <h3>Adımlar bitince “tamam” demek yetmez — kapanış bir yaşam döngüsüdür</h3>
+      <p class="explain measure" style="margin:8px 0 18px;">Problem, aksiyon yazıldığı an kapanmaz. Etkinlik <b>veriyle</b> doğrulanana kadar izlenir; tekrar ederse yeniden açılır. Bu, denetimde “çözüldü dediniz ama kanıt ne?” sorusunun cevabıdır.</p>
+
+      <div class="lifecycle">
+        <span class="lc-node">OPEN</span>
+        <span class="lc-arrow">→</span>
+        <span class="lc-node">CLOSURE_CANDIDATE</span>
+        <span class="lc-arrow">→</span>
+        <span class="lc-node">MONITORING</span>
+        <span class="lc-arrow">→</span>
+        <span class="lc-node closed">CLOSED</span>
+        <span class="lc-arrow">/</span>
+        <span class="lc-node reopen">REOPENED</span>
+      </div>
+      <div class="grid g4" style="margin-top:18px;">
+        <div class="panel eng-card"><h3 style="font-size:0.92rem;margin-bottom:6px;">OPEN</h3><p style="font-size:0.85rem;">Adımlar doldurulur; kök neden ve kalıcı aksiyonlar tanımlanır.</p></div>
+        <div class="panel eng-card"><h3 style="font-size:0.92rem;margin-bottom:6px;">CLOSURE_CANDIDATE</h3><p style="font-size:0.85rem;">Kanıt kapıları geçildi mi? Kanıtsız adım kapanışa <b>ilerleyemez</b>.</p></div>
+        <div class="panel eng-card"><h3 style="font-size:0.92rem;margin-bottom:6px;">MONITORING</h3><p style="font-size:0.85rem;">30/60/90 gün etkinlik izlemesi; önce/sonra metriği.</p></div>
+        <div class="panel eng-card"><h3 style="font-size:0.92rem;margin-bottom:6px;">CLOSED / REOPENED</h3><p style="font-size:0.85rem;">Tekrar yoksa kapanır; görülürse yeniden açılır (analiz eksikti).</p></div>
+      </div>
+    </div>
+
+    <!-- PART D — the output -->
+    <div class="part">
+      <div class="part-label">D · Çıktımız ne oluyor</div>
+      <h3>Doldurulan adımlardan tek tuşla profesyonel, yazdırılabilir rapor</h3>
+      <p class="explain measure" style="margin:8px 0 18px;">Sistem, adım verilerinden raporu tutarlı biçimde kendisi kurar; yapay zekâ varsa yalnızca dil cilası ve yönetici özeti ekler. Çıktı, müşteriye/denetime sunulabilir, doğrudan yazdırılabilir bir A4 belgesidir — antet ve aksiyon tablosuyla.</p>
+
+      <div class="doc">
+        <div class="doc-bar"><span>çalışma alanı · rapor · A4 yazdırılabilir</span><span>8D · Kaynak dikişi çatlağı</span></div>
+        <div class="doc-body">
+          <h4>Kaynak Dikişinde Çatlak — 8D Kapanış Raporu</h4>
+          <span class="subtitle">Metodoloji: 8D · Durum: MONITORING · İlerleme 8/9 adım · Açık aksiyon: 1</span>
+
+          <div class="exec">
+            <span class="lbl">Yönetici Özeti</span>
+            Müşteriden gelen çatlak şikayeti üzerine 8D başlatıldı. Şüpheli stok bloke edilip ayıklama ile müşteri korundu (D3). Kök neden, kaynak akım limitinin prosedürde tanımsız olması; kaçış nedeni ise nüfuziyetin yalnızca görsel kontrol edilmesiydi (D4). Prosedüre akım limiti ve tahribatsız ara kontrol eklendi (D5–D6); 60 günlük izlemede tekrar görülmedi.
+          </div>
+
+          <div class="doc-sec">Adım adım çözüm</div>
+          <ul class="doc-list">
+            <li><b>D2 · Problem:</b> X hattında kaynak dikişinde çatlak; 1.000 adette 7 kaçak, müşteride 2 iade.</li>
+            <li><b>D4 · Kök neden:</b> akım limiti prosedürde tanımsız (oluşma) + nüfuziyet görsel kontrol (kaçış).</li>
+            <li><b>D5 · Kalıcı aksiyon:</b> akım aralığı sabitlendi + hat sonu tahribatsız test (poka-yoke).</li>
+            <li><b>D7 · Sistemik:</b> PFMEA, kontrol planı ve iş talimatı güncellendi; benzer 2 hatta yatay yayıldı.</li>
+          </ul>
+
+          <div class="doc-sec">Aksiyon takibi</div>
+          <div class="mini-actions">
+            <table>
+              <thead><tr><th>Aksiyon</th><th>Sorumlu</th><th>Termin</th><th>Durum</th></tr></thead>
+              <tbody>
+                <tr><td>Akım limitini prosedüre işle</td><td>Süreç Müh.</td><td>Tamamlandı</td><td class="st-done">DONE</td></tr>
+                <tr><td>Hat sonu TT test istasyonu</td><td>Kalite</td><td>Tamamlandı</td><td class="st-done">DONE</td></tr>
+                <tr><td>Benzer hatlara yaygınlaştırma</td><td>Üretim</td><td>+15 gün</td><td class="st-open">OPEN</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="doc-sec">Rapor ayrıca içerir</div>
+          <ul class="doc-list">
+            <li><b>Sistem dokümanları</b> — güncellenen FMEA / kontrol planı / talimat, revizyon ve sahibiyle.</li>
+            <li><b>Containment yaşam döngüsü</b> — geçici önlemler, kapsam ve kaldırma kriteri.</li>
+            <li><b>Kurumsal öğrenim kaydı</b> — lessons-learned sistem kararı ve gerekçesi.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- extras -->
+    <div class="part">
+      <div class="part-label">Ayrıca — çalışma alanının içindeki ileri yetenekler</div>
+      <div class="extras">
+        <div class="extra"><div class="et"><span class="fm">↔</span> Metodolojiler arası aktarım</div><div class="ed">RCA→8D, FMEA→Poka-Yoke, FMEA→SPC: bir analizin çıktısı diğerini tohumlar.</div></div>
+        <div class="extra"><div class="et"><span class="fm">⚑</span> Kırmızı takım</div><div class="ed">Kök neden iddiaları, kapanıştan önce zayıflıklarına karşı sınanır.</div></div>
+        <div class="extra"><div class="et"><span class="fm">▣</span> Kanıt kapıları</div><div class="ed">Kanıtlanmamış adım kapanışa ilerleyemez — “kağıt üstünde kapandı”yı önler.</div></div>
+        <div class="extra"><div class="et"><span class="fm">◈</span> Problem-DNA</div><div class="ed">Geçmiş vakalarla benzerlik eşleştirmesi; kurumsal hafıza zemini.</div></div>
+        <div class="extra"><div class="et"><span class="fm">◱</span> Adım başına AI taslak</div><div class="ed">Boş alanlara profesyonel ilk taslak; kullanıcı verisini ezmez.</div></div>
+        <div class="extra"><div class="et"><span class="fm">⛁</span> Kalıcı kayıt</div><div class="ed">Her tur ve adım saklanır; geçmişe dönüp incelenebilir, öğrenme için zemin.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 06 VALUE ===================== -->
+<section id="value">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">06 — Üretim ekibine değeri</span>
+      <h2>Bir OpEx ekibinin gerçekten kazandığı şey.</h2>
+    </div>
+    <div class="value-grid">
+      <div class="panel value">
+        <div class="metric">Doğru araç</div>
+        <h3>İlk seferde doğru metodoloji</h3>
+        <p>Yanlış yöntemle kaybedilen haftalar önlenir. Seçim öznel “tecrübe”ye değil, sınanabilir kurallara dayanır.</p>
+      </div>
+      <div class="panel value">
+        <div class="metric">İzlenebilir</div>
+        <h3>Denetime hazır karar zinciri</h3>
+        <p>Her öneri gerekçesini taşır. IATF 16949 / müşteri denetimlerinde “neden bu yöntem?” sorusu belgeyle yanıtlanır.</p>
+      </div>
+      <div class="panel value">
+        <div class="metric">Standart</div>
+        <h3>Kişiden bağımsız kalite</h3>
+        <p>Kıdemli mühendisin sezgisi bir kural tabanına kodlanır; yeni ekip üyesi de aynı disiplinle çalışır.</p>
+      </div>
+      <div class="panel value">
+        <div class="metric">Öğrenen</div>
+        <h3>Kurumsal hafıza</h3>
+        <p>Her teşhis ve kapanış kaydedilir; Problem-DNA ile geçmiş vakalar bugünkü probleme bağlanır.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 07 LIMITS ===================== -->
+<section id="limits">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">07 — Dürüst sınırlar</span>
+      <h2>Neyin kanıtlandığı, neyin kanıtlanmadığı.</h2>
+      <p class="lead measure">Bir mühendisin en güçlü ifadesi, ölçtüğü şeyin sınırını bilmesidir. Bu proje kasıtlı olarak abartısız konumlandırılır.</p>
+    </div>
+
+    <div class="panel limits">
+      <div class="spec-row">
+        <span class="sk">Doğrulama durumu</span>
+        <span class="sv"><b>Kontrollü senaryolarda doğrulandı</b> — yüzlerce örnek problemle otomatik sınandı ve her birinde beklenen metodolojiyi seçtiği doğrulandı. Gerçek hatta gerçek kullanıcılarla pilot <b>henüz yok</b>; “sahada kanıtlandı” iddiası edilmez.</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Güven yüzdeleri</span>
+        <span class="sv">Ekrandaki yüzde, <b>kural tabanına göreli uyum</b>tur — kanıtlanmış başarı olasılığı değil. Gerçek kullanım verisi biriktiğinde bu güven hesabı gerçek sonuçlarla kalibre edilecek (zemin hazır, bilinçli ertelendi).</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Kural ağırlıkları</span>
+        <span class="sv">Kuralların başlangıç ağırlıkları uzman görüşüyle belirlendi — öznellik riski var. Azaltma: yüzlerce örnek senaryo bir güvenlik ağı oluşturur; ağırlıklar sabitlenmemiş, <b>ayarlanabilir</b>.</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Kapsam</span>
+        <span class="sv"><b>Tek kurum için iç araç, kiralık bir ürün (SaaS) değil.</b> Kapsam dışı: çok-şirketli kullanım, faturalandırma, ERP/MES/QMS entegrasyonları, dijital ikiz.</span>
+      </div>
+      <div class="spec-row">
+        <span class="sk">Yapay zekânın rolü</span>
+        <span class="sv">Yapay zekâ yalnızca metni anlar, soru ve rapor yazar — karar vermez. “Delil yoksa boş bırak” kuralı ve çıktının forma zorla uydurulması sayesinde “uydurma” riski sınırlanır.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-stat"><span class="fv">14</span><span class="fl">metodoloji playbook’u</span></div>
+      <div class="foot-stat"><span class="fv">~20</span><span class="fl">teşhis değişkeni</span></div>
+      <div class="foot-stat"><span class="fv">150+</span><span class="fl">doğrulanan örnek senaryo</span></div>
+      <div class="foot-stat"><span class="fv">0</span><span class="fl">karar için zorunlu yapay zekâ</span></div>
+      <div class="foot-stat"><span class="fv">0₺</span><span class="fl">zorunlu abonelik / lisans maliyeti</span></div>
+    </div>
+    <div style="margin-top:34px; padding-top:24px; border-top:1px solid var(--line-soft); display:flex; flex-wrap:wrap; gap:32px; justify-content:space-between; align-items:flex-end;">
+      <div class="stack-line">
+        <span>uygulama ·</span> gerçek, çalışan web uygulaması<br>
+        <span>yapay zekâ ·</span> yerel &amp; ücretsiz · veri dışarı çıkmaz<br>
+        <span>veri ·</span> kurumsal veritabanında kalıcı kayıt<br>
+        <span>doğrulama ·</span> 150+ otomatik örnek senaryo
+      </div>
+      <div style="text-align:right;">
+        <p style="font-family:var(--mono); font-size:0.78rem; color:var(--ink-soft);">önce problemi teşhis et,<br>sonra doğru metodolojiyi seç.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function () {
+    var tt = document.getElementById('tt');
+    var root = document.documentElement;
+    tt.addEventListener('click', function () {
+      var cur = root.getAttribute('data-theme');
+      if (!cur) {
+        cur = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    });
+  })();
+
+  // animate the instrument once visible (respect reduced motion)
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var instr = document.getElementById('instr');
+    if (!instr) return;
+
+    function run() {
+      var fills = instr.querySelectorAll('.bar-fill');
+      fills.forEach(function (f) { f.style.width = f.getAttribute('data-w') + '%'; });
+
+      var pcts = instr.querySelectorAll('.pct');
+      pcts.forEach(function (el) {
+        var target = parseInt(el.getAttribute('data-pct'), 10);
+        if (reduce) { el.textContent = target + '%'; return; }
+        var t0 = null, dur = 1100;
+        function step(ts) {
+          if (!t0) t0 = ts;
+          var p = Math.min((ts - t0) / dur, 1);
+          el.textContent = Math.round(target * (0.15 + 0.85 * p)) + '%';
+          if (p < 1) requestAnimationFrame(step); else el.textContent = target + '%';
+        }
+        requestAnimationFrame(step);
+      });
+
+      // entropy count-down 2.13 -> 0.62
+      var ent = document.getElementById('ent');
+      if (ent && !reduce) {
+        var from = 2.13, to = 0.62, s0 = null, d = 1400;
+        function estep(ts) {
+          if (!s0) s0 = ts;
+          var p = Math.min((ts - s0) / d, 1);
+          ent.textContent = (from + (to - from) * p).toFixed(2);
+          if (p < 1) requestAnimationFrame(estep);
+        }
+        setTimeout(function () { requestAnimationFrame(estep); }, 400);
+      } else if (ent) { ent.textContent = '0.62'; }
+    }
+
+    if ('IntersectionObserver' in window && !reduce) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { run(); io.disconnect(); }
+        });
+      }, { threshold: 0.35 });
+      io.observe(instr);
+    } else {
+      run();
+    }
+  })();
+</script>
+
+<script>
+  // Playbook kataloğu — src/domain/playbook/playbooks.ts ile birebir.
+  // f: alanlar. t: metin|uzun metin|tablo|5 neden|balık kılçığı. c: tablo sütun etiketleri.
+  (function () {
+    var PB = [
+      { code: "8D", name: "8 Disiplin", intro: "Müşteriyi etkileyen problemlerde ekip temelli, disiplinli çözüm: önce müşteriyi koru (D3), sonra kök nedeni bul ve kalıcı kapat (D4–D7).", steps: [
+        { i: "D0", n: "Acil Müdahale ve Hazırlık", o: "8D'nin gerekli olduğunu doğrula; müşteriyi/süreci korumak için acil müdahale (ERA) al.", f: [
+          { l: "8D gerekçesi (neden 8D?)", t: "uzun metin" },
+          { l: "Acil müdahale (ERA) aksiyonları", t: "tablo", c: ["Acil aksiyon", "Sorumlu", "Durum"] } ] },
+        { i: "D1", n: "Ekibi Kur", o: "Problemi çözecek çok disiplinli ekibi ve lideri belirle.", f: [
+          { l: "Ekip üyeleri", t: "tablo", c: ["İsim", "Rol", "Bölüm"] },
+          { l: "Ekip lideri / şampiyon", t: "metin" } ] },
+        { i: "D2", n: "Problemi Tanımla", o: "Problemi veriyle, 5N2K ile nesnel olarak tanımla.", f: [
+          { l: "Ne / Hangi ürün-süreç", t: "metin" }, { l: "Nerede ve ne zaman", t: "metin" },
+          { l: "Ne kadar (adet, oran, trend)", t: "metin" }, { l: "Problem cümlesi", t: "uzun metin" } ] },
+        { i: "D3", n: "Geçici Önlem (Containment)", o: "Kök neden bulunana kadar müşteriyi kusurdan izole et.", f: [
+          { l: "Containment aksiyonları", t: "tablo", c: ["Önlem", "Kapsam", "Sorumlu", "Etkinlik doğrulaması"] },
+          { l: "Etkinlik değerlendirmesi", t: "uzun metin" } ] },
+        { i: "D4", n: "Kök Nedeni Belirle", o: "Oluşma VE kaçış kök nedenlerini kanıtla doğrula.", f: [
+          { l: "5 Neden zinciri", t: "5 neden" }, { l: "Oluşma kök nedeni", t: "uzun metin" },
+          { l: "Kaçış kök nedeni", t: "uzun metin" } ] },
+        { i: "D5", n: "Kalıcı Düzeltici Aksiyonları Seç", o: "Kök nedeni ortadan kaldıran kalıcı çözümü seç ve doğrula.", f: [
+          { l: "Kalıcı düzeltici aksiyonlar", t: "tablo", c: ["Hedeflenen kök neden", "Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "D6", n: "Uygula ve Doğrula", o: "Kalıcı aksiyonları devreye al, etkinliği veriyle kanıtla.", f: [
+          { l: "Uygulama kaydı", t: "uzun metin" }, { l: "Etkinlik doğrulaması (veri)", t: "uzun metin" },
+          { l: "Containment kaldırma kararı", t: "metin" } ] },
+        { i: "D7", n: "Tekrarı Önle (Sistemik)", o: "Aynı hatanın benzer süreç/ürünlerde oluşmasını sistemik engelle.", f: [
+          { l: "Güncellenen dokümanlar / sistemler", t: "tablo", c: ["Doküman/Sistem", "Değişiklik", "Sorumlu"] },
+          { l: "Yatay yayılım", t: "uzun metin" } ] },
+        { i: "D8", n: "Ekibi Takdir Et ve Kapat", o: "Sonuçları müşteriyle paylaş, ekibi takdir et, dosyayı kapat.", f: [
+          { l: "Müşteri kapanış özeti", t: "uzun metin" }, { l: "Öğrenilen dersler", t: "uzun metin" } ] } ] },
+
+      { code: "RCA", name: "Kök Neden Analizi", intro: "Belirtiyi değil nedeni tedavi et: kanıt topla, neden zincirini kur, kök nedeni doğrula, kalıcı önlem al, etkinliği kontrol et.", steps: [
+        { i: "1", n: "Problemi Tanımla", o: "Sapmayı ölçülebilir ve nesnel biçimde tanımla.", f: [ { l: "Problem cümlesi", t: "uzun metin" }, { l: "Kapsam (ürün/hat/vardiya/dönem)", t: "metin" } ] },
+        { i: "2", n: "Kanıt Topla", o: "Fikir değil veri: fiziksel kanıt, kayıt ve gözlem topla.", f: [ { l: "Kanıtlar", t: "tablo", c: ["Kanıt / Veri", "Kaynak", "Bulgu"] } ] },
+        { i: "3", n: "Neden Analizi (5 Neden + Balık Kılçığı)", o: "Olası nedenleri sistematik üret, zinciri kök nedene kadar derinleştir.", f: [ { l: "Balık kılçığı (6M) adayları", t: "balık kılçığı" }, { l: "5 Neden zinciri", t: "5 neden" } ] },
+        { i: "4", n: "Kök Nedeni Doğrula", o: "Kök nedeni kanıtla; 'kaldır → problem yok' testini uygula.", f: [ { l: "Doğrulanmış kök neden", t: "uzun metin" }, { l: "Doğrulama yöntemi ve kanıtı", t: "uzun metin" } ] },
+        { i: "5", n: "Kalıcı Önlem Al", o: "Kök nedeni ortadan kaldıran önlemleri planla ve uygula.", f: [ { l: "Önlemler", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "6", n: "Etkinliği Kontrol Et", o: "Önlem sonrası problemi veriyle izle; tekrar yoksa kapat.", f: [ { l: "İzleme sonucu (önce/sonra)", t: "uzun metin" }, { l: "Kapanış kararı", t: "metin" } ] } ] },
+
+      { code: "Kepner–Tregoe", name: "KT Problem Analizi", intro: "Yeni başlayan sapmalarda IS / IS-NOT karşılaştırması ve değişiklik analiziyle nedeni mantıksal daralt.", steps: [
+        { i: "1", n: "Sapma Cümlesi", o: "Neyin, hangi standarttan saptığını tek cümlede tanımla.", f: [ { l: "Sapma cümlesi (nesne + kusur)", t: "metin" }, { l: "Ne zamandan beri", t: "metin" } ] },
+        { i: "2", n: "IS / IS-NOT Matrisi", o: "Problemin sınırlarını çiz: nerede VAR, nerede olabilirdi ama YOK?", f: [ { l: "IS / IS-NOT matrisi", t: "tablo", c: ["Boyut", "IS (var)", "IS-NOT (yok ama olabilirdi)", "Fark / Tuhaflık"] } ] },
+        { i: "3", n: "Değişiklik Analizi", o: "Sapmanın başladığı ana yakın tüm değişiklikleri listele.", f: [ { l: "Değişiklikler", t: "tablo", c: ["Değişiklik", "Tarih", "Sapma ile zaman ilişkisi"] } ] },
+        { i: "4", n: "Olası Nedenleri Test Et", o: "Her hipotezi IS/IS-NOT gerçekleriyle mantıksal sına.", f: [ { l: "Hipotez testleri", t: "tablo", c: ["Olası neden", "IS/IS-NOT'a uyum", "Sonuç"] } ] },
+        { i: "5", n: "Doğrula ve Düzelt", o: "En olası nedeni sahada doğrula, düzeltici aksiyonu uygula.", f: [ { l: "Doğrulama (deney/kanıt)", t: "uzun metin" }, { l: "Düzeltici aksiyonlar", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] } ] },
+
+      { code: "FMEA", name: "Hata Türü ve Etkileri Analizi", intro: "Hata oluşmadan riskleri sistematik değerlendir: hata modu, etki, neden puanla (S×O×D), yüksek riskleri aksiyonla düşür.", steps: [
+        { i: "1", n: "Kapsam ve Ekip", o: "Analiz sınırını (süreç/ürün) ve çok disiplinli ekibi belirle.", f: [ { l: "Kapsam (süreç/ürün ve sınırlar)", t: "uzun metin" }, { l: "Ekip", t: "tablo", c: ["İsim", "Rol", "Bölüm"] } ] },
+        { i: "2", n: "Fonksiyonlar ve Gereksinimler", o: "Her süreç adımının fonksiyonunu ve gereksinimini tanımla.", f: [ { l: "Adım / fonksiyon / gereksinim", t: "tablo", c: ["Süreç adımı", "Fonksiyon", "Gereksinim / Spek"] } ] },
+        { i: "3", n: "Değişim, Varsayım ve Gelecek Senaryoları", o: "Geçmiş kayıtlarla sınırlı kalmadan sistemin gelecekte hangi koşulda başarısız olabileceğini araştır.", f: [ { l: "Gelecek senaryoları ve varsayım kırılmaları", t: "tablo", c: ["Değişebilecek unsur", "Mevcut varsayım", "Değişim senaryosu", "Sistemin tepkisi", "Olası hata modu", "Mevcut kontrol", "Kırılma koşulu", "Kanıt"] } ] },
+        { i: "4", n: "Hata Modu Analizi (S·O·D)", o: "Hata modlarını etki-neden-kontrolleriyle puanla; RPN = S×O×D.", f: [ { l: "FMEA tablosu", t: "tablo", c: ["Süreç adımı", "Hata modu", "Etki", "S", "Neden", "O", "Önleyici kontrol", "Tespit kontrolü", "D", "RPN"] } ] },
+        { i: "5", n: "Riskleri Düşür", o: "Yüksek riskli maddelere önleme/tespit aksiyonu planla.", f: [ { l: "Risk azaltma aksiyonları", t: "tablo", c: ["Hata modu", "Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "6", n: "Yeniden Puanla ve Yaşat", o: "Aksiyon sonrası S·O·D'yi güncelle; FMEA'yı canlı doküman yap.", f: [ { l: "Aksiyon sonrası puanlar", t: "tablo", c: ["Hata modu", "Yeni S", "Yeni O", "Yeni D", "Yeni RPN"] }, { l: "Yeniden değerlendirme tetikleyicileri", t: "tablo", c: ["Tetikleyici", "İzleme sahibi", "Gözden geçirme kuralı", "Son gözden geçirme"] } ] } ] },
+
+      { code: "PDCA / A3", name: "Planla–Uygula–Kontrol–Önlem", intro: "İyileştirmeyi bilimsel döngüyle yürüt: mevcut durumu anla, hedef koy, kök nedene karşı önlem planla, dene, ölç, standartlaştır.", steps: [
+        { i: "1", n: "Arka Plan ve Mevcut Durum", o: "Neden bu konu? Mevcut durumu veriyle görünür kıl.", f: [ { l: "Arka plan (neden önemli)", t: "uzun metin" }, { l: "Mevcut durum (veriyle)", t: "uzun metin" } ] },
+        { i: "2", n: "Hedef", o: "Ölçülebilir ve süreli hedef tanımla.", f: [ { l: "Hedef cümlesi", t: "uzun metin" } ] },
+        { i: "3", n: "Analiz (Kök Neden)", o: "Mevcut durum ile hedef arasındaki farkın nedenlerini bul.", f: [ { l: "Neden analizi", t: "tablo", c: ["Fark / kayıp", "Kök neden", "Kanıt"] } ] },
+        { i: "4", n: "Plan (Karşı Önlemler)", o: "Her kök nedene karşı önlem, sorumlu ve termin planla.", f: [ { l: "Karşı önlem planı", t: "tablo", c: ["Kök neden", "Karşı önlem", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "5", n: "Do (Uygula)", o: "Planı uygula; sapmaları ve gözlemleri kaydet.", f: [ { l: "Uygulama kaydı", t: "uzun metin" } ] },
+        { i: "6", n: "Check (Sonucu Ölç)", o: "Sonucu hedef metriğiyle karşılaştır.", f: [ { l: "Sonuçlar (önce/sonra)", t: "uzun metin" } ] },
+        { i: "7", n: "Act (Standartlaştır)", o: "Çalışanı standartlaştır, çalışmayanı yeni döngüye taşı.", f: [ { l: "Standartlaştırma", t: "uzun metin" }, { l: "Sonraki döngü / kalan konular", t: "uzun metin" } ] } ] },
+
+      { code: "DMAIC", name: "Define–Measure–Analyze–Improve–Control", intro: "Veri yoğun, varyasyon problemi için istatistiksel iyileştirme döngüsü.", steps: [
+        { i: "1", n: "Define (Tanımla)", o: "Problemi, kapsamı, hedefi ve müşteri kritiklerini (CTQ) netleştir.", f: [ { l: "Problem cümlesi", t: "uzun metin" }, { l: "Kapsam (dahil / hariç)", t: "metin" }, { l: "Hedef", t: "metin" }, { l: "CTQ", t: "metin" } ] },
+        { i: "2", n: "Measure (Ölç)", o: "Mevcut performansı güvenilir veriyle temelle (baseline).", f: [ { l: "Metrikler ve baseline", t: "tablo", c: ["Metrik", "Ölçüm yöntemi", "Mevcut değer"] }, { l: "Ölçüm sistemi (MSA)", t: "uzun metin" } ] },
+        { i: "3", n: "Analyze (Analiz Et)", o: "Varyasyonun köklerini istatistiksel doğrula.", f: [ { l: "Hipotezler ve testler", t: "tablo", c: ["Hipotez (X→Y)", "Analiz / test", "Sonuç"] }, { l: "Doğrulanmış kök nedenler", t: "uzun metin" } ] },
+        { i: "4", n: "Improve (İyileştir)", o: "Doğrulanmış nedenlere çözüm geliştir, pilotla kanıtla.", f: [ { l: "Çözümler", t: "tablo", c: ["Kök neden", "Çözüm", "Sorumlu", "Pilot sonucu"] } ] },
+        { i: "5", n: "Control (Kontrol Altına Al)", o: "Kazanımı kontrol planı ve SPC ile kalıcı kıl.", f: [ { l: "Kontrol planı", t: "tablo", c: ["Metrik", "Limit / hedef", "İzleme sıklığı", "Tepki planı"] }, { l: "Süreç sahibine devir", t: "metin" } ] } ] },
+
+      { code: "5S", name: "Düzen & Standartlaştırma", intro: "Düzensizlikten doğan kayıpları kaldır: sınıflandır, düzenle, temizle, standartlaştır, sürdür.", steps: [
+        { i: "0", n: "Hazırlık ve Alan Seçimi", o: "Pilot alanı seç, mevcut durumu fotoğrafla, ekibi belirle.", f: [ { l: "Pilot alan ve sahibi", t: "metin" }, { l: "Mevcut durum gözlemleri", t: "uzun metin" } ] },
+        { i: "1", n: "Seiri (Sınıflandır)", o: "Gerekli ile gereksizi ayır; gereksizi alandan çıkar.", f: [ { l: "Kırmızı etiket listesi", t: "tablo", c: ["Eşya / malzeme", "Neden gereksiz", "Karar"] } ] },
+        { i: "2", n: "Seiton (Düzenle)", o: "Her şeyin yeri belli, işaretli, erişimi kolay olsun.", f: [ { l: "Yerleşim düzenlemeleri", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "3", n: "Seiso (Temizle)", o: "Temizlik yaparken kaynağındaki kirlilik/anormallik nedenlerini bul.", f: [ { l: "Temizlik bulguları / kaynaklar", t: "tablo", c: ["Bulgu / kaynak", "Aksiyon", "Sorumlu"] } ] },
+        { i: "4", n: "Seiketsu (Standartlaştır)", o: "İlk 3S'i görsel standartlara bağla.", f: [ { l: "Standartlar (görev/sıklık/sorumlu)", t: "uzun metin" } ] },
+        { i: "5", n: "Shitsuke (Sürdür)", o: "Denetim ve alışkanlıkla sistemi yaşat.", f: [ { l: "Denetim planı", t: "metin" }, { l: "Denetim soruları", t: "uzun metin" } ] } ] },
+
+      { code: "TPM", name: "Toplam Üretken Bakım", intro: "Ekipman güvenilirliğini operatör-bakım iş birliğiyle yükselt: kayıpları ölç (OEE), otonom ve planlı bakımı kur.", steps: [
+        { i: "1", n: "Ekipman ve Kayıp Analizi", o: "Hedef ekipmanı seç, OEE ve ana kayıpları ölç.", f: [ { l: "Hedef ekipman", t: "metin" }, { l: "Mevcut OEE ve bileşenleri", t: "metin" }, { l: "Kayıp analizi", t: "tablo", c: ["Kayıp türü", "Büyüklük", "Not"] } ] },
+        { i: "2", n: "Arıza Geçmişi ve Kök Nedenler", o: "Tekrarlayan arızaları analiz et, kronikleri ayıkla.", f: [ { l: "Arıza geçmişi", t: "tablo", c: ["Arıza", "Sıklık", "Kök neden"] } ] },
+        { i: "3", n: "Otonom Bakım", o: "Operatörün günlük temizlik-yağlama-kontrol rutinini kur.", f: [ { l: "Temizlik-Yağlama-Kontrol standardı", t: "uzun metin" }, { l: "Tespit edilen anormallikler", t: "tablo", c: ["Anormallik", "Aksiyon", "Sorumlu"] } ] },
+        { i: "4", n: "Planlı Bakım", o: "Kritik parçalar için periyodik bakım planını kur.", f: [ { l: "Planlı bakım planı", t: "tablo", c: ["Bileşen", "Bakım görevi", "Periyot", "Sorumlu"] } ] },
+        { i: "5", n: "Eğitim ve Yetkinlik", o: "Operatör ve bakımcının gereken becerilerini geliştir.", f: [ { l: "Eğitim planı / beceri matrisi", t: "uzun metin" } ] },
+        { i: "6", n: "İzleme ve Hedef", o: "OEE ve arıza metriklerini panoda izle, hedefe yürü.", f: [ { l: "Hedefler (OEE/MTBF/MTTR)", t: "metin" }, { l: "Gözden geçirme rutini", t: "metin" } ] } ] },
+
+      { code: "Yalın / VSM", name: "Değer Akış Haritalama", intro: "Değer akışını uçtan uca haritala, israfı ve bekleme sürelerini görünür kıl, gelecek durum tasarımıyla akışı hızlandır.", steps: [
+        { i: "1", n: "Ürün Ailesi ve Kapsam", o: "Haritalanacak ürün ailesini ve akış sınırlarını seç.", f: [ { l: "Ürün ailesi", t: "metin" }, { l: "Akış sınırları (başlangıç → bitiş)", t: "metin" } ] },
+        { i: "2", n: "Mevcut Durum Haritası", o: "Akışı kapıdan kapıya yürüyerek veriyle haritala.", f: [ { l: "Süreç adımları", t: "tablo", c: ["Adım", "Çevrim süresi", "Bekleme / stok", "Gözlem"] }, { l: "Temin süresi vs katma değerli süre", t: "metin" } ] },
+        { i: "3", n: "İsraf Analizi", o: "7 israfı (taşıma, stok, hareket, bekleme, aşırı üretim/işlem, hata) tespit et.", f: [ { l: "İsraf listesi", t: "tablo", c: ["İsraf türü", "Nerede", "Etki"] } ] },
+        { i: "4", n: "Gelecek Durum Tasarımı", o: "Takt'a göre akan, çekme esaslı gelecek durumu tasarla.", f: [ { l: "Takt süresi ve hedef temin süresi", t: "metin" }, { l: "Gelecek durum tasarım kararları", t: "uzun metin" } ] },
+        { i: "5", n: "Kaizen Planı ve Uygulama", o: "Gelecek duruma götürecek kaizen çalışmalarını planla.", f: [ { l: "Kaizen planı", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] } ] },
+
+      { code: "DMADV", name: "Design for Six Sigma", intro: "Yeni ürün/süreci tasarım aşamasında müşteri kritiklerine ve hedef kaliteye göre kur — düzeltme değil, doğru tasarım.", steps: [
+        { i: "1", n: "Define (Tasarım Hedefi)", o: "Tasarım projesinin hedefini ve kapsamını netleştir.", f: [ { l: "Tasarım hedefi", t: "uzun metin" }, { l: "Kısıtlar", t: "metin" } ] },
+        { i: "2", n: "Measure (Müşteri Sesi → CTQ)", o: "Müşteri ihtiyaçlarını ölçülebilir CTQ'lara çevir.", f: [ { l: "VOC → CTQ tablosu", t: "tablo", c: ["Müşteri ihtiyacı", "CTQ", "Hedef / spek", "Öncelik"] } ] },
+        { i: "3", n: "Analyze (Kavram Seçimi)", o: "Alternatif tasarım kavramlarını üret ve sistematik seç (Pugh).", f: [ { l: "Kavram karşılaştırması", t: "tablo", c: ["Kavram", "Güçlü yönler", "Zayıf yönler", "Puan"] }, { l: "Seçilen kavram ve gerekçe", t: "uzun metin" } ] },
+        { i: "4", n: "Design (Detay Tasarım)", o: "Seçilen kavramı detaylandır; riskleri tasarım FMEA ile ele al.", f: [ { l: "Detay tasarım kararları", t: "uzun metin" }, { l: "Tasarım riskleri (mini FMEA)", t: "tablo", c: ["Risk / hata modu", "Etki", "Önlem"] } ] },
+        { i: "5", n: "Verify (Doğrula)", o: "Pilot/prototiple tasarımın CTQ'ları karşıladığını kanıtla.", f: [ { l: "Pilot / doğrulama sonuçları", t: "uzun metin" }, { l: "Devreye alma planı", t: "uzun metin" } ] } ] },
+
+      { code: "SPC", name: "İstatistiksel Proses Kontrol", intro: "Süreci kontrol kartlarıyla izle; özel neden sinyallerini erken yakala, gereksiz müdahaleyi (tampering) önle.", steps: [
+        { i: "1", n: "Kritik Karakteristiği Seç", o: "İzlenecek karakteristiği ve ölçüm noktasını belirle.", f: [ { l: "Karakteristik ve spek limitleri", t: "metin" }, { l: "Ölçüm noktası ve sıklığı", t: "metin" } ] },
+        { i: "2", n: "Ölçüm Sistemini Doğrula", o: "Ölçüm sisteminin güvenilirliğini (MSA) göster.", f: [ { l: "MSA sonucu / değerlendirme", t: "uzun metin" } ] },
+        { i: "3", n: "Kart Tipini Seç ve Veri Planla", o: "Veri tipine uygun kontrol kartını ve alt grup planını seç.", f: [ { l: "Kart tipi ve gerekçe", t: "metin" }, { l: "Alt grup planı (boyut, sıklık)", t: "metin" } ] },
+        { i: "4", n: "Kontrol Limitleri ve İlk Çalışma", o: "Süreç verisinden kontrol limitlerini hesapla, stabiliteyi değerlendir.", f: [ { l: "Hesaplanan limitler", t: "metin" }, { l: "Stabilite / özel nedenler", t: "uzun metin" } ] },
+        { i: "5", n: "Tepki Planı (OCAP)", o: "Sinyal görülünce kimin ne yapacağını önceden tanımla.", f: [ { l: "Tepki planı", t: "tablo", c: ["Sinyal", "Tepki", "Sorumlu"] } ] },
+        { i: "6", n: "Yaşat ve Yetenek İzle", o: "Kartı rutine bağla; süreç yeteneğini (Cp/Cpk) periyodik raporla.", f: [ { l: "Rutin (kim çizer, kim gözden geçirir)", t: "metin" }, { l: "Süreç yeteneği (Cp/Cpk)", t: "metin" } ] } ] },
+
+      { code: "Poka-Yoke", name: "Hata Önleme", intro: "İnsan hatasını eğitimle değil tasarımla engelle: hatayı imkânsız kıl (önleme) ya da anında yakala (tespit).", steps: [
+        { i: "1", n: "Hata Analizi", o: "Hatanın (error) ve kusurun (defect) oluşma-yakalanma noktalarını ayır.", f: [ { l: "Hatanın oluştuğu adım", t: "metin" }, { l: "Kusurun yakalandığı nokta", t: "metin" }, { l: "Yerinde gözlem notları", t: "uzun metin" } ] },
+        { i: "2", n: "Hata Modları", o: "Olası insan hatası modlarını listele ve önceliklendir.", f: [ { l: "Hata modları", t: "tablo", c: ["Hata modu", "Kolaylaştıran koşul", "Sıklık / etki"] } ] },
+        { i: "3", n: "Çözüm Konsepti", o: "Önleme mi tespit mi; hangi poka-yoke tipiyle?", f: [ { l: "Yaklaşım (önleme / tespit)", t: "metin" }, { l: "Çözüm alternatifleri", t: "tablo", c: ["Konsept", "Tip", "Maliyet/karmaşıklık"] } ] },
+        { i: "4", n: "Tasarla ve Uygula", o: "Seçilen çözümü tasarla, sahada devreye al.", f: [ { l: "Tasarım / uygulama detayı", t: "uzun metin" }, { l: "Uygulama aksiyonları", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "5", n: "Doğrula ve Standartlaştır", o: "Hatanın artık oluşamadığını/yakalandığını kanıtla; standarda bağla.", f: [ { l: "Doğrulama testi ve sonucu", t: "uzun metin" }, { l: "Standart / günlük kontrol", t: "metin" } ] } ] },
+
+      { code: "TOC", name: "Kısıtlar Teorisi", intro: "Sistemin çıktısını kısıt belirler: kısıtı bul, ondan azami yararlan, her şeyi ona tabi kıl, gerekiyorsa yükselt — ve tekrarla.", steps: [
+        { i: "1", n: "Hedef ve Akışı Tanımla", o: "Sistemin hedefini ve ana akışını netleştir.", f: [ { l: "Hedef metrik (throughput)", t: "metin" }, { l: "Ana akış adımları", t: "uzun metin" } ] },
+        { i: "2", n: "Kısıtı Belirle", o: "Akışı sınırlayan adımı veriyle bul.", f: [ { l: "Kapasite / talep karşılaştırması", t: "tablo", c: ["Adım", "Kapasite", "Talep", "Önündeki birikim"] }, { l: "Belirlenen kısıt", t: "metin" } ] },
+        { i: "3", n: "Kısıtı Sömür", o: "Yatırım yapmadan kısıttan azami çıktı al.", f: [ { l: "Sömürme aksiyonları", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
+        { i: "4", n: "Her Şeyi Kısıta Tabi Kıl", o: "Diğer adımları kısıtın ritmine göre çalıştır (drum-buffer-rope).", f: [ { l: "Tabi kılma kararları (tampon, tempo)", t: "uzun metin" } ] },
+        { i: "5", n: "Kısıtı Yükselt", o: "Sömürme yetmezse kapasite artışına yatırım yap.", f: [ { l: "Yükseltme seçenekleri", t: "tablo", c: ["Seçenek", "Beklenen kazanç", "Maliyet"] } ] },
+        { i: "6", n: "Tekrarla", o: "Kısıt kırıldıysa yeni kısıtı bul; ataletin kısıt olmasına izin verme.", f: [ { l: "Yeni durum değerlendirmesi", t: "uzun metin" } ] } ] },
+
+      { code: "SDCA", name: "Standardize–Do–Check–Act", intro: "İyileştirmeden önce mevcut en iyi yöntemi standartlaştır, temel 4M koşullarını kur, uygulamayı doğrula ve kararlı baz hattı sabitle.", steps: [
+        { i: "1", n: "Stabilizasyon İhtiyacını Değerlendir", o: "Kararsızlığın standart/insan/makine/malzeme/yöntem/ölçüm boşluğundan gelip gelmediğini kanıtla.", f: [ { l: "Hazırlık değerlendirmesi", t: "tablo", c: ["Boyut", "Mevcut koşul", "Beklenen standart", "Kanıt", "Boşluk"] }, { l: "Baz hat metriği ve mevcut değer", t: "uzun metin" } ] },
+        { i: "2", n: "Standardize", o: "Bugün bilinen en iyi güvenli çalışma yöntemini görünür ve uygulanabilir standart yap.", f: [ { l: "Standart iş öğeleri", t: "tablo", c: ["İş adımı", "Standart yöntem", "Kritik nokta / limit", "Neden önemli", "Sapmada reaksiyon"] }, { l: "Standart sahibi ve revizyon", t: "metin" } ] },
+        { i: "3", n: "Do: Uygula ve Yetkinliği Doğrula", o: "Standardı tüm vardiyalarda uygula; katılımı değil yapabilme yetkinliğini doğrula.", f: [ { l: "Uygulama ve yetkinlik kaydı", t: "tablo", c: ["Vardiya / ekip", "Eğitim", "Yetkinlik kanıtı", "Uygulama engeli", "Durum"] } ] },
+        { i: "4", n: "Check: Uygulama ve Kararlılığı Ölç", o: "Standarda uyumu ve çıktının zaman içindeki kararlılığını birlikte doğrula.", f: [ { l: "Kararlılık kontrolleri", t: "tablo", c: ["Metrik / kontrol", "Ölçüm yöntemi", "Kabul kriteri", "Gerçekleşen", "Kanıt"] }, { l: "Kararlılık sonucu ve özel nedenler", t: "uzun metin" } ] },
+        { i: "5", n: "Act: Sapmayı Düzelt ve Baz Hattı Sabitle", o: "Standart/temel koşul sapmalarını gider, çalışan yöntemi yeni baz hat olarak sabitle.", f: [ { l: "Stabilizasyon aksiyonları", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] }, { l: "İyileştirmeye geçiş kapısı", t: "tablo", c: ["Kriter", "Sonuç", "Kanıt", "Onaylayan"] }, { l: "Sonraki yöntem ve gerekçe", t: "uzun metin" } ] } ] }
+    ];
+
+    var TOOL_TYPES = { "tablo": "tbl", "5 neden": "tool", "balık kılçığı": "tool" };
+    var tabs = document.getElementById("pbTabs");
+    var introEl = document.getElementById("pbIntro");
+    var stepsEl = document.getElementById("pbSteps");
+    if (!tabs || !stepsEl) return;
+
+    function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+
+    function render(idx) {
+      var m = PB[idx];
+      Array.prototype.forEach.call(tabs.children, function (b, i) { b.setAttribute("aria-selected", i === idx ? "true" : "false"); });
+      introEl.innerHTML = "<b>" + esc(m.code) + " — " + esc(m.name) + ".</b> " + esc(m.intro) + " <b>" + m.steps.length + " adım.</b>";
+      var html = "";
+      m.steps.forEach(function (s) {
+        html += '<div class="step"><div class="idx">' + esc(s.i) + '</div><div>';
+        html += '<div class="sname">' + esc(s.n) + '</div><div class="sobj">' + esc(s.o) + '</div>';
+        html += '<div class="flabel">Doldurulacak alanlar</div><div class="fields">';
+        s.f.forEach(function (f) {
+          var cls = TOOL_TYPES[f.t] || "";
+          html += '<div class="fld"><div class="fl">' + esc(f.l) + ' <span class="fbadge ' + cls + '">' + esc(f.t) + '</span></div>';
+          if (f.c) { html += '<div class="cols">' + f.c.map(function (c) { return '<span class="col-chip">' + esc(c) + '</span>'; }).join("") + '</div>'; }
+          html += '</div>';
+        });
+        html += '</div></div></div>';
+      });
+      stepsEl.innerHTML = html;
+    }
+
+    PB.forEach(function (m, i) {
+      var b = document.createElement("button");
+      b.className = "mtab";
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.textContent = m.code;
+      b.addEventListener("click", function () { render(i); });
+      tabs.appendChild(b);
+    });
+    render(0);
+  })();
+</script>
