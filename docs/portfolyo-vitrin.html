@@ -474,6 +474,18 @@
   .extra .et .fm { font-family: var(--mono); color: var(--accent); }
   .extra .ed { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.4; margin-top: 5px; }
 
+  /* ===== 02 · real question list ===== */
+  .qpanel { margin-top: 22px; padding: 22px; }
+  .qhead { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+  .qsub { font-size: 0.86rem; color: var(--ink-soft); line-height: 1.5; margin-bottom: 16px; }
+  .qlist { display: flex; flex-direction: column; }
+  .qrow { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; padding: 13px 0; border-bottom: 1px solid var(--line-soft); }
+  .qrow:last-child { border-bottom: none; }
+  .qrow .q { font-size: 0.92rem; color: var(--ink); line-height: 1.45; flex: 1 1 320px; }
+  .qrow .q .num { font-family: var(--mono); font-size: 0.78rem; color: var(--ink-faint); margin-right: 8px; }
+  .qrow .sig { font-family: var(--mono); font-size: 0.76rem; color: var(--accent); white-space: nowrap; flex: none; }
+  .qrow .sig .arrow { color: var(--ink-faint); }
+
   /* =================== 08 · DESIGN DECISIONS =================== */
   .dd-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
   @media (max-width: 720px) { .dd-list { grid-template-columns: 1fr; } }
@@ -646,7 +658,7 @@
       <div class="flow-step">
         <span class="k">05 · cevabı al</span>
         <span class="t">Cevabı yorumla</span>
-        <span class="d">Seçilen değişkenin <b>hazır Türkçe sorusu</b> sorulur; kullanıcının serbest cevabı tekrar bir değere yorumlanıp döngüye döner.</span>
+        <span class="d">Her değişkenin sorusu <b>önceden yazılmış ve sabittir</b>. Serbest cevap evet / hayır / bilinmiyor değerine indirgenip motora geri beslenir; döngü yeni bilgiyle baştan işler.</span>
         <span class="badge">yapay zekâ · yardımcı</span>
       </div>
     </div>
@@ -663,6 +675,37 @@
         <span class="trace-node">Tekrar <b>eden</b> değil</span>
         <span class="trace-arrow">→</span>
         <span class="trace-concl">∴ 8D · Güçlü destek</span>
+      </div>
+    </div>
+
+    <div class="panel qpanel">
+      <div class="qhead">motorun akıl yürüttüğü gerçek sorulardan bazıları</div>
+      <p class="qsub">Bunlar sohbet cümleleri değil; her biri bir teşhis değişkenini ölçen, önceden yazılmış sorulardır. Cevap, doğrudan bir metodoloji sinyaline dönüşür — motor bunlardan yalnızca <b>ilgili</b> olanları, yalnızca <b>emin olana kadar</b> sorar.</p>
+      <div class="qlist">
+        <div class="qrow">
+          <span class="q"><span class="num">01</span>Ürün, proses veya ekipmanda fiilen gerçekleşmiş bir hata/kusur var mı, yoksa yalnızca risk mi?</span>
+          <span class="sig">Hayır <span class="arrow">→</span> FMEA</span>
+        </div>
+        <div class="qrow">
+          <span class="q"><span class="num">02</span>Problem müşterinin teslimat, kullanım veya hizmet deneyimini etkiledi mi?</span>
+          <span class="sig">Evet <span class="arrow">→</span> 8D</span>
+        </div>
+        <div class="qrow">
+          <span class="q"><span class="num">03</span>Kök neden ölçüm, kontrollü deney veya tekrar üretme testiyle doğrulandı mı?</span>
+          <span class="sig">Hayır <span class="arrow">→</span> RCA</span>
+        </div>
+        <div class="qrow">
+          <span class="q"><span class="num">04</span>Problem yakın zamanda, belirlenebilir bir tarihten sonra mı başladı?</span>
+          <span class="sig">Evet + değişiklik <span class="arrow">→</span> Kepner–Tregoe</span>
+        </div>
+        <div class="qrow">
+          <span class="q"><span class="num">05</span>Proses çıktısının dağılımı, spesifikasyon toleransına göre gereğinden geniş mi?</span>
+          <span class="sig">Evet <span class="arrow">→</span> DMAIC</span>
+        </div>
+        <div class="qrow">
+          <span class="q"><span class="num">06</span>Bu çalışma gerçekleşmiş bir hatadan bağımsız, planlı bir performans iyileştirmesi mi?</span>
+          <span class="sig">Evet <span class="arrow">→</span> PDCA / A3</span>
+        </div>
       </div>
     </div>
   </div>
