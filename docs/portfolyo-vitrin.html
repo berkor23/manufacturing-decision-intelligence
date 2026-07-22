@@ -474,6 +474,20 @@
   .extra .et .fm { font-family: var(--mono); color: var(--accent); }
   .extra .ed { font-size: 0.82rem; color: var(--ink-soft); line-height: 1.4; margin-top: 5px; }
 
+  /* =================== 08 · OBJECTIONS =================== */
+  .obj-list { display: flex; flex-direction: column; gap: 14px; }
+  .obj { border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); padding: 20px 22px; }
+  .obj-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .obj-n { font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint); }
+  .verdict { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; border: 1px solid var(--ink-faint); color: var(--ink-faint); }
+  .verdict.valid { color: var(--bad); border-color: var(--bad); }
+  .verdict.partial { color: var(--warn); border-color: var(--warn); }
+  .verdict.solved { color: var(--good); border-color: var(--good); }
+  .obj-q { font-style: italic; color: var(--ink); font-size: 0.98rem; line-height: 1.5; padding-left: 16px; border-left: 2px solid var(--line); }
+  .obj-a { font-size: 0.9rem; color: var(--ink-soft); line-height: 1.6; margin-top: 12px; }
+  .obj-a b { color: var(--ink); font-weight: 600; }
+  .obj-a .k { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 4px; }
+
   @media (prefers-reduced-motion: reduce) {
     .bar-fill { transition: none !important; }
     .instr-head .live .dot { animation: none; }
@@ -518,7 +532,7 @@
       <!-- live instrument -->
       <div class="panel panel-2 instr" id="instr">
         <div class="instr-head">
-          <span>metodoloji güven sıralaması</span>
+          <span>metodoloji · göreli uygunluk</span>
           <span class="live"><span class="dot"></span> canlı</span>
         </div>
         <div class="scenario">
@@ -551,6 +565,7 @@
             <span class="pct" data-pct="4">0%</span>
           </div>
         </div>
+        <div style="font-size:0.76rem; color:var(--ink-faint); margin-top:12px; line-height:1.4;">Lider: <b style="color:var(--accent);">8D · Güçlü destek</b> — yüzdeler mutlak güven değil, kural tabanına <b>göreli uygunluk</b>.</div>
         <div class="entropy">
           <span class="label">Kalan belirsizlik</span>
           <span class="val"><span id="ent">2.13</span></span>
@@ -587,7 +602,7 @@
         <h3>Teşhis önce, araç sonuç</h3>
         <ul>
           <li>Problemin özniteliklerini çıkarır: kusur oluştu mu, müşteri etkilendi mi, kök neden biliniyor mu…</li>
-          <li>Kural tabanı her metodolojiyi puanlar; puanlar bir güven yüzdesine dönüşür.</li>
+          <li>Kural tabanı her metodolojiyi puanlar; puanlar bir <b>göreli uygunluk</b> yüzdesine dönüşür (mutlak güven değil).</li>
           <li>Her öneri, tetiklenen kuralların <b>karar zincirini</b> taşır — denetlenebilir.</li>
           <li>Aynı girdi → aynı sonuç; kişiye, güne veya modele göre değişmez.</li>
         </ul>
@@ -621,7 +636,7 @@
       <div class="flow-step pure">
         <span class="k">03 · ölçme</span>
         <span class="t">Güveni hesapla</span>
-        <span class="d">Puanlar her metodoloji için bir güven yüzdesine çevrilir; kalan belirsizlik ölçülür.</span>
+        <span class="d">Puanlar her metodoloji için bir göreli uygunluk yüzdesine çevrilir; kalan belirsizlik ölçülür.</span>
         <span class="badge">kural tabanlı</span>
       </div>
       <div class="flow-step pure">
@@ -649,7 +664,7 @@
         <span class="trace-arrow">→</span>
         <span class="trace-node">Tekrar <b>eden</b> değil</span>
         <span class="trace-arrow">→</span>
-        <span class="trace-concl">∴ 8D · güven %84</span>
+        <span class="trace-concl">∴ 8D · Güçlü destek</span>
       </div>
     </div>
   </div>
@@ -706,7 +721,7 @@
     <div class="sec-head">
       <span class="sec-num">04 — Kararın sağlamlığı</span>
       <h2>Bu aracın önerisine neden güvenilir?</h2>
-      <p class="lead measure">Çünkü kararı yapay zekâ değil, sabit kurallar verir — ve bu kurallar yüzlerce örnek senaryoyla sürekli sınanır. Aynı problem her zaman aynı gerekçeli öneriyi alır; kişiye, güne ya da modele göre kaymaz.</p>
+      <p class="lead measure">Çünkü kararı yapay zekâ değil, sabit kurallar verir — ve bu kurallar bir <strong>golden-case test seti</strong>yle (etiketli örnek problemler) sürekli sınanır. Aynı problem her zaman aynı gerekçeli öneriyi alır; kişiye, güne ya da modele göre kaymaz.</p>
     </div>
 
     <div class="grid g2">
@@ -724,7 +739,7 @@
       </div>
       <div class="panel eng-card">
         <h3><span class="n">D</span> Sürekli kanıtlanır</h3>
-        <p>Yüzlerce etiketli örnek senaryo hazırdır: “müşteri şikayeti + kök neden yok → 8D” gibi. Kurallar her değiştiğinde bu senaryolar otomatik kontrol edilir; sistem yanlışa kayarsa hemen görünür.</p>
+        <p>Etiketli örnek senaryolardan oluşan bir golden-case test seti hazırdır: “müşteri şikayeti + kök neden yok → 8D” gibi. Kurallar her değiştiğinde bu senaryolar otomatik kontrol edilir; sistem yanlışa kayarsa hemen görünür. <b>Not:</b> bu senaryolar yazar tarafından oluşturuldu — karar mantığını doğrular, saha gerçeğini değil.</p>
       </div>
     </div>
 
@@ -978,7 +993,7 @@
     <div class="panel limits">
       <div class="spec-row">
         <span class="sk">Doğrulama durumu</span>
-        <span class="sv"><b>Kontrollü senaryolarda doğrulandı</b> — yüzlerce örnek problemle otomatik sınandı ve her birinde beklenen metodolojiyi seçtiği doğrulandı. Gerçek hatta gerçek kullanıcılarla pilot <b>henüz yok</b>; “sahada kanıtlandı” iddiası edilmez.</span>
+        <span class="sv"><b>Kontrollü senaryolarda doğrulandı</b> — golden-case test setiyle (yazar tarafından yazılmış etiketli örnek problemler) otomatik sınandı ve her birinde beklenen metodolojiyi seçtiği doğrulandı. Gerçek hatta, gerçek ve dağınık kullanıcı girdisiyle pilot <b>henüz yok</b>; “sahada kanıtlandı” iddiası edilmez.</span>
       </div>
       <div class="spec-row">
         <span class="sk">Güven yüzdeleri</span>
@@ -986,7 +1001,7 @@
       </div>
       <div class="spec-row">
         <span class="sk">Kural ağırlıkları</span>
-        <span class="sv">Kuralların başlangıç ağırlıkları uzman görüşüyle belirlendi — öznellik riski var. Azaltma: yüzlerce örnek senaryo bir güvenlik ağı oluşturur; ağırlıklar sabitlenmemiş, <b>ayarlanabilir</b>.</span>
+        <span class="sv">Kuralların başlangıç ağırlıkları uzman görüşüyle belirlendi — öznellik riski var. Azaltma: golden-case test seti bir güvenlik ağı oluşturur; ağırlıklar sabitlenmemiş, <b>ayarlanabilir</b>. Ayrıntı için aşağıdaki itiraz–cevap bölümüne bakın.</span>
       </div>
       <div class="spec-row">
         <span class="sk">Kapsam</span>
@@ -1000,13 +1015,71 @@
   </div>
 </section>
 
+<!-- ===================== 08 OBJECTIONS ===================== -->
+<section id="itirazlar">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-num">08 — Sık gelen itirazlar ve cevapları</span>
+      <h2>İyi bir mühendislik iddiası, en sert itirazı davet eder.</h2>
+      <p class="lead measure">Bu araca yöneltilebilecek en keskin eleştirileri kendim topladım. Amacım kusuru gizlemek değil; hangisinin haklı olduğunu bilmek ve dürüstçe cevaplayabilmek. Rozetler benim değerlendirmemdir.</p>
+    </div>
+
+    <div class="obj-list">
+      <div class="obj">
+        <div class="obj-head"><span class="obj-n">İtiraz 01</span><span class="verdict partial">kısmen haklı</span></div>
+        <p class="obj-q">Metodoloji seçimi sadece teknik değil, politiktir. Müşteri sözleşmesi “her şikayette 8D” diyorsa, kök neden bilinse bile 8D zorunlu olur. Motorun bunu nasıl karşılıyor?</p>
+        <div class="obj-a">
+          <span class="k">Cevap</span>
+          Doğru. Motor bunu bir <b>zorunluluk</b> değil, güçlü bir <b>sinyal</b> olarak taşır (müşteri etkilendi → 8D). Daha önemlisi: <b>8D bir kaptır, RCA onun içinde (D4) yaşar</b> — “sözleşme 8D” ile “teşhis RCA” çelişmez; motor “kabuk 8D, ama asıl teşhis ihtiyacın D4’te RCA” diyebilir. Sert sözleşme zorunlulukları için doğru yer, teşhis motorunun <b>üstünde</b>, öneriyi gerekçesi loglanarak ezebilen ince bir politika katmanıdır — temiz mimari bunu karar mantığını bozmadan mümkün kılar.
+        </div>
+      </div>
+
+      <div class="obj">
+        <div class="obj-head"><span class="obj-n">İtiraz 02</span><span class="verdict valid">haklı — en keskin</span></div>
+        <p class="obj-q">150+ senaryo güzel ama muhtemelen sen yazdın — kendi zihin modelinle tutarlı. Gerçek mühendisler eksik bilgi verir, yanlış hatırlar, savunmaya geçer. Bunu test ettin mi?</p>
+        <div class="obj-a">
+          <span class="k">Cevap</span>
+          En haklı eleştiri — ve bu yüzden vitrinden “150+ senaryo” gibi şişkin ifadeleri kaldırdım. Test edilen şey <b>karar mantığı</b>dır, insan-girdisi dayanıklılığı değil. Yapısal önlem var — bilinmeyen alan sorulur, delil yoksa boş bırakılır, “Bilmiyorum” seçilebilir — ama gerçek, dağınık, savunmacı girdiyle <b>pilot yapılmadı</b>; özellikle Türkçe serbest metin çıkarımının kalitesi kanıtlanmadı. Tam bu yüzden “sahada kanıtlandı” demiyorum.
+        </div>
+      </div>
+
+      <div class="obj">
+        <div class="obj-head"><span class="obj-n">İtiraz 03</span><span class="verdict valid">haklı</span></div>
+        <p class="obj-q">Problem-DNA benzerliği yüzeysel/kelime bazlı. Yüzeysel olarak benzer iki cümle tamamen farklı kök nedene sahip olabilir — yanlış bir “biz bunu gördük” güveni yaratır.</p>
+        <div class="obj-a">
+          <span class="k">Cevap</span>
+          Teknik olarak doğru: kelime kümesi örtüşmesine bakar, kök nedene değil. Bilinçli olarak <b>hafif bir sezgiseldir</b> (ağır vektör altyapısı erteli). Doğru çerçeve: “incelenebilecek <b>olası</b> benzer vakalar” olarak danışma amaçlı sunulur; kök neden <b>asla otomatik taşınmaz</b> — kararı insan verir. Anlamsal benzerlik, gerçek kullanım verisi biriktiğinde sonraki adımdır.
+        </div>
+      </div>
+
+      <div class="obj">
+        <div class="obj-head"><span class="obj-n">İtiraz 04</span><span class="verdict solved">üründe çözülü</span></div>
+        <p class="obj-q">Ekranda büyük puntoyla “%84 güven” görünce, acele bir vardiya amiri “sistem %84 emin, direkt 8D açalım” diye okur. Metinle arayüz algısı arasında uçurum var.</p>
+        <div class="obj-a">
+          <span class="k">Cevap</span>
+          Kaygı yerinde — ve gerçek arayüz tam bu yüzden ana sonucu bir yüzdeyle <b>değil</b>, niteliksel bir <b>destek bandıyla</b> gösterir (“Güçlü destek”), sıralama yüzdelerini de “güven” değil <b>“göreli uygunluk”</b> diye etiketler. Yüzde bir olasılık iddiası değil, kural tabanına göreli uyumdur. (Bu vitrindeki büyük “%84” yalnızca özet için bir basitleştirmeydi; onu da ürünle hizaladım.)
+        </div>
+      </div>
+
+      <div class="obj">
+        <div class="obj-head"><span class="obj-n">İtiraz 05</span><span class="verdict valid">haklı — mülakat riski</span></div>
+        <p class="obj-q">Kural ağırlıklarını nasıl belirledin, hangi kaynağa dayanıyor, neden bu eşik değil de şu? “Uzman görüşü” cevabı bir mülakatta yetmez.</p>
+        <div class="obj-a">
+          <span class="k">Cevap</span>
+          <b>Eşleme ile ağırlığı ayırıyorum.</b> Eşleme standarttır ve neredeyse tanımsaldır: FMEA ileriye dönük risk içindir (henüz hata yok), RCA bilinmeyen kök neden içindir, 8D müşteri şikayeti içindir. Ağırlığın <b>büyüklüğü</b> (3’e karşı 2) kalibre edilmiş kardinal bir değer değil, <b>sıralı bir güç derecesidir</b> (zayıf/orta/güçlü). Savunduğum şey kesin sayı değil, golden-case testlerinin bu sıralamanın <b>doğru metodolojiyi seçtiğini</b> garanti etmesidir. Kesin kalibrasyon gerçek veriyle sonraki adımdır.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===================== FOOTER ===================== -->
 <footer>
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-stat"><span class="fv">14</span><span class="fl">metodoloji playbook’u</span></div>
       <div class="foot-stat"><span class="fv">~20</span><span class="fl">teşhis değişkeni</span></div>
-      <div class="foot-stat"><span class="fv">150+</span><span class="fl">doğrulanan örnek senaryo</span></div>
+      <div class="foot-stat"><span class="fv">golden-case</span><span class="fl">otomatik test seti (etiketli senaryolar)</span></div>
       <div class="foot-stat"><span class="fv">0</span><span class="fl">karar için zorunlu yapay zekâ</span></div>
       <div class="foot-stat"><span class="fv">0₺</span><span class="fl">zorunlu abonelik / lisans maliyeti</span></div>
     </div>
@@ -1015,7 +1088,7 @@
         <span>uygulama ·</span> gerçek, çalışan web uygulaması<br>
         <span>yapay zekâ ·</span> yerel &amp; ücretsiz · veri dışarı çıkmaz<br>
         <span>veri ·</span> kurumsal veritabanında kalıcı kayıt<br>
-        <span>doğrulama ·</span> 150+ otomatik örnek senaryo
+        <span>doğrulama ·</span> golden-case otomatik test seti
       </div>
       <div style="text-align:right;">
         <p style="font-family:var(--mono); font-size:0.78rem; color:var(--ink-soft);">önce problemi teşhis et,<br>sonra doğru metodolojiyi seç.</p>
