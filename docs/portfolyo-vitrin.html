@@ -526,10 +526,10 @@
         <span class="eyebrow">Karar destek motoru · üretim &amp; kalite</span>
         <h1>Önce problemi <span class="kw">teşhis et</span>,<br>sonra doğru metodolojiyi seç.</h1>
         <p class="lead measure">
-          Çoğu ekip problemi sınıflandırmadan araca sarılır — refleksle 8D açar, alışkanlıkla DMAIC başlatır.
-          Bu araç bunu tersine çevirir: problemi anlar, belirsizliği ölçülebilir biçimde daraltır, en çok bilgi
-          getiren soruyu sorar ve <b>kural tabanlı bir karar motoruyla</b> gerekçeli metodolojiyi önerir.
-          Kararı yapay zekâ değil, <b>sabit ve sınanabilir kurallar</b> verir.
+          Ekipler çoğu zaman problemi sınıflandırmadan araca sarılır; refleksle 8D açar, alışkanlıkla
+          DMAIC başlatır. Bu araç sırayı tersine çevirir. Önce problemi anlar, birkaç hedefli soruyla
+          belirsizliği daraltır, sonra <b>kural tabanlı bir karar motoruyla</b> hangi metodolojinin uygun
+          olduğunu gerekçesiyle söyler. Kararı yapay zekâ vermez; bunu <b>sabit ve sınanabilir kurallar</b> yapar.
         </p>
         <div class="hero-meta">
           <span class="chip"><span class="dot" style="background:var(--accent)"></span> 14 metodoloji</span>
@@ -575,7 +575,7 @@
             <span class="pct" data-pct="4">0%</span>
           </div>
         </div>
-        <div style="font-size:0.76rem; color:var(--ink-faint); margin-top:12px; line-height:1.4;">Lider: <b style="color:var(--accent);">8D · Güçlü destek</b> — yüzdeler mutlak güven değil, kural tabanına <b>göreli uygunluk</b>.</div>
+        <div style="font-size:0.76rem; color:var(--ink-faint); margin-top:12px; line-height:1.4;">Lider: <b style="color:var(--accent);">8D · Güçlü destek</b>. Yüzdeler mutlak güven değil, kural tabanına <b>göreli uygunluk</b>.</div>
         <div class="entropy">
           <span class="label">Kalan belirsizlik</span>
           <span class="val"><span id="ent">2.13</span></span>
@@ -592,7 +592,7 @@
     <div class="sec-head">
       <span class="sec-num">01 — Temel tez</span>
       <h2>Problemi sınıflandırmadan araç seçmek, en pahalı kalite hatasıdır.</h2>
-      <p class="lead measure">Yanlış metodoloji; kaybedilen zaman, kapanmayan kök neden ve tekrar eden kusur demektir. Bu araç, metodoloji seçimini bir <strong>teşhis kararı</strong> olarak ele alır: önce problemin karakterini belirler, sonra yöntemi ona göre seçer.</p>
+      <p class="lead measure">Yanlış metodoloji zaman kaybettirir, kök nedeni kapatmaz ve kusuru tekrar ettirir. Bu araç metodoloji seçimini bir <strong>teşhis kararı</strong> gibi ele alır: önce problemin ne tür bir problem olduğunu belirler, sonra yöntemi buna göre seçer.</p>
     </div>
 
     <div class="versus">
@@ -600,7 +600,7 @@
         <span class="tag" style="color:var(--bad)">yaygın pratik</span>
         <h3>Araç önce, teşhis sonra</h3>
         <ul>
-          <li>“Müşteri var → hemen 8D” — oysa kök neden zaten biliniyorsa 8D fazla ağır.</li>
+          <li>“Müşteri var → hemen 8D.” Oysa kök neden zaten biliniyorsa 8D fazla ağır.</li>
           <li>Veri yokken DMAIC başlatmak → Measure fazında tıkanma.</li>
           <li>Seçim gerekçesiz; denetimde “neden bu yöntem?” sorusuna cevap yok.</li>
           <li>Kararı doğrudan yapay zekâya sormak → her seferinde farklı, izlenemez cevap.</li>
@@ -613,7 +613,7 @@
         <ul>
           <li>Problemin özniteliklerini çıkarır: kusur oluştu mu, müşteri etkilendi mi, kök neden biliniyor mu…</li>
           <li>Kural tabanı her metodolojiyi puanlar; puanlar bir <b>göreli uygunluk</b> yüzdesine dönüşür (mutlak güven değil).</li>
-          <li>Her öneri, tetiklenen kuralların <b>karar zincirini</b> taşır — denetlenebilir.</li>
+          <li>Her öneri, tetiklenen kuralların <b>karar zincirini</b> taşır; sonradan denetlenebilir.</li>
           <li>Aynı girdi → aynı sonuç; kişiye, güne veya modele göre değişmez.</li>
         </ul>
       </div>
@@ -626,15 +626,15 @@
   <div class="wrap">
     <div class="sec-head">
       <span class="sec-num">02 — Adaptif teşhis döngüsü</span>
-      <h2>Rastgele soru sormaz — belirsizliği en çok azaltan soruyu sorar.</h2>
-      <p class="lead measure">Bir doktorun gereksiz tetkik istememesi gibi: her tur, cevabı <strong>kalan belirsizliği en çok azaltacak</strong> soruyu seçer. “Yeterince eminim” eşiğine gelince durur.</p>
+      <h2>Rastgele değil, belirsizliği en çok azaltan soruyu sorar.</h2>
+      <p class="lead measure">İyi bir doktor gibi gereksiz soru sormaz. Her turda cevabı <strong>kalan belirsizliği en çok azaltacak</strong> olan soruyu seçer ve yeterince emin olduğunda durur.</p>
     </div>
 
     <div class="flow">
       <div class="flow-step">
         <span class="k">01 · anlama</span>
         <span class="t">Metni anla</span>
-        <span class="d">Serbest metin, yapılandırılmış bilgilere çevrilir. Metinde delil yoksa alan <b>boş kalır</b> — yapay zekâ tahmin uydurmaz.</span>
+        <span class="d">Serbest metin, yapılandırılmış bilgilere çevrilir. Metinde delil yoksa alan <b>boş kalır</b>; yapay zekâ tahmin uydurmaz.</span>
         <span class="badge">yapay zekâ · yardımcı</span>
       </div>
       <div class="flow-step pure">
@@ -664,7 +664,7 @@
     </div>
 
     <div class="panel trace">
-      <div class="trace-head">karar zinciri — sistem üretir, yapay zekâ yalnızca dile çevirir</div>
+      <div class="trace-head">karar zinciri · sistem üretir, yapay zekâ yalnızca dile çevirir</div>
       <div class="trace-chain">
         <span class="trace-node">Kusur <b>oluştu</b></span>
         <span class="trace-arrow">→</span>
@@ -680,7 +680,7 @@
 
     <div class="panel qpanel">
       <div class="qhead">motorun akıl yürüttüğü gerçek sorulardan bazıları</div>
-      <p class="qsub">Bunlar sohbet cümleleri değil; her biri bir teşhis değişkenini ölçen, önceden yazılmış sorulardır. Cevap, doğrudan bir metodoloji sinyaline dönüşür — motor bunlardan yalnızca <b>ilgili</b> olanları, yalnızca <b>emin olana kadar</b> sorar.</p>
+      <p class="qsub">Bunlar sohbet cümlesi değil; her biri bir teşhis değişkenini ölçen, önceden yazılmış sorular. Cevap doğrudan bir metodoloji sinyaline dönüşür. Motor bu soruların yalnızca <b>ilgili</b> olanlarını sorar ve <b>yeterince emin olunca</b> durur.</p>
       <div class="qlist">
         <div class="qrow">
           <span class="q"><span class="num">01</span>Ürün, proses veya ekipmanda fiilen gerçekleşmiş bir hata/kusur var mı, yoksa yalnızca risk mi?</span>
@@ -762,7 +762,7 @@
     <div class="sec-head">
       <span class="sec-num">04 — Kararın sağlamlığı</span>
       <h2>Bu aracın önerisine neden güvenilir?</h2>
-      <p class="lead measure">Çünkü kararı yapay zekâ değil, sabit kurallar verir — ve bu kurallar bir <strong>golden-case test seti</strong>yle (etiketli örnek problemler) sürekli sınanır. Aynı problem her zaman aynı gerekçeli öneriyi alır; kişiye, güne ya da modele göre kaymaz.</p>
+      <p class="lead measure">Çünkü kararı yapay zekâ değil, sabit kurallar verir. Bu kurallar da bir <strong>golden-case test seti</strong>yle (etiketli örnek problemler) sürekli sınanır. Aynı problem her zaman aynı gerekçeli öneriyi alır; kişiye, güne ya da modele göre kaymaz.</p>
     </div>
 
     <div class="grid g2">
@@ -772,15 +772,15 @@
       </div>
       <div class="panel eng-card">
         <h3><span class="n">B</span> En bilgilendirici soruyu sorar</h3>
-        <p>Sistem, cevabı en çok belirsizlik azaltacak soruyu bulup önce onu sorar — tıpkı gereksiz tetkik istemeyen bir doktor gibi. Yeterince emin olunca, gereksiz soru sormadan durur.</p>
+        <p>Sistem, cevabı belirsizliği en çok azaltacak soruyu bulup önce onu sorar. Yeterince emin olunca fazladan soru sormadan durur.</p>
       </div>
       <div class="panel eng-card">
         <h3><span class="n">C</span> Yapay zekâ olmadan da çalışır</h3>
-        <p>Yapay zekâ yalnızca üç kenar işi için: metni anlamak, adım taslağı önermek ve raporu yazmak. Kararı ve soruları o üretmez. Tamamen kapatılsa bile karar motoru çalışmaya devam eder. Kullanılan yapay zekâ <b>yerel ve ücretsizdir</b>; veri dışarı çıkmaz, abonelik gerekmez.</p>
+        <p>Yapay zekâ yalnızca yardımcı işler yapar: metni anlar, adım taslağı önerir, raporu yazar. Kararı ve soruları o üretmez. Tamamen kapatılsa bile karar motoru çalışır. Üstelik yerel ve ücretsizdir; veri dışarı çıkmaz, abonelik gerekmez.</p>
       </div>
       <div class="panel eng-card">
         <h3><span class="n">D</span> Sürekli kanıtlanır</h3>
-        <p>Etiketli örnek senaryolardan oluşan bir golden-case test seti hazırdır: “müşteri şikayeti + kök neden yok → 8D” gibi. Kurallar her değiştiğinde bu senaryolar otomatik kontrol edilir; sistem yanlışa kayarsa hemen görünür. <b>Not:</b> bu senaryolar yazar tarafından oluşturuldu — karar mantığını doğrular, saha gerçeğini değil.</p>
+        <p>Etiketli örnek senaryolardan oluşan bir golden-case test seti hazırdır: “müşteri şikayeti + kök neden yok → 8D” gibi. Kurallar her değiştiğinde bu senaryolar otomatik kontrol edilir; sistem yanlışa kayarsa hemen görünür. <b>Not:</b> bu senaryoları yazar hazırladı; karar mantığını doğrular, saha gerçeğini değil.</p>
       </div>
     </div>
 
@@ -799,22 +799,22 @@
   <div class="wrap">
     <div class="sec-head">
       <span class="sec-num">05 — Metodolojiyi seçtik: sırada tam olarak ne var?</span>
-      <h2>Öneri bir başlangıçtır — asıl iş, doğru forma göre uçtan uca uygulamaktır.</h2>
+      <h2>Metodoloji seçimi işin yarısı; asıl iş onu doğru forma göre uygulamak.</h2>
       <p class="lead measure">Metodoloji seçilince uygulama, o metodolojinin <strong>gerçek endüstri formunu</strong> yansıtan bir çalışma alanıyla açılır: sıralı adımlar, her adımın amacı ve doldurulacak <strong>yapılandırılmış alanlar</strong> (serbest not değil; gerçek bir 8D / FMEA / KT formu gibi). Aşağıdaki gezgin, koddaki playbook kataloğunun birebir kendisidir.</p>
     </div>
 
     <!-- PART A — interactive explorer -->
     <div class="part">
       <div class="part-label">A · Playbook gezgini</div>
-      <h3>Bir metodoloji seç — adımlarını ve alt-alanlarını gör</h3>
+      <h3>Bir metodoloji seç, adımlarını ve alt-alanlarını gör</h3>
       <div class="mtabs" id="pbTabs" role="tablist" aria-label="Metodoloji seçimi"></div>
       <div class="pb-intro" id="pbIntro"></div>
       <div class="stepmap" id="pbSteps"></div>
       <p class="explain" style="margin-top:16px;">
         Rozetler alan tipini gösterir: <span class="fbadge">metin</span> / <span class="fbadge">uzun metin</span> serbest;
         <span class="fbadge tbl">tablo</span> yapılandırılmış satır-sütun; <span class="fbadge tool">5 neden</span>
-        <span class="fbadge tool">balık kılçığı</span> özel araçlar. Üçü de <b>aynı yapıyı</b> paylaşır — bu yüzden
-        kaydetme, doğrulama ve AI taslağı tek ve tutarlı yoldan akar.
+        <span class="fbadge tool">balık kılçığı</span> özel araçlar. Üçü de <b>aynı yapıyı</b> paylaşır; bu sayede
+        kaydetme, doğrulama ve AI taslağı tek yoldan işler.
       </p>
     </div>
 
@@ -828,7 +828,7 @@
       <div class="panel anatomy">
         <div class="a-top">
           <div class="sname">D4 — Kök Nedeni Belirle</div>
-          <div class="a-guide"><b>Amaç:</b> oluşma VE kaçış kök nedenlerini kanıtla doğrula. <b>Rehber:</b> iki soru birden — kusur neden <em>oluştu</em> ve kontrol sisteminden neden <em>kaçtı</em>? Her hipotezi veriyle test et; kök neden, “kaldırınca problem tekrarlanamıyor” olduğunda doğrulanmıştır.</div>
+          <div class="a-guide"><b>Amaç:</b> oluşma VE kaçış kök nedenlerini kanıtla doğrula. <b>Rehber:</b> iki soru birden. Kusur neden <em>oluştu</em> ve kontrol sisteminden neden <em>kaçtı</em>? Her hipotezi veriyle test et; kök neden, “kaldırınca problem tekrarlanamıyor” olduğunda doğrulanmıştır.</div>
         </div>
         <div class="a-body">
           <div class="wfield">
@@ -838,7 +838,7 @@
                 <div class="fw-row"><span class="lvl">Neden 1</span><span class="q">Sahada kaynak dikişi çatladı</span><span></span></div>
                 <div class="fw-row"><span class="lvl">Neden 2</span><span class="q">Dikiş nüfuziyeti spek altında kaldı</span><span></span></div>
                 <div class="fw-row"><span class="lvl">Neden 3</span><span class="q">Kaynak akımı düşük ayarlandı</span><span></span></div>
-                <div class="fw-row root"><span class="lvl">Neden 4</span><span class="q">Akım limiti prosedürde tanımsız — operatöre bırakılmış</span><span class="fw-root-tag">kök neden</span></div>
+                <div class="fw-row root"><span class="lvl">Neden 4</span><span class="q">Akım limiti prosedürde tanımsız, operatöre bırakılmış</span><span class="fw-root-tag">kök neden</span></div>
               </div>
             </div>
           </div>
@@ -848,7 +848,7 @@
           </div>
           <div class="ai-note">
             <span class="tag">AI taslak</span>
-            <p><b>İsteğe bağlı yardımcı:</b> “AI taslak al” dersen, yapay zekâ bilgi tabanına dayanarak boş alanlara profesyonel bir ilk taslak yazar — ama <b>senin girdiğin veriyi asla ezmez</b> ve çıktı adımın formuna zorla uydurulur. Karar ve içerik sende; yapay zekâ yalnızca hızlandırır.</p>
+            <p><b>İsteğe bağlı yardımcı:</b> “AI taslak al” dersen, yapay zekâ bilgi tabanına dayanarak boş alanlara profesyonel bir ilk taslak yazar. Ama <b>senin girdiğin veriyi asla ezmez</b> ve çıktı adımın formuna uydurulur. Karar ve içerik sende; yapay zekâ yalnızca hızlandırır.</p>
           </div>
           <div>
             <div class="step-label" style="font-family:var(--mono);font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;">Adım durumu</div>
@@ -867,15 +867,15 @@
       <div class="panel anatomy">
         <div class="a-top">
           <div class="sname">4 — Hata Modu Analizi · her hata modunu üç boyutta puanla</div>
-          <div class="a-guide"><b>Amaç:</b> her hata modunun riskini üç eksende değerlendir — <b>Şiddet (S)</b>: sonuç ne kadar ağır; <b>Olasılık (O)</b>: ne sıklıkla oluşur; <b>Tespit (D)</b>: mevcut kontrol yakalar mı (yüksek D = zor yakalanır). Risk önceliği <b>RPN = S × O × D</b>. Güvenlik/regülasyon etkili maddeler (S = 9–10) RPN'den bağımsız önceliklidir.</div>
+          <div class="a-guide"><b>Amaç:</b> her hata modunun riskini üç eksende değerlendir. <b>Şiddet (S)</b>: sonuç ne kadar ağır. <b>Olasılık (O)</b>: ne sıklıkla oluşur. <b>Tespit (D)</b>: mevcut kontrol yakalar mı (yüksek D = zor yakalanır). Risk önceliği <b>RPN = S × O × D</b>. Güvenlik/regülasyon etkili maddeler (S = 9–10) RPN'den bağımsız önceliklidir.</div>
         </div>
         <div class="a-body">
           <div class="fm-row"><b>Hata modu:</b> kaynak dikişinde yetersiz nüfuziyet &nbsp;·&nbsp; <b>Etki:</b> sahada dikiş kopması, güvenlik riski &nbsp;·&nbsp; <b>Neden:</b> kaynak akımı spek altında &nbsp;·&nbsp; <b>Mevcut kontrol:</b> hat sonu görsel muayene</div>
 
           <div class="sod-grid">
-            <div class="sod s"><span class="sl">Şiddet · S</span><span class="sn">9</span><span class="sr">Etki güvenlik/regülasyon sınıfında — en ağır sonuçlardan.</span></div>
+            <div class="sod s"><span class="sl">Şiddet · S</span><span class="sn">9</span><span class="sr">Etki güvenlik/regülasyon sınıfında; en ağır sonuçlardan.</span></div>
             <div class="sod o"><span class="sl">Olasılık · O</span><span class="sn">4</span><span class="sr">Ara sıra; akım limiti prosedürde tanımsız, operatöre bırakılmış.</span></div>
-            <div class="sod d"><span class="sl">Tespit · D</span><span class="sn">6</span><span class="sr">Görsel muayene nüfuziyeti göremez — zayıf yakalama.</span></div>
+            <div class="sod d"><span class="sl">Tespit · D</span><span class="sn">6</span><span class="sr">Görsel muayene nüfuziyeti göremez; zayıf yakalama.</span></div>
           </div>
 
           <div class="rpn-calc">
@@ -887,7 +887,7 @@
 
           <div class="ai-note">
             <span class="tag">doğru sıra</span>
-            <p><b>Riski nereden düşürürüz?</b> Önce <b>olasılığı (O)</b>: akım limitini prosedüre işle ve yanlış ayarı fiziksel olarak imkânsız kıl (poka-yoke). Sonra <b>tespiti (D)</b>: hat sonuna tahribatsız test ekle. <b>Şiddet (S) genelde ancak tasarım değişirse düşer</b> — bu yüzden etkiyi değil, olasılık ve tespiti hedefliyoruz.</p>
+            <p><b>Riski nereden düşürürüz?</b> Önce <b>olasılığı (O)</b>: akım limitini prosedüre işle ve yanlış ayarı fiziksel olarak imkânsız kıl (poka-yoke). Sonra <b>tespiti (D)</b>: hat sonuna tahribatsız test ekle. <b>Şiddet (S) genelde ancak tasarım değişirse düşer</b>; bu yüzden etkiyi değil, olasılık ve tespiti hedefliyoruz.</p>
           </div>
 
           <div>
@@ -897,7 +897,7 @@
               <span class="state-arrow">→</span>
               <span class="rs">Sonrası · O 4→2, D 6→2, S <b>9</b> (değişmez) · RPN <b>36</b> · <span class="ap l">Düşük</span></span>
             </div>
-            <p class="explain" style="margin-top:10px;">Etki (S) aynı kaldı — parça hâlâ güvenlik-kritik; ama artık hata çok daha seyrek oluşuyor ve oluşursa hemen yakalanıyor. FMEA canlı bir dokümandır: süreç değiştikçe yeniden puanlanır.</p>
+            <p class="explain" style="margin-top:10px;">Etki (S) aynı kaldı; parça hâlâ güvenlik-kritik. Ama artık hata çok daha seyrek oluşuyor ve oluşursa hemen yakalanıyor. FMEA canlı bir dokümandır: süreç değiştikçe yeniden puanlanır.</p>
           </div>
         </div>
       </div>
@@ -906,7 +906,7 @@
     <!-- PART C — how we reach a conclusion -->
     <div class="part">
       <div class="part-label">C · Sonuca nasıl ulaşıyoruz</div>
-      <h3>Adımlar bitince “tamam” demek yetmez — kapanış bir yaşam döngüsüdür</h3>
+      <h3>Adımlar bitince “tamam” demek yetmez; kapanış bir yaşam döngüsüdür</h3>
       <p class="explain measure" style="margin:8px 0 18px;">Problem, aksiyon yazıldığı an kapanmaz. Etkinlik <b>veriyle</b> doğrulanana kadar izlenir; tekrar ederse yeniden açılır. Bu, denetimde “çözüldü dediniz ama kanıt ne?” sorusunun cevabıdır.</p>
 
       <div class="lifecycle">
@@ -932,7 +932,7 @@
     <div class="part">
       <div class="part-label">D · Çıktımız ne oluyor</div>
       <h3>Doldurulan adımlardan tek tuşla profesyonel, yazdırılabilir rapor</h3>
-      <p class="explain measure" style="margin:8px 0 18px;">Sistem, adım verilerinden raporu tutarlı biçimde kendisi kurar; yapay zekâ varsa yalnızca dil cilası ve yönetici özeti ekler. Çıktı, müşteriye/denetime sunulabilir, doğrudan yazdırılabilir bir A4 belgesidir — antet ve aksiyon tablosuyla.</p>
+      <p class="explain measure" style="margin:8px 0 18px;">Sistem, adım verilerinden raporu tutarlı biçimde kendisi kurar; yapay zekâ varsa yalnızca dil cilası ve yönetici özeti ekler. Çıktı, antet ve aksiyon tablosuyla birlikte, müşteriye veya denetime sunulabilir, doğrudan yazdırılabilir bir A4 belgesidir.</p>
 
       <div class="doc">
         <div class="doc-bar"><span>çalışma alanı · rapor · A4 yazdırılabilir</span><span>8D · Kaynak dikişi çatlağı</span></div>
@@ -977,11 +977,11 @@
 
     <!-- extras -->
     <div class="part">
-      <div class="part-label">Ayrıca — çalışma alanının içindeki ileri yetenekler</div>
+      <div class="part-label">Ayrıca · çalışma alanının içindeki ileri yetenekler</div>
       <div class="extras">
         <div class="extra"><div class="et"><span class="fm">↔</span> Metodolojiler arası aktarım</div><div class="ed">RCA→8D, FMEA→Poka-Yoke, FMEA→SPC: bir analizin çıktısı diğerini tohumlar.</div></div>
         <div class="extra"><div class="et"><span class="fm">⚑</span> Kırmızı takım</div><div class="ed">Kök neden iddiaları, kapanıştan önce zayıflıklarına karşı sınanır.</div></div>
-        <div class="extra"><div class="et"><span class="fm">▣</span> Kanıt kapıları</div><div class="ed">Kanıtlanmamış adım kapanışa ilerleyemez — “kağıt üstünde kapandı”yı önler.</div></div>
+        <div class="extra"><div class="et"><span class="fm">▣</span> Kanıt kapıları</div><div class="ed">Kanıtlanmamış adım kapanışa ilerleyemez; “kağıt üstünde kapandı”yı önler.</div></div>
         <div class="extra"><div class="et"><span class="fm">◈</span> Problem-DNA</div><div class="ed">Geçmiş vakalarla benzerlik eşleştirmesi; kurumsal hafıza zemini.</div></div>
         <div class="extra"><div class="et"><span class="fm">◱</span> Adım başına AI taslak</div><div class="ed">Boş alanlara profesyonel ilk taslak; kullanıcı verisini ezmez.</div></div>
         <div class="extra"><div class="et"><span class="fm">⛁</span> Kalıcı kayıt</div><div class="ed">Her tur ve adım saklanır; geçmişe dönüp incelenebilir, öğrenme için zemin.</div></div>
@@ -1028,21 +1028,21 @@
     <div class="sec-head">
       <span class="sec-num">07 — Dürüst sınırlar</span>
       <h2>Neyin kanıtlandığı, neyin kanıtlanmadığı.</h2>
-      <p class="lead measure">Bir mühendisin en güçlü ifadesi, ölçtüğü şeyin sınırını bilmesidir. Bu proje kasıtlı olarak abartısız konumlandırılır.</p>
+      <p class="lead measure">Bu bölüm, projenin neyi kanıtladığını ve neyi kanıtlamadığını açıkça sıralar. Bilerek abartısız tutuldu.</p>
     </div>
 
     <div class="panel limits">
       <div class="spec-row">
         <span class="sk">Doğrulama durumu</span>
-        <span class="sv"><b>Kontrollü senaryolarda doğrulandı</b> — golden-case test setiyle (yazar tarafından yazılmış etiketli örnek problemler) otomatik sınandı ve her birinde beklenen metodolojiyi seçtiği doğrulandı. Gerçek hatta, gerçek ve dağınık kullanıcı girdisiyle pilot <b>henüz yok</b>; “sahada kanıtlandı” iddiası edilmez.</span>
+        <span class="sv"><b>Kontrollü senaryolarda doğrulandı.</b> Golden-case test setiyle (yazar tarafından yazılmış etiketli örnek problemler) otomatik sınandı ve her birinde beklenen metodolojiyi seçti. Gerçek hatta, dağınık kullanıcı girdisiyle pilot <b>henüz yok</b>; “sahada kanıtlandı” iddiası edilmez.</span>
       </div>
       <div class="spec-row">
         <span class="sk">Güven yüzdeleri</span>
-        <span class="sv">Ekrandaki yüzde, <b>kural tabanına göreli uyum</b>tur — kanıtlanmış başarı olasılığı değil. Gerçek kullanım verisi biriktiğinde bu güven hesabı gerçek sonuçlarla kalibre edilecek (zemin hazır, bilinçli ertelendi).</span>
+        <span class="sv">Ekrandaki yüzde, <b>kural tabanına göreli uyum</b>tur; kanıtlanmış bir başarı olasılığı değil. Gerçek kullanım verisi biriktiğinde bu hesap gerçek sonuçlarla kalibre edilecek (zemin hazır, bilinçli ertelendi).</span>
       </div>
       <div class="spec-row">
         <span class="sk">Kural ağırlıkları</span>
-        <span class="sv">Kuralların başlangıç ağırlıkları uzman görüşüyle belirlendi — öznellik riski var. Azaltma: golden-case test seti bir güvenlik ağı oluşturur; ağırlıklar sabitlenmemiş, <b>ayarlanabilir</b>. Ayrıntı için aşağıdaki tasarım kararları bölümüne bakın.</span>
+        <span class="sv">Kuralların başlangıç ağırlıkları uzman görüşüyle belirlendi; bu bir öznellik riski taşır. Golden-case test seti bir güvenlik ağı oluşturur ve ağırlıklar sabit değil, <b>ayarlanabilir</b>. Ayrıntı için aşağıdaki tasarım kararları bölümüne bakın.</span>
       </div>
       <div class="spec-row">
         <span class="sk">Kapsam</span>
@@ -1050,7 +1050,7 @@
       </div>
       <div class="spec-row">
         <span class="sk">Yapay zekânın rolü</span>
-        <span class="sv">Yapay zekâ yalnızca metni anlar, soru ve rapor yazar — karar vermez. “Delil yoksa boş bırak” kuralı ve çıktının forma zorla uydurulması sayesinde “uydurma” riski sınırlanır.</span>
+        <span class="sv">Yapay zekâ yalnızca metni anlar, soru ve rapor yazar; karar vermez. “Delil yoksa boş bırak” kuralı ve çıktının forma uydurulması, “uydurma” riskini sınırlar.</span>
       </div>
     </div>
   </div>
@@ -1061,29 +1061,29 @@
   <div class="wrap">
     <div class="sec-head">
       <span class="sec-num">08 — Bilinçli tasarım kararları</span>
-      <h2>Her mühendislik kararı bir denge içerir — işte bilinçli seçimlerimiz.</h2>
-      <p class="lead measure">Güçlü bir tasarım, sınırlarını bilerek yapılır. Aşağıda; kritik tasarım kararları, kabul ettiğimiz bilinçli sınırlar ve planlanan sonraki adımlar.</p>
+      <h2>Bilerek verdiğimiz kararlar ve kabul ettiğimiz sınırlar.</h2>
+      <p class="lead measure">Aşağıda, tasarımın kritik kararları, bilerek kabul edilen sınırları ve planlanan sonraki adımları var.</p>
     </div>
 
     <div class="dd-list">
       <div class="dd">
         <span class="dd-tag">ayrım · teşhis / politika</span>
         <h3>Teşhis kararını, sözleşme kararından ayrı tutuyoruz</h3>
-        <p>Motor “problem hangi yöntemi gerektiriyor?” sorusuna cevap verir. “Müşteri sözleşmesi hangi formatı zorunlu kılıyor?” ise ayrı bir sorudur ve teşhisin üstündeki bir <b>politika katmanına</b> aittir. Dahası <b>8D bir kaptır, RCA onun içinde (D4) yaşar</b> — zorunlu bir 8D ile teşhisin işaret ettiği RCA ihtiyacı çelişmez, birlikte var olur.</p>
+        <p>Motor “problem hangi yöntemi gerektiriyor?” sorusuna cevap verir. “Müşteri sözleşmesi hangi formatı zorunlu kılıyor?” ise ayrı bir sorudur ve teşhisin üstündeki bir <b>politika katmanına</b> aittir. Dahası <b>8D bir kaptır, RCA onun içinde (D4) yaşar</b>. Zorunlu bir 8D ile teşhisin işaret ettiği RCA ihtiyacı çelişmez; ikisi birlikte var olur.</p>
         <div class="next"><b>Sonraki adım</b> — müşteriye özel zorunlulukları, öneriyi gerekçesiyle ezebilen açık bir politika katmanı.</div>
       </div>
 
       <div class="dd">
         <span class="dd-tag">kapsam · ne doğrulandı</span>
         <h3>Karar mantığını doğruladık; saha dayanıklılığını pilot kanıtlayacak</h3>
-        <p>Golden-case test seti, karar mantığının her etiketli senaryoda doğru metodolojiyi seçtiğini güvence altına alır. Motor dağınık girdiye de yapısal olarak hazırdır: bilinmeyeni sorar, delil yoksa boş bırakır, “Bilmiyorum”u kabul eder. Gerçek kullanıcı girdisiyle saha davranışı ise ancak bir pilotla kanıtlanır — bu yüzden “sahada kanıtlandı” <b>demiyoruz</b>.</p>
+        <p>Golden-case test seti, karar mantığının her etiketli senaryoda doğru metodolojiyi seçtiğini güvence altına alır. Motor dağınık girdiye de yapısal olarak hazırdır: bilinmeyeni sorar, delil yoksa boş bırakır, “Bilmiyorum”u kabul eder. Gerçek kullanıcı girdisiyle saha davranışı ise ancak bir pilotla kanıtlanır. Bu yüzden “sahada kanıtlandı” <b>demiyoruz</b>.</p>
         <div class="next"><b>Sonraki adım</b> — gerçek bir hatta, gerçek ve dağınık girdiyle pilot.</div>
       </div>
 
       <div class="dd">
         <span class="dd-tag">güvenlik önlemi · benzerlik</span>
         <h3>Geçmiş vaka benzerliği bir danışma ipucudur, karar değil</h3>
-        <p>Problem-DNA, geçmiş vakalar arasındaki olası bağlantıları benzerlikle yüzeye çıkarır — bilinçli olarak <b>hafif</b> bir yöntem. İki benzer problem farklı kök nedene sahip olabileceğinden, sistem kök nedeni asla otomatik taşımaz; yalnızca “incelemeye değer olası benzer vakalar” önerir, kararı insan verir.</p>
+        <p>Problem-DNA, geçmiş vakalar arasındaki olası bağlantıları benzerlikle yüzeye çıkarır; bilinçli olarak <b>hafif</b> tutulmuş bir yöntem. İki benzer problem farklı kök nedene sahip olabilir, bu yüzden sistem kök nedeni asla otomatik taşımaz; yalnızca “incelemeye değer olası benzer vakalar” önerir, kararı insan verir.</p>
         <div class="next"><b>Sonraki adım</b> — gerçek veri biriktiğinde anlamsal (bağlam duyarlı) benzerlik.</div>
       </div>
 
@@ -1286,7 +1286,7 @@
         { i: "4", n: "Gelecek Durum Tasarımı", o: "Takt'a göre akan, çekme esaslı gelecek durumu tasarla.", f: [ { l: "Takt süresi ve hedef temin süresi", t: "metin" }, { l: "Gelecek durum tasarım kararları", t: "uzun metin" } ] },
         { i: "5", n: "Kaizen Planı ve Uygulama", o: "Gelecek duruma götürecek kaizen çalışmalarını planla.", f: [ { l: "Kaizen planı", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] } ] },
 
-      { code: "DMADV", name: "Design for Six Sigma", intro: "Yeni ürün/süreci tasarım aşamasında müşteri kritiklerine ve hedef kaliteye göre kur — düzeltme değil, doğru tasarım.", steps: [
+      { code: "DMADV", name: "Design for Six Sigma", intro: "Yeni ürün/süreci tasarım aşamasında müşteri kritiklerine ve hedef kaliteye göre kur; düzeltme değil, doğru tasarım.", steps: [
         { i: "1", n: "Define (Tasarım Hedefi)", o: "Tasarım projesinin hedefini ve kapsamını netleştir.", f: [ { l: "Tasarım hedefi", t: "uzun metin" }, { l: "Kısıtlar", t: "metin" } ] },
         { i: "2", n: "Measure (Müşteri Sesi → CTQ)", o: "Müşteri ihtiyaçlarını ölçülebilir CTQ'lara çevir.", f: [ { l: "VOC → CTQ tablosu", t: "tablo", c: ["Müşteri ihtiyacı", "CTQ", "Hedef / spek", "Öncelik"] } ] },
         { i: "3", n: "Analyze (Kavram Seçimi)", o: "Alternatif tasarım kavramlarını üret ve sistematik seç (Pugh).", f: [ { l: "Kavram karşılaştırması", t: "tablo", c: ["Kavram", "Güçlü yönler", "Zayıf yönler", "Puan"] }, { l: "Seçilen kavram ve gerekçe", t: "uzun metin" } ] },
@@ -1308,7 +1308,7 @@
         { i: "4", n: "Tasarla ve Uygula", o: "Seçilen çözümü tasarla, sahada devreye al.", f: [ { l: "Tasarım / uygulama detayı", t: "uzun metin" }, { l: "Uygulama aksiyonları", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
         { i: "5", n: "Doğrula ve Standartlaştır", o: "Hatanın artık oluşamadığını/yakalandığını kanıtla; standarda bağla.", f: [ { l: "Doğrulama testi ve sonucu", t: "uzun metin" }, { l: "Standart / günlük kontrol", t: "metin" } ] } ] },
 
-      { code: "TOC", name: "Kısıtlar Teorisi", intro: "Sistemin çıktısını kısıt belirler: kısıtı bul, ondan azami yararlan, her şeyi ona tabi kıl, gerekiyorsa yükselt — ve tekrarla.", steps: [
+      { code: "TOC", name: "Kısıtlar Teorisi", intro: "Sistemin çıktısını kısıt belirler: kısıtı bul, ondan azami yararlan, her şeyi ona tabi kıl, gerekiyorsa yükselt ve tekrarla.", steps: [
         { i: "1", n: "Hedef ve Akışı Tanımla", o: "Sistemin hedefini ve ana akışını netleştir.", f: [ { l: "Hedef metrik (throughput)", t: "metin" }, { l: "Ana akış adımları", t: "uzun metin" } ] },
         { i: "2", n: "Kısıtı Belirle", o: "Akışı sınırlayan adımı veriyle bul.", f: [ { l: "Kapasite / talep karşılaştırması", t: "tablo", c: ["Adım", "Kapasite", "Talep", "Önündeki birikim"] }, { l: "Belirlenen kısıt", t: "metin" } ] },
         { i: "3", n: "Kısıtı Sömür", o: "Yatırım yapmadan kısıttan azami çıktı al.", f: [ { l: "Sömürme aksiyonları", t: "tablo", c: ["Aksiyon", "Sorumlu", "Termin", "Durum"] } ] },
