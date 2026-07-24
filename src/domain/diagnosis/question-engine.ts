@@ -98,7 +98,7 @@ function featurePriority(key: DiagnosticFeatureKey, rules: Rule[]): number {
  */
 export function isQuestionRelevant(key: DiagnosticFeatureKey, p: StructuredProblem): boolean {
   const f = p.features;
-  const common = new Set<DiagnosticFeatureKey>(["defectOccurred", "customerAffected", "safetyOrRegulatory", "standardWorkEstablished", "basicConditionsStable"]);
+  const common = new Set<DiagnosticFeatureKey>(["defectOccurred", "customerAffected", "safetyOrRegulatory", "standardWorkEstablished", "basicConditionsStable", "decisionBetweenOptions"]);
   if (common.has(key)) return true;
 
   if (f.isNewDesign === true) {

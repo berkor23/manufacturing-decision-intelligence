@@ -15,6 +15,7 @@ export const METHODOLOGIES = [
   "POKA_YOKE",
   "TOC",
   "SDCA",
+  "KT_DECISION",
 ] as const;
 
 export type Methodology = (typeof METHODOLOGIES)[number];
@@ -36,6 +37,7 @@ export const METHODOLOGY_ROLES: Record<Methodology, { role: MethodologyRole; lab
   POKA_YOKE: { role: "COUNTERMEASURE", label: "Hata önleyici karşı önlem" },
   TOC: { role: "IMPROVEMENT", label: "Sistem kısıtı iyileştirmesi" },
   SDCA: { role: "OPERATING_SYSTEM", label: "Stabilizasyon ve standartlaştırma" },
+  KT_DECISION: { role: "ANALYSIS", label: "Ağırlıklı kriterle alternatif seçimi" },
 };
 
 export interface MethodologyMeta {
@@ -145,6 +147,86 @@ export const METHODOLOGY_META: Record<Methodology, MethodologyMeta> = {
     shortName: "SDCA",
     description: "Kararsız veya standardı yerleşmemiş süreci iyileştirmeden önce temel koşulları sabitle.",
     knowledgeFile: "SDCA.md",
+  },
+  KT_DECISION: {
+    code: "KT_DECISION",
+    name: "Kepner-Tregoe Karar Analizi",
+    shortName: "KT Karar",
+    description: "Hata teşhisi değil; tanımlı alternatifler arasından ağırlıklı MUST/WANT kriterleriyle en iyi seçeneği belirleme.",
+    knowledgeFile: "KepnerTregoeDecision.md",
+  },
+};
+
+// Metodoloji kimliği — makale sesiyle: her yöntemin cevapladığı SORU ve varlık
+// nedeni (öz). "Neden bu yöntem değil" açıklaması bu statik kataloğdan kurulur;
+// LLM üretimi DEĞİLDİR. Kaynak: docs/makale.txt.
+export interface MethodologyIdentity {
+  /** Yöntemin cevapladığı temel soru. */
+  question: string;
+  /** Yöntemin ne için var olduğu — tek cümlelik öz. */
+  essence: string;
+}
+
+export const METHODOLOGY_IDENTITY: Record<Methodology, MethodologyIdentity> = {
+  FMEA: {
+    question: "Bu süreç gelecekte hangi koşullarda başarısız olabilir?",
+    essence: "FMEA’nın amacı geçmişi açıklamak değil, gelecekte oluşabilecek hata türlerini öngörüp önleyici kontrol geliştirmektir; yangın çıktıktan sonra değil, yangın ihtimali varken devreye girer.",
+  },
+  KEPNER_TREGOE: {
+    question: "Ne değişti?",
+    essence: "Kepner-Tregoe, uzun süre sorunsuz çalışan bir sistem aniden bozulduğunda ‘ne değişti?’ sorusuna odaklanır; problemi ezbere çözmeden önce değişikliği bulup sınırlarını belirler.",
+  },
+  RCA: {
+    question: "Gerçek kök neden nedir?",
+    essence: "RCA, hata çoktan oluşmuşken sistemi bozan asıl nedeni ortaya çıkarmak içindir; amaç suçlu bulmak değil, tekrarı önleyecek kök nedeni bulmaktır.",
+  },
+  EIGHT_D: {
+    question: "Müşteriyi de koruyarak problemi kalıcı biçimde nasıl ortadan kaldırırız?",
+    essence: "8D müşteri etkilendiğinde devreye girer; yalnız kök nedeni bulmakla kalmaz, koruma, kalıcı düzeltici faaliyet ve standart güncellemeyi bir yönetim disipliniyle birleştirir.",
+  },
+  PDCA_A3: {
+    question: "Bu süreci adım adım nasıl geliştirir ve öğrenmeyi nasıl standartlaştırırız?",
+    essence: "PDCA/A3, ortada büyük bir kriz yokken mevcut performansı adım adım ve öğrenerek geliştirmek içindir.",
+  },
+  DMAIC: {
+    question: "Bu varyasyonu verilerle nasıl azaltırız?",
+    essence: "DMAIC, gözle görülemeyen, yüksek varyasyonlu ve çok değişkenli problemler içindir; ilişkileri sezgiyle değil istatistikle doğrular.",
+  },
+  FIVE_S: {
+    question: "Kayıpların kaynağı çalışma alanının düzensizliği mi?",
+    essence: "5S, kayıpların kökeni malzeme/araç/dokümanın standart bir yeri olmaması olduğunda; düzeni ve standardı kurmak içindir.",
+  },
+  TPM: {
+    question: "Ekipman neden tekrar tekrar güvenilirlik kaybediyor?",
+    essence: "TPM, kronik duruş ve ekipman güvenilirliği kaybı için; bakımı tekil müdahaleden bir yönetim sistemine dönüştürür.",
+  },
+  LEAN_VSM: {
+    question: "Değer akışında zaman ve israf nerede birikiyor?",
+    essence: "Yalın/VSM, bekleme, ara stok ve uzun temin süresi gibi akış-israf problemleri için; uçtan uca değer akışını görünür kılar.",
+  },
+  DMADV: {
+    question: "Bu ürün/süreç sıfırdan nasıl doğru tasarlanır?",
+    essence: "DMADV mevcut bir hatayı düzeltmek için değil, yeni bir ürün ya da süreci baştan doğru tasarlamak içindir.",
+  },
+  SPC: {
+    question: "Kararlı süreç kontrol sınırlarının dışına ne zaman çıkıyor?",
+    essence: "SPC, kararlılığı zaten doğrulanmış bir süreci kontrol kartlarıyla sürekli izleyip özel nedenli sapmaları erken yakalamak içindir.",
+  },
+  POKA_YOKE: {
+    question: "Bu hata fiziksel olarak nasıl imkânsız kılınır?",
+    essence: "Poka-Yoke, bilinen bir hata modunu yapısal olarak imkânsız kılan bir karşı önlemdir; önlenecek hatanın önce net tanımlı olmasını gerektirir.",
+  },
+  TOC: {
+    question: "Sistemin toplam çıktısını hangi tek kısıt belirliyor?",
+    essence: "TOC, sistemin çıktısını sınırlayan darboğazı bulup yönetmek içindir.",
+  },
+  SDCA: {
+    question: "Bu süreç iyileştirmeye hazır olacak kadar kararlı mı?",
+    essence: "SDCA, iyileştirmeye geçmeden önce standardı ve temel koşulları oturtup süreci stabilize etmek içindir.",
+  },
+  KT_DECISION: {
+    question: "Tanımlı kriterlere göre alternatiflerden hangisi en iyisi?",
+    essence: "Kepner-Tregoe Karar Analizi bir hatayı çözmek için değil, tanımlı seçenekler arasından zorunlu (MUST) ve ağırlıklı isteğe bağlı (WANT) kriterlerle en iyi seçeneği belirlemek içindir.",
   },
 };
 

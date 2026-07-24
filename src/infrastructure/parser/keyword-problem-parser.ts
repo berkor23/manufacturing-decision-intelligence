@@ -56,6 +56,8 @@ const SIGNALS: Signal[] = [
   { key: "standardWorkEstablished", value: true, patterns: [/standart iş.*(var|tanımlı|uygulanıyor)/, /standart operasyon.*tanımlı/] },
   { key: "basicConditionsStable", value: false, patterns: [/temel koşul.*(sağlanmıyor|eksik)/, /4m.*(değişken|kararsız)/] },
   { key: "basicConditionsStable", value: true, patterns: [/temel koşul.*(sağlanıyor|kararlı)/, /4m.*(kararlı|kontrol altında)/] },
+
+  { key: "decisionBetweenOptions", value: true, patterns: [/hangisini seç/, /hangisini tercih/, /alternatifler? aras/, /seçenekler? aras/, /iki (seçenek|alternatif|tedarikçi|makine|yöntem|teklif)/, /karar ver(memiz|ilmesi|eceğiz)/, /kıyasl(a|ıyoruz)/, /hangi (tedarikçi|makine|yöntem|teklif|opsiyon)/] },
 ];
 
 const YES = [/\bevet\b/, /\bvar\b/, /oldu/, /etkilendi/, /değişti/, /biliniyor/, /yüksek/, /\bdoğru\b/, /geçti/, /mevcut/, /\baynen\b/];

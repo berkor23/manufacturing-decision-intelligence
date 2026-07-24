@@ -85,6 +85,10 @@ export const COMPLEMENTARY: Record<Methodology, MethodologyLink[]> = {
     { code: "DMAIC", reason: "Baz hat kararlı olduktan sonra kalan varyasyonu istatistiksel yöntemlerle azalt." },
     { code: "SPC", reason: "Yerleşen standardın kararlılığını kontrol kartlarıyla izle." },
   ],
+  KT_DECISION: [
+    { code: "FMEA", reason: "Seçilen alternatifin olası hata modlarını devreye almadan önce proaktif değerlendir." },
+    { code: "PDCA_A3", reason: "Kararı önce küçük ölçekte dene, öğren, sonra yaygınlaştır." },
+  ],
 };
 
 /** Bir metodolojinin doğal takip/tamamlayıcı yöntemleri. */

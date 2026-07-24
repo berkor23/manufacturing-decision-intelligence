@@ -325,6 +325,17 @@ export const RULES: Rule[] = [
     effect: { SDCA: 3, PDCA_A3: -1 },
   },
   {
+    // KARAR EKSENİ: Bu bir hata teşhisi değil, tanımlı alternatifler arasından
+    // seçimdir. Reaktif/teşhis yöntemleri (RCA/8D/DMAIC/FMEA) burada yanlış kapıdır;
+    // doğru araç Kepner-Tregoe Karar Analizi'dir (ağırlıklı MUST/WANT).
+    id: "KD1",
+    because: "Bu bir hata teşhisi değil, tanımlı alternatifler arasından seçim → Kepner-Tregoe Karar Analizi",
+    reads: ["decisionBetweenOptions"],
+    traceFeature: "decisionBetweenOptions",
+    when: (p) => p.features.decisionBetweenOptions === true,
+    effect: { KT_DECISION: 6, RCA: -3, EIGHT_D: -3, DMAIC: -2, FMEA: -2 },
+  },
+  {
     id: "S4",
     because: "Standart, temel koşullar ve proses kararlılığı doğrulandı → stabilizasyon kapısı geçildi",
     reads: ["standardWorkEstablished", "basicConditionsStable", "processStable"],

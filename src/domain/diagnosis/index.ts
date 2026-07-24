@@ -12,5 +12,7 @@ export * from "./decision-trace";
 export * from "./diagnose";
 export * from "./sequence";
 export * from "./counterfactual";
+export * from "./rival-analysis";
+export * from "./decision-analysis";
 export * from "./methodology-composition";
 export * from "./stabilization";

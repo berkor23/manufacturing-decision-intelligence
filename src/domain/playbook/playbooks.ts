@@ -27,6 +27,102 @@ const TEAM_COLS: PlaybookColumn[] = [
 ];
 
 export const PLAYBOOKS: Record<Methodology, Playbook> = {
+  // ──────────────────────────────────────────── Kepner-Tregoe Karar Analizi
+  KT_DECISION: {
+    methodology: "KT_DECISION",
+    intro:
+      "Kepner-Tregoe Karar Analizi, bir hatayı çözmek için değil, tanımlı alternatifler arasından seçim yapmak içindir: önce amacı ve kriterleri netleştir, zorunlu (MUST) kriterlerle ele, ağırlıklı isteğe bağlı (WANT) kriterlerle puanla, sonra seçileni riskleriyle sına.",
+    steps: [
+      {
+        key: "frame",
+        name: "1 — Karar İfadesi ve Amaç",
+        objective: "Neye karar verildiğini ve kararın amacını tek cümlede netleştir.",
+        guidance:
+          "Kararı bir eylem + sonuç olarak yaz (ör. 'X hattı için en uygun tedarikçiyi seç'). Kapsamı ve kısıtları (bütçe, süre, zorunluluklar) belirt. Bu bir problem teşhisi değil; ortada çözülecek bir hata değil, seçilecek alternatifler var.",
+        fields: [
+          { key: "statement", label: "Karar ifadesi", type: "text", help: "Eylem + istenen sonuç" },
+          { key: "scope", label: "Kapsam ve kısıtlar", type: "textarea", help: "Bütçe, süre, sınırlar" },
+        ],
+      },
+      {
+        key: "musts",
+        name: "2 — Zorunlu (MUST) Kriterler",
+        objective: "Bir alternatifin kabul edilebilmesi için mutlaka karşılaması gereken go/no-go koşulları belirle.",
+        guidance:
+          "MUST kriterleri pazarlıksızdır: ölçülebilir ve gerçekçi olmalı. Birini bile karşılamayan alternatif, diğer yönleri ne kadar iyi olursa olsun elenir. Karşılanıp karşılanmadığı net (evet/hayır) doğrulanabilmeli.",
+        fields: [
+          {
+            key: "mustTable",
+            label: "Zorunlu kriterler",
+            type: "table",
+            columns: [
+              { key: "criterion", label: "MUST kriteri" },
+              { key: "measure", label: "Ölçüt (nasıl doğrulanır)" },
+            ],
+          },
+        ],
+      },
+      {
+        key: "wants",
+        name: "3 — İsteğe Bağlı (WANT) Kriterler ve Ağırlıklar",
+        objective: "Kararı iyileştiren, ağırlıklandırılabilir tercih kriterlerini ve önem ağırlıklarını belirle.",
+        guidance:
+          "WANT kriterleri elemez, ayırt eder. Her birine göreli önem ağırlığı ver (ör. 1–10). En önemli kritere en yüksek ağırlığı ata; ağırlıklar tercihlerinizi açıkça yansıtsın.",
+        fields: [
+          {
+            key: "wantTable",
+            label: "İsteğe bağlı kriterler",
+            type: "table",
+            columns: [
+              { key: "criterion", label: "WANT kriteri" },
+              { key: "weight", label: "Ağırlık (1–10)" },
+            ],
+          },
+        ],
+      },
+      {
+        key: "score",
+        name: "4 — Alternatifleri Puanla",
+        objective: "Her alternatif–kriter çifti için değeri gir; canlı karar motoru elemeyi ve ağırlıklı skoru anında hesaplasın.",
+        guidance:
+          "Her satır bir alternatif–kriter çiftidir. Kriter adını MUST/WANT tablolarındaki adla BİREBİR yaz. MUST kriterinde değer 'evet' veya 'hayır'; WANT kriterinde 0–10 puan. Bir MUST'ı 'hayır' olan alternatif otomatik elenir; kalanlar ağırlıklı WANT skoruna göre sıralanır. Motor sonucu yukarıdaki 'KT karar motoru' panelinde canlı gösterir.",
+        fields: [
+          {
+            key: "scoreTable",
+            label: "Alternatif × kriter puanları",
+            type: "table",
+            columns: [
+              { key: "option", label: "Alternatif" },
+              { key: "criterion", label: "Kriter (MUST/WANT adıyla aynı)" },
+              { key: "value", label: "Değer (MUST: evet/hayır · WANT: 0–10)" },
+              { key: "evidence", label: "Gerekçe / kanıt" },
+            ],
+          },
+        ],
+      },
+      {
+        key: "risk",
+        name: "5 — Seçilen Alternatifin Riskleri",
+        objective: "Öne çıkan alternatifin olası olumsuz sonuçlarını tartıp kararı sağlamlaştır.",
+        guidance:
+          "En yüksek puanlı seçenek otomatik en iyi değildir. Seçilenin olası olumsuz sonuçlarını (olasılık × etki) listele; ikinci sıradakiyle farkı darsa bu risk analizi belirleyici olur. Ciddi bir risk varsa önlem tanımla ya da kararı yeniden gözden geçir.",
+        fields: [
+          {
+            key: "riskTable",
+            label: "Olumsuz sonuç analizi",
+            type: "table",
+            columns: [
+              { key: "risk", label: "Olası olumsuz sonuç" },
+              { key: "likelihood", label: "Olasılık" },
+              { key: "impact", label: "Etki" },
+              { key: "mitigation", label: "Önlem" },
+            ],
+          },
+          { key: "decision", label: "Karar ve gerekçe", type: "textarea", help: "Seçilen alternatif ve nedeni" },
+        ],
+      },
+    ],
+  },
   // ────────────────────────────────────────────────────────── 8D
   EIGHT_D: {
     methodology: "EIGHT_D",

@@ -17,6 +17,7 @@ import {
 } from "./question-engine";
 import { buildDecisionTrace, DecisionTrace } from "./decision-trace";
 import { composeMethodologyPlan, MethodologyPlan } from "./methodology-composition";
+import { explainRivals, RivalExplanation } from "./rival-analysis";
 import { evaluateStabilizationGate, StabilizationGate } from "./stabilization";
 
 export interface DiagnosisConfig {
@@ -43,6 +44,8 @@ export interface DiagnosisSnapshot {
   trace: DecisionTrace;
   evidence: DiagnosisEvidence;
   methodPlan: MethodologyPlan;
+  /** Önerilmeyen yöntemler için "neden değil" gerekçeleri (deterministik). */
+  rivalAnalysis: RivalExplanation[];
   stabilization: StabilizationGate;
 }
 
@@ -73,6 +76,7 @@ export function diagnose(
   const entropy = rankingEntropy(ranking);
   const trace = buildDecisionTrace(p, evaluation, ranking);
   const methodPlan = composeMethodologyPlan(ranking);
+  const rivalAnalysis = explainRivals(p, evaluation, ranking);
   const stabilization = evaluateStabilizationGate(p);
   const leader = ranking[0];
   const supportingFeatures = new Set<DiagnosticFeatureKey>();
@@ -135,6 +139,7 @@ export function diagnose(
     trace,
     evidence,
     methodPlan,
+    rivalAnalysis,
     stabilization,
   };
 }

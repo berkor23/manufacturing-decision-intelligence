@@ -45,6 +45,7 @@ export interface DiagnosisView {
   counterfactuals: DiagnosisCounterfactual[];
   evidence: ReturnType<typeof diagnose>["evidence"];
   methodPlan: ReturnType<typeof diagnose>["methodPlan"];
+  rivalAnalysis: ReturnType<typeof diagnose>["rivalAnalysis"];
   stabilization: ReturnType<typeof diagnose>["stabilization"];
 }
 
@@ -229,6 +230,7 @@ export class DiagnosisService {
       counterfactuals: conv.status === "CONCLUDED" ? diagnosisCounterfactuals(conv.structuredProblem, conv.questionsAsked, this.config) : [],
       evidence: snap.evidence,
       methodPlan: snap.methodPlan,
+      rivalAnalysis: snap.rivalAnalysis,
       stabilization: snap.stabilization,
     };
   }

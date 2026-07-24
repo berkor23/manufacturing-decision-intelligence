@@ -120,6 +120,22 @@ describe("golden cases — doğru metodoloji seçimi", () => {
   it("darboğaz WIP ve akış kaybı da üretiyorsa açık sistem kısıtı nedeniyle TOC öne çıkar", () => {
     expect(topMethodology(problemWith({ bottleneckThroughput: true, flowOrWaste: true, hasMeasurementData: true }))).toBe("TOC");
   });
+
+  it("tanımlı alternatifler arasından seçim → Kepner-Tregoe Karar Analizi (KT_DECISION)", () => {
+    expect(topMethodology(problemWith({ decisionBetweenOptions: true }))).toBe("KT_DECISION");
+  });
+
+  it("karar problemi teşhis yöntemlerinden ayrışır: RCA/8D/DMAIC/FMEA bastırılır", () => {
+    const { scores } = evaluateRules(problemWith({ decisionBetweenOptions: true }));
+    for (const m of ["RCA", "EIGHT_D", "DMAIC", "FMEA"] as const) {
+      expect(scores[m]).toBeLessThan(0);
+    }
+  });
+
+  it("KARAR ekseni ile DEĞİŞİM ekseni karışmaz: yeni başlayan+değişiklik hâlâ KT problem analizi", () => {
+    // decisionBetweenOptions null → karar eksenine kaymaz.
+    expect(topMethodology(problemWith({ defectOccurred: true, startedRecently: true, processChanged: true }))).toBe("KEPNER_TREGOE");
+  });
 });
 
 describe("teşhis önceliği (R6b) — kök neden bilinmezken çözüm erken", () => {

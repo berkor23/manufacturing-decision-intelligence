@@ -42,7 +42,10 @@ import type {
 import {
   METHODOLOGY_META,
   nextMethodologies,
+  analyzeDecision,
   type Methodology,
+  type DecisionCriterion,
+  type DecisionOption,
 } from "@/domain/diagnosis";
 import {
   analyzeIndividuals,
@@ -6127,6 +6130,121 @@ function SpecialtyPanel({
             <option value="REJECTED">Neden elendi</option>
           </select>
         </div>
+      </section>
+    );
+  }
+  if (workspace.methodology === "KT_DECISION") {
+    const rowsOf = (stepKey: string, field: string) =>
+      (workspace.steps.find((s) => s.key === stepKey)?.values[field] ?? []) as TableRow[];
+    const mustRows = rowsOf("musts", "mustTable");
+    const wantRows = rowsOf("wants", "wantTable");
+    const scoreRows = rowsOf("score", "scoreTable");
+
+    const norm = (s: string | undefined) => (s ?? "").trim().toLocaleLowerCase("tr");
+    const YES = new Set(["evet", "var", "geçer", "geçti", "true", "yes", "x", "✓", "olur", "uygun"]);
+    const NO = new Set(["hayır", "yok", "kalır", "elendi", "false", "no", "olmaz"]);
+    const asBool = (v: string | undefined): boolean | null => {
+      const t = norm(v);
+      if (YES.has(t)) return true;
+      if (NO.has(t)) return false;
+      return null;
+    };
+    const asNum = (v: string | undefined): number => {
+      const n = Number((v ?? "").replace(",", "."));
+      return Number.isFinite(n) ? Math.max(0, Math.min(10, n)) : 0;
+    };
+    const asWeight = (v: string | undefined): number => {
+      const n = Number((v ?? "").replace(",", "."));
+      return Number.isFinite(n) && n > 0 ? Math.max(1, Math.min(10, n)) : 1;
+    };
+
+    const criteria: DecisionCriterion[] = [];
+    for (const r of mustRows) {
+      const label = (r.criterion ?? "").trim();
+      if (label) criteria.push({ id: norm(label), label, kind: "MUST" });
+    }
+    for (const r of wantRows) {
+      const label = (r.criterion ?? "").trim();
+      if (label) criteria.push({ id: norm(label), label, kind: "WANT", weight: asWeight(r.weight) });
+    }
+    const critById = new Map(criteria.map((c) => [c.id, c]));
+
+    const optionMap = new Map<string, DecisionOption>();
+    let unmatched = 0;
+    for (const r of scoreRows) {
+      const opt = (r.option ?? "").trim();
+      const critKey = norm(r.criterion);
+      if (!opt || !critKey) continue;
+      const c = critById.get(critKey);
+      if (!c) { unmatched++; continue; }
+      if (!optionMap.has(opt)) optionMap.set(opt, { id: opt, label: opt, scores: {} });
+      optionMap.get(opt)!.scores[c.id] = c.kind === "MUST" ? asBool(r.value) : asNum(r.value);
+    }
+    const options = [...optionMap.values()];
+    const result = options.length && criteria.length ? analyzeDecision(criteria, options) : null;
+
+    return (
+      <section className="card p-6">
+        <p className="eyebrow">KT karar motoru</p>
+        <h2 className="text-lg font-semibold">Canlı karar hesabı (MUST/WANT)</h2>
+        <p className="text-xs text-slate-400">
+          Kriter ve puanları girdikçe eleme ile ağırlıklı skor anında hesaplanır; LLM değil, deterministik motor.
+        </p>
+        {!result ? (
+          <p className="mt-4 text-sm text-slate-400">
+            Önce “Zorunlu/İsteğe bağlı kriterler” ve “Alternatifleri Puanla” adımlarını doldurun.
+          </p>
+        ) : (
+          <>
+            {result.recommended ? (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Önerilen alternatif</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {result.recommended.option.label}
+                  <span className="text-emerald-600 dark:text-emerald-400"> · {Math.round(result.recommended.normalized * 100)}/100</span>
+                </p>
+                {result.close && (
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                    Karar kırılgan: ikinci sıradakiyle fark dar; seçileni riskleriyle ayrıca tartın.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/20">
+                Hiçbir alternatif tüm zorunlu (MUST) kriterleri karşılamıyor; kriterleri veya alternatifleri gözden geçirin.
+              </p>
+            )}
+            <div className="mt-3 flex flex-col gap-2">
+              {result.ranked.map((e) => (
+                <div
+                  key={e.option.id}
+                  className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm ${e.eliminated ? "border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/10" : "border-slate-200 dark:border-slate-800"}`}
+                >
+                  <span className="font-medium">{e.option.label}</span>
+                  {e.eliminated ? (
+                    <span className="text-xs text-red-600 dark:text-red-400">Elendi · {e.failedMusts.join(", ")}</span>
+                  ) : (
+                    <span className="text-xs text-slate-500">
+                      Ağırlıklı skor {Math.round(e.normalized * 100)}/100
+                      {e.unverifiedMusts.length ? ` · doğrulanmamış: ${e.unverifiedMusts.join(", ")}` : ""}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl bg-slate-50 p-3 dark:bg-slate-900/50">
+              <p className="text-xs font-semibold text-slate-500">Gerekçe</p>
+              <ul className="mt-1 list-disc pl-5 text-xs text-slate-600 dark:text-slate-400">
+                {result.trace.map((t, i) => <li key={i}>{t}</li>)}
+              </ul>
+            </div>
+            {unmatched > 0 && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                {unmatched} puan satırı bir kriterle eşleşmedi — “Kriter” adını MUST/WANT tablolarındaki adla birebir yazın.
+              </p>
+            )}
+          </>
+        )}
       </section>
     );
   }

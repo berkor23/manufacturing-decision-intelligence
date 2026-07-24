@@ -449,17 +449,19 @@ function ResultView({
         </ol>
       </div>
 
+      <RivalAnalysisPanel view={view} />
+
       <StabilizationGatePanel view={view} />
       <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-200"><strong>Teknik öneri ile kurumsal zorunluluk aynı şey değildir.</strong><p className="mt-1 text-xs leading-5">Uygulama alanında müşteri/OEM formatı, regülasyon, mevcut CAPA kaydı, ekip yetkinliği, zaman ve kaynak baskısını ayrıca kaydedin. Örneğin teknik analiz RCA iken müşteri yanıtı 8D formatında yürütülebilir.</p></div>
       <MethodPlanPanel view={view} />
 
       <SequencePanel methodology={result.methodology} ranking={view.ranking} />
 
-      {view.counterfactuals.length > 0 && (
-        <div className="card p-6">
-          <p className="eyebrow">Kararı ne değiştirirdi?</p>
-          <h3 className="mt-1 font-semibold">Karşı-olgusal teşhis</h3>
-          <p className="mt-1 text-xs text-slate-400">Her senaryo aynı deterministik motorla yeniden hesaplandı; LLM yorumu değildir.</p>
+      <div className="card p-6">
+        <p className="eyebrow">Kararı ne değiştirirdi?</p>
+        <h3 className="mt-1 font-semibold">Karşı-olgusal teşhis</h3>
+        <p className="mt-1 text-xs text-slate-400">Her senaryo aynı deterministik motorla yeniden hesaplandı; LLM yorumu değildir.</p>
+        {view.counterfactuals.length > 0 ? (
           <div className="mt-3 flex flex-col gap-2">
             {view.counterfactuals.map((c) => (
               <div key={`${c.featureKey}-${c.assumedValue}`} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
@@ -468,8 +470,12 @@ function ResultView({
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-300">
+            Bu karar sağlam: tek bir cevabın değişmesi önerilen yöntemi değiştirmiyor — öneriyi birden fazla koşul birlikte destekliyor.
+          </p>
+        )}
+      </div>
 
       <RankingBars ranking={view.ranking} limit={6} caption="Tüm metodolojiler için göreli uygunluk" />
 
@@ -477,6 +483,32 @@ function ResultView({
         Yeni teşhis başlat
       </button>
     </div>
+  );
+}
+
+function RivalAnalysisPanel({ view }: { view: DiagnosisView }) {
+  const rivals = view.rivalAnalysis ?? [];
+  if (rivals.length === 0) return null;
+  return (
+    <section className="card p-6">
+      <p className="eyebrow">Neden diğer yöntemler değil?</p>
+      <h3 className="mt-1 font-semibold">Elenen yöntemlerin gerekçesi</h3>
+      <p className="mt-1 text-xs text-slate-400">Gerekçeler kararı veren kuralların kendi notlarıdır; sonradan yazılmış bir yorum ya da LLM çıktısı değildir.</p>
+      <div className="mt-4 flex flex-col gap-3">
+        {rivals.map((r) => (
+          <div key={r.methodology} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-semibold">{label(r.methodology)}</p>
+              <span className={`rounded-full px-2 py-0.5 text-xs ${r.kind === "SUPPRESSED" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"}`}>
+                {r.kind === "SUPPRESSED" ? "Bu problemde uygun değil" : `Kısmen uygun · lider ${r.scoreGapToLeader} puan önde`}
+              </span>
+            </div>
+            {r.question && <p className="mt-1 text-xs italic text-slate-400">Sorduğu soru: “{r.question}”</p>}
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{r.reason}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
