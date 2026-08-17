@@ -266,7 +266,10 @@ export function MethodologyWorkspace({ id, aiEnabled = true }: { id: string; aiE
       {/* Yapışkan kontrol çubuğu: cam efekti (backdrop-blur + yarı saydam)
           yerine opak yüzey ve 1px çerçeve. Altındaki içerik bulanık bir sis
           değil, çizgiyle kesilmiş net bir sınır olarak okunur. */}
-      <div className="sticky top-[105px] z-10 -mx-1 border border-[var(--rule-strong)] bg-[var(--surface)] p-2 md:top-14">
+      {/* Yapışkan başlık her genişlikte 56px (min-h-14); çubuk ona yaslanır.
+          Eskiden mobilde 105px'ten yapışıyordu — başlık 57px olduğu için
+          arada 48px'lik bir bant kalıyor ve içerik oradan akıp geçiyordu. */}
+      <div className="sticky top-14 z-10 -mx-1 border border-[var(--rule-strong)] bg-[var(--surface)] p-2">
         <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-2">
           <div className="flex flex-wrap items-center gap-2.5">
             <StatusPill status={ws.closureStatus} />
