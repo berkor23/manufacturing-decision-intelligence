@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DiagnosisView } from "@/application/diagnosis-service";
 import type { Conversation } from "@/application/ports/conversation-repository";
-import { FEATURE_META, type DiagnosticFeatureKey } from "@/domain/diagnosis";
+import { FEATURE_META, PROBLEM_TEXT_MIN, PROBLEM_TEXT_TOO_LONG, problemTextAcceptable, type DiagnosticFeatureKey } from "@/domain/diagnosis";
 import { METHODOLOGY_META, METHODOLOGY_ROLES, type Methodology } from "@/domain/diagnosis/methodologies";
 import { closeAlternatives, nextMethodologies } from "@/domain/diagnosis/sequence";
 import { Markdown } from "@/components/markdown";
@@ -25,6 +25,40 @@ const supportLabel=(value:number)=>value>=0.55?"Çok güçlü":value>=0.35?"Gü�
 const evidenceLevel=(view:DiagnosisView)=>view.evidence.status==="CONFIRMED"?"İyi desteklenen öneri":view.evidence.status==="INCONCLUSIVE"?"Ek kanıt gerekli":view.evidence.supportingSignals>=3&&view.evidence.knownAnswers>=4?"Güçlenen aday":view.evidence.supportingSignals>=2?"Doğrulama bekleyen öneri":"İlk yönlendirme";
 const label = (m: Methodology) => METHODOLOGY_META[m].shortName;
 const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Devam eden teşhisin kimliğini adres çubuğunda taşı.
+ *
+ * Üye kullanıcının oturumu yalnız React state'inde yaşıyordu: sekme kapanınca,
+ * sayfa yenilenince veya "Yeni teşhis"e basılınca verilen cevaplar ekrandan
+ * kayboluyordu — kayıt veritabanında dursa bile ona dönmenin yolu yoktu.
+ * Kimlik URL'de olunca yenileme, geri tuşu ve yer imi çalışır; yetkilendirmeyi
+ * proxy zaten /api/diagnosis/conv_* deseninde yapıyor.
+ */
+const CONVERSATION_PARAM = "c";
+
+function readConversationParam(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get(CONVERSATION_PARAM);
+}
+
+function writeConversationParam(id: string | null) {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (id) url.searchParams.set(CONVERSATION_PARAM, id);
+  else url.searchParams.delete(CONVERSATION_PARAM);
+  window.history.replaceState(null, "", url.toString());
+}
+
+/** Yerel depodaki devam eden (ASKING) misafir teşhisi — yoksa null. */
+async function findResumableGuestDiagnosis(): Promise<GuestDiagnosisRecord | null> {
+  try {
+    const rows = await listGuestDiagnoses();
+    return rows.find((row) => row.view.status === "ASKING") ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Üç durumlu seçim. Eski hâli iOS tarzı "gri hap içinde kayan beyaz kutu"ydu;
@@ -145,9 +179,38 @@ export function DiagnosisFlow({ authenticated }: { authenticated: boolean }) {
   const [reviewPending, setReviewPending] = useState(false);
 
   useEffect(() => {
-    if (authenticated) return;
-    void listGuestDiagnoses().then((rows) => setSavedDiagnosis(rows.find((row) => row.view.status === "ASKING") ?? null)).catch(() => undefined);
+    if (!authenticated) {
+      void findResumableGuestDiagnosis().then(setSavedDiagnosis);
+      return;
+    }
+    // Üye: adres çubuğundaki kimlikten oturumu geri yükle.
+    const id = readConversationParam();
+    if (!id) return;
+    let cancelled = false;
+    void (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/diagnosis/${id}`);
+        const data = res.ok ? ((await res.json()) as DiagnosisView) : null;
+        if (cancelled) return;
+        // Kayıt yoksa veya erişim yoksa kimliği adres çubuğundan düşür;
+        // kullanıcı ölü bir bağlantıyla baş başa kalmasın.
+        if (data) setView(normalizeDiagnosisView(data));
+        else writeConversationParam(null);
+      } catch {
+        if (!cancelled) writeConversationParam(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [authenticated]);
+
+  // Görünüm değiştikçe kimliği adres çubuğunda güncel tut.
+  useEffect(() => {
+    if (!authenticated) return;
+    writeConversationParam(view && view.status !== "CONCLUDED" ? view.conversationId : null);
+  }, [authenticated, view]);
 
   async function call(url: string, body: { text: string }, operation: "START" | "ANSWER") {
     setLoading(true);
@@ -225,12 +288,27 @@ export function DiagnosisFlow({ authenticated }: { authenticated: boolean }) {
       setLoading(false);
     }
   }
+  /**
+   * Yeni teşhise dön. Devam eden bir oturum varsa önce onay ister — buton
+   * eskiden sessizce sıfırlıyordu ve verilen cevaplar ekrandan siliniyordu.
+   *
+   * Sıfırlamadan sonra kayıtlı misafir teşhisi YENİDEN OKUNUR: kayıt yerel
+   * depoda duruyor olsa bile "yarım kalan teşhisiniz var" bandı yalnız sayfa
+   * açılışında hesaplanıyordu, dolayısıyla kullanıcı sayfayı elle yenilemeden
+   * kendi kaydına geri dönemiyordu.
+   */
   const reset = () => {
+    const midFlow = view !== null && view.status !== "CONCLUDED";
+    if (midFlow && !window.confirm(
+      "Bu teşhis oturumu kapatılıp yeni bir teşhise dönülecek. Verdiğiniz cevaplar bu ekrandan kaldırılır. Devam edilsin mi?",
+    )) return;
     setView(null);
     setText("");
     setGuestState(null);
     setReviewPending(false);
     setError(null);
+    writeConversationParam(null);
+    if (!authenticated) void findResumableGuestDiagnosis().then(setSavedDiagnosis);
   };
 
   return (
@@ -476,7 +554,7 @@ function InformationTasks({ view, loading, onView }: { view: DiagnosisView; load
     try {
       const res = await fetch(`/api/diagnosis/${view.conversationId}/tasks`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
       const data = await res.json(); if (!res.ok) throw new Error(data.error ?? "Görev güncellenemedi."); onView(normalizeDiagnosisView(data));
-    } catch(e) { setErr(e instanceof Error ? e.message : "Hata"); } finally { setBusy(null); }
+    } catch(e) { setErr(e instanceof Error ? e.message : "Görev güncellenemedi. Bağlantınızı kontrol edip yeniden deneyin."); } finally { setBusy(null); }
   }
   return (
     <section className="card card-accent-indigo p-5 sm:p-6">
@@ -620,13 +698,25 @@ function Intake({
           ))}
         </ul>
       </div>
-      <button
-        onClick={onStart}
-        disabled={loading || text.trim().length === 0}
-        className="btn btn-primary btn-lg mt-5"
-      >
-        {loading ? "Değerlendiriliyor…" : "Teşhise başla"}
-      </button>
+      {/* Eşik domainden gelir; istemci, misafir rotası ve üye rotası aynı
+          kuralı okur. Düğme kapalıysa nedeni yazılı — sessizce kapalı bir
+          düğme kullanıcıya ne yapması gerektiğini söylemez. */}
+      <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <button
+          onClick={onStart}
+          disabled={loading || !problemTextAcceptable(text)}
+          className="btn btn-primary btn-lg"
+        >
+          {loading ? "Değerlendiriliyor…" : "Teşhise başla"}
+        </button>
+        {!loading && text.trim().length > 0 && !problemTextAcceptable(text) && (
+          <span className="text-[11px] text-[var(--st-warn)]">
+            {text.trim().length < PROBLEM_TEXT_MIN
+              ? `Biraz daha ayrıntı gerekiyor — ${PROBLEM_TEXT_MIN - text.trim().length} karakter daha.`
+              : PROBLEM_TEXT_TOO_LONG}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -859,7 +949,7 @@ function ResultView({
       if (!res.ok) throw new Error(data.error ?? "Rapor üretilemedi.");
       setReport(data.report);
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Hata.");
+      setActionError(e instanceof Error ? e.message : "İşlem tamamlanamadı. Yeniden deneyin.");
     } finally {
       setBusy(null);
     }
@@ -896,7 +986,7 @@ function ResultView({
       if (!res.ok) throw new Error(data.error ?? "Açılamadı.");
       router.push(`/workspace/${data.id}`);
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Hata.");
+      setActionError(e instanceof Error ? e.message : "İşlem tamamlanamadı. Yeniden deneyin.");
       setBusy(null);
     }
   }
@@ -1048,7 +1138,7 @@ function ResultView({
       <div className="card card-accent-indigo p-4 sm:px-5">
         <strong className="text-[13px]">Teknik öneri ile kurumsal zorunluluk aynı şey değildir.</strong>
         <p className="mt-1 max-w-3xl text-[12px] leading-relaxed text-[var(--muted)]">
-          Uygulama alanında müşteri/OEM formatı, regülasyon, mevcut CAPA kaydı, ekip yetkinliği,
+          Çalışma alanında müşteri/OEM formatı, regülasyon, mevcut CAPA kaydı, ekip yetkinliği,
           zaman ve kaynak baskısını ayrıca kaydedin. Örneğin teknik analiz RCA iken müşteri yanıtı
           8D formatında yürütülebilir.
         </p>

@@ -1,6 +1,6 @@
 "use client";
 
-// Metodoloji Uygulama Alanı — playbook tabanlı profesyonel yürütme.
+// Metodoloji Çalışma Alanı — playbook tabanlı profesyonel yürütme.
 // Sol: adım haritası (ilerleme). Sağ: aktif adımın yapılandırılmış formu
 // (gerçek 8D/FMEA/KT formları gibi), adım başına AI taslağı ve rehber.
 // Altta: aksiyon takibi, profesyonel rapor ve AI rehber paneli.
@@ -35,7 +35,7 @@ import { friendlyStepName } from "@/components/workspace/terminology";
 import { generateWorkspaceReport, officialReportBlockers } from "@/domain/workspace-report";
 
 
-export function MethodologyWorkspace({ id }: { id: string }) {
+export function MethodologyWorkspace({ id, aiEnabled = true }: { id: string; aiEnabled?: boolean }) {
   const localMode = isGuestWorkspaceId(id);
   const [ws, setWs] = useState<WsData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +133,7 @@ export function MethodologyWorkspace({ id }: { id: string }) {
       setLastSavedAt(new Date());
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Hata.");
+      setError(e instanceof Error ? e.message : "Çalışma kaydedilemedi. Değişiklikleriniz ekranda duruyor; bağlantı gelince yeniden deneyin.");
       return false;
     } finally {
       setSaving(false);
@@ -195,7 +195,7 @@ export function MethodologyWorkspace({ id }: { id: string }) {
       <header className="card p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="eyebrow">Uygulama Alanı</p>
+            <p className="eyebrow">Çalışma Alanı</p>
             <h1 className="text-2xl font-bold tracking-tight">
               {ws.methodologyName}
             </h1>
@@ -322,8 +322,12 @@ export function MethodologyWorkspace({ id }: { id: string }) {
               onClick={() => save()}
               disabled={saving || !dirty}
               className="btn btn-primary"
+              /* Çalışma zaten kendiliğinden kaydediliyor; bu düğme yalnız
+                 beklemeden kaydetmek isteyen için. Adı bunu söylemeli, yoksa
+                 "basmazsam kaybolur mu?" sorusunu doğuruyor. */
+              title="Çalışma kendiliğinden kaydedilir; bu düğme beklemeden kaydeder"
             >
-              {saving ? "Kaydediliyor…" : "Kaydet"}
+              {saving ? "Kaydediliyor…" : "Şimdi kaydet"}
             </button>
           </div>
         </div>
@@ -492,6 +496,7 @@ export function MethodologyWorkspace({ id }: { id: string }) {
               }}
               ensureSaved={() => save()}
               localMode={localMode}
+              aiEnabled={aiEnabled}
               prerequisiteMessage={(() => {
                 const prerequisite = playbook.steps.slice(0, active).find((definition) =>
                   !stepIsComplete(ws.steps.find((item) => item.key === definition.key)?.status),

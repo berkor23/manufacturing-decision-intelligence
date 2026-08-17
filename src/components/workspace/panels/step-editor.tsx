@@ -55,6 +55,7 @@ export function StepEditor({
   onDrafted,
   ensureSaved,
   localMode = false,
+  aiEnabled = true,
   prerequisiteMessage,
 }: {
   workspaceId: string;
@@ -69,6 +70,8 @@ export function StepEditor({
   onDrafted: (ws: WsData) => void;
   ensureSaved: () => Promise<boolean>;
   localMode?: boolean;
+  /** Sağlayıcı kapalıysa düğme AI vaat etmez; sistem şablona düşer. */
+  aiEnabled?: boolean;
   prerequisiteMessage?: string;
 }) {
   const [drafting, setDrafting] = useState(false);
@@ -128,7 +131,7 @@ export function StepEditor({
       if (!res.ok) throw new Error(data.error ?? "Taslak üretilemedi.");
       onDrafted(data);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Hata.");
+      setErr(e instanceof Error ? e.message : "Taslak üretilemedi. Yeniden deneyin.");
     } finally {
       setDrafting(false);
     }
@@ -179,10 +182,16 @@ export function StepEditor({
         {!localMode && <button
           onClick={draft}
           disabled={drafting}
-          className="rounded-lg border border-[var(--st-ok-rule)] px-3 py-1.5 text-xs font-medium text-[var(--st-ok)] transition hover:bg-[var(--st-ok-bg)] disabled:opacity-40"
-          title="Boş alanlara probleme özel profesyonel taslak doldurur"
+          className="btn btn-secondary shrink-0"
+          title={aiEnabled
+            ? "Boş alanlara probleme özel taslak doldurur; dolu alanlara dokunmaz"
+            : "Bu kurulumda AI sağlayıcı kapalı — boş alanlara adım rehberinden şablon metni yerleştirilir"}
         >
-          {drafting ? "Taslak üretiliyor…" : "AI ile taslak doldur"}
+          {drafting
+            ? "Taslak üretiliyor…"
+            : aiEnabled
+              ? "AI ile taslak doldur"
+              : "Şablon taslağı doldur"}
         </button>}
       </div>
 

@@ -101,7 +101,10 @@ export interface WorkspaceAttachment {
 
 export interface WorkspaceAuditEvent {
   id: string;
-  type: "CREATED" | "UPDATED" | "AI_DRAFT" | "REPORT" | "ATTACHMENT" | "LINKED" | "LIFECYCLE";
+  // TEMPLATE_DRAFT, AI_DRAFT'tan ayrıdır: AI sağlayıcı kapalıyken veya model
+  // bozuk çıktı verip deterministik şablona düşüldüğünde ortada AI yoktur.
+  // Denetim izi ne olduğunu yazmalı; "AI taslağı" demek iz kaydını yanlışlar.
+  type: "CREATED" | "UPDATED" | "AI_DRAFT" | "TEMPLATE_DRAFT" | "REPORT" | "ATTACHMENT" | "LINKED" | "LIFECYCLE";
   summary: string;
   changedFields: string[];
   occurredAt: string;

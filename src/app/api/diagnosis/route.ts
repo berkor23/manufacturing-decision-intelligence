@@ -3,8 +3,11 @@ import { z } from "zod";
 import { getDiagnosisService } from "@/application/wiring";
 import { accountAuthEnabled, accountFromRequest, recordActivity } from "@/lib/account-auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { PROBLEM_TEXT_MAX, PROBLEM_TEXT_MIN, PROBLEM_TEXT_TOO_LONG, PROBLEM_TEXT_TOO_SHORT } from "@/domain/diagnosis";
 
-const bodySchema = z.object({ text: z.string().min(1, "Problem metni boş olamaz.") });
+const bodySchema = z.object({
+  text: z.string().trim().min(PROBLEM_TEXT_MIN, PROBLEM_TEXT_TOO_SHORT).max(PROBLEM_TEXT_MAX, PROBLEM_TEXT_TOO_LONG),
+});
 
 // POST /api/diagnosis — yeni teşhis başlat
 export async function POST(req: NextRequest) {

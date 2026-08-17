@@ -36,7 +36,7 @@ export function GuidePanel({
       setThread((t) => [...t, { q: question, a }]);
       setQ("");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Hata.");
+      setErr(e instanceof Error ? e.message : "Rehber yanıtı alınamadı. Yeniden deneyin.");
     } finally {
       setBusy(false);
     }

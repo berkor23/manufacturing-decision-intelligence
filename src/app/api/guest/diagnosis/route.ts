@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ANSWER_TEXT_MAX, ANSWER_TEXT_MIN, PROBLEM_TEXT_MAX, PROBLEM_TEXT_MIN, PROBLEM_TEXT_TOO_LONG, PROBLEM_TEXT_TOO_SHORT } from "@/domain/diagnosis";
 import { z } from "zod";
 import { DiagnosisService } from "@/application/diagnosis-service";
 import type { Conversation } from "@/application/ports/conversation-repository";
@@ -36,10 +37,10 @@ const conversationSchema = z.object({
 });
 
 const requestSchema = z.discriminatedUnion("operation", [
-  z.object({ operation: z.literal("START"), text: z.string().trim().min(10).max(8_000) }),
+  z.object({ operation: z.literal("START"), text: z.string().trim().min(PROBLEM_TEXT_MIN, PROBLEM_TEXT_TOO_SHORT).max(PROBLEM_TEXT_MAX, PROBLEM_TEXT_TOO_LONG) }),
   z.object({
     operation: z.literal("ANSWER"),
-    text: z.string().trim().min(1).max(4_000),
+    text: z.string().trim().min(ANSWER_TEXT_MIN).max(ANSWER_TEXT_MAX),
     state: conversationSchema,
   }),
   z.object({

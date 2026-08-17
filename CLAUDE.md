@@ -22,7 +22,7 @@ Mimari sözleşme: `docs/ARCHITECTURE.md` · Plan ve fazlar: `docs/PLAN.md` · V
 
 ## Katmanlı yapı (bağımlılık içeri doğru)
 - `src/domain/diagnosis/` — SAF çekirdek: features, rules, rule-engine, confidence-engine, question-engine, decision-trace, diagnose (fasad). LLM/DB YOK. `index.ts` barrel.
-- `src/domain/playbook/` — SAF playbook kataloğu: 13 metodolojinin profesyonel uygulama şablonu (adımlar + yapılandırılmış alanlar). Workspace bu şablondan tohumlanır; AI taslağı ve rapor buna dayanır.
+- `src/domain/playbook/` — SAF playbook kataloğu: desteklenen her metodolojinin profesyonel uygulama şablonu (adımlar + yapılandırılmış alanlar). Workspace bu şablondan tohumlanır; AI taslağı ve rapor buna dayanır.
 - `src/domain/access/` — SAF erişim çekirdeği. `ownership.ts`: kim hangi kaydı okur/yazar (girdi yalnız `AccessIdentity` + `RecordOwner`). `account-policy.ts`: giriş kararı, jeton geçerliliği/TTL, koltuk limiti, davet ve üyelik kuralları. DB/oturum/e-posta YOK; `lib/account-auth.ts` ve route'lar yalnız uygular.
 - `src/application/` — orkestrasyon: `diagnosis-service.ts`, `account-service.ts`, `wiring.ts` (composition root), `ports/` (IAIProvider, IProblemParser, IConversationRepository, IAccountRepository, IPasswordHasher, IEmailSender, IAttachmentStorage)
 - `src/infrastructure/` — port uygulamaları: `ai/` (ollama/none), `parser/` (keyword/llm), `persistence/` (in-memory; prisma sonra)

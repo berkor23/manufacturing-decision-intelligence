@@ -2,6 +2,7 @@
 // application katmanı yalnızca buradan import eder; iç dosyalar detaydır.
 
 export * from "./features";
+export * from "./problem-input";
 export * from "./context";
 export * from "./methodologies";
 export * from "./rules";

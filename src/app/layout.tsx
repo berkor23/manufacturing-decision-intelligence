@@ -6,6 +6,7 @@ import { ADMIN_SESSION_COOKIE, SESSION_COOKIE, adminPassword, authEnabled } from
 import { SiteHeader } from "@/components/site-header";
 import { DemoBanner } from "@/components/demo-banner";
 import { accountAuthEnabled, currentAccount, USER_SESSION_COOKIE } from "@/lib/account-auth";
+import { aiEnabled } from "@/lib/ai-config";
 import "./globals.css";
 
 // Tipografi: IBM Plex. Mühendislik/üretim bağlamına ait, Türkçe için gerekli
@@ -46,7 +47,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="flex min-h-full flex-col">
         <a href="#main-content" className="skip-link">Ana içeriğe geç</a>
         {process.env.NEXT_PUBLIC_DEMO === "1" && (
-          <DemoBanner aiEnabled={(process.env.AI_PROVIDER ?? "ollama").toLowerCase() !== "none"} />
+          <DemoBanner aiEnabled={aiEnabled()} />
         )}
         <SiteHeader signedIn={signedIn} adminAvailable={!accountAuthEnabled() && adminAvailable} accountName={account?.name} companyManager={Boolean(account?.organizationId && ["OWNER","ADMIN","MANAGER"].includes(account.role ?? ""))} />
         <div id="main-content" className="flex flex-1 flex-col" tabIndex={-1}>{children}</div>

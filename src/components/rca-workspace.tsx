@@ -52,7 +52,7 @@ export function RcaWorkspace({ id }: { id: string }) {
       if (!res.ok) throw new Error("Kaydetme başarısız.");
       setDirty(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Hata.");
+      setError(e instanceof Error ? e.message : "Kayıt güncellenemedi. Yeniden deneyin.");
     } finally {
       setSaving(false);
     }

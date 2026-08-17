@@ -27,7 +27,7 @@ export function LoginForm() {
       router.replace(next && next.startsWith("/") ? next : "/");
       router.refresh();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Hata.");
+      setErr(e instanceof Error ? e.message : "Giriş yapılamadı. Bağlantınızı kontrol edip yeniden deneyin.");
       setBusy(false);
     }
   }

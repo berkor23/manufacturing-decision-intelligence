@@ -113,7 +113,7 @@ export function IntelligencePanel({
       onFresh(data);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Hata");
+      setError(e instanceof Error ? e.message : "İstek tamamlanamadı. Yeniden deneyin.");
     } finally {
       setBusy(false);
     }
@@ -138,7 +138,7 @@ export function IntelligencePanel({
       if (!res.ok) throw new Error(data.error ?? "Tekrar vakası açılamadı.");
       window.location.assign(`/workspace/${data.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Hata");
+      setError(e instanceof Error ? e.message : "İstek tamamlanamadı. Yeniden deneyin.");
       setBusy(false);
     }
   }

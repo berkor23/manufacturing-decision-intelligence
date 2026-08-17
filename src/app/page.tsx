@@ -4,7 +4,7 @@ import { METHODOLOGIES, METHODOLOGY_META, type Methodology } from "@/domain/diag
 const STEPS = [
   { t: "Problemi anlat", d: "Kendi cümlelerinle yaz. Sistem metni yapılandırır." },
   { t: "Soruları yanıtla", d: "Belirsizliği en çok azaltan, probleme özel sorular sorulur." },
-  { t: "Öneri ve uygulama", d: "Gerekçeli metodoloji önerisi, rapor ve adım adım uygulama alanı." },
+  { t: "Öneri ve uygulama", d: "Gerekçeli metodoloji önerisi, rapor ve adım adım çalışma alanı." },
 ];
 
 const OUTCOMES = [
@@ -211,7 +211,7 @@ export default function Home() {
             Çalışmanız siz istemeden buluta taşınmaz
           </h2>
           <p className="mt-3 max-w-xl text-[13px] leading-[1.7] text-[var(--ink-soft)]">
-            Misafir olarak başladığınız teşhis ve uygulama alanı kullandığınız tarayıcıda otomatik
+            Misafir olarak başladığınız teşhis ve çalışma alanı kullandığınız tarayıcıda otomatik
             kaydedilir. Tarayıcı verilerini temizlerseniz kayıt kaybolabilir; dilediğiniz zaman yedek
             alabilir veya üyelik açtıktan sonra seçerek hesabınıza taşıyabilirsiniz.
           </p>

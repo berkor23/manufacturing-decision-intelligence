@@ -68,7 +68,7 @@ export function AttachmentPanel({
       setFile(null);
       setDescription("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Hata");
+      setError(e instanceof Error ? e.message : "Dosya işlemi tamamlanamadı. Dosya boyutunu kontrol edip yeniden deneyin.");
     } finally {
       setBusy(false);
     }

@@ -26,7 +26,7 @@ export default async function WorkspacesPage() {
     <main className="page-shell flex-1">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--rule-strong)] pb-5">
         <div>
-          <p className="eyebrow">Uygulama alanları</p>
+          <p className="eyebrow">Çalışma alanları</p>
           <h1 className="page-heading mt-1.5">Çalışmalar</h1>
           <p className="page-lead">
             Başlattığın metodoloji uygulamaları — kaldığın yerden devam et.
@@ -40,7 +40,7 @@ export default async function WorkspacesPage() {
           <div>
             <p className="text-[13px] text-[var(--ink-soft)]">Henüz bir çalışma alanı açılmamış.</p>
             <p className="mt-1.5 text-[12px] text-[var(--muted-2)]">
-              Bir teşhisle başla; önerilen metodolojinin uygulama alanı buraya düşer.
+              Bir teşhisle başla; önerilen metodolojinin çalışma alanı buraya düşer.
             </p>
             <Link href="/diagnoz" className="btn btn-primary mt-5">Teşhise başla</Link>
           </div>
@@ -101,7 +101,7 @@ function WorkspaceRow({ ws }: { ws: WorkspaceSummary }) {
         href={`/workspace/${ws.id}`}
         className="group flex min-w-0 flex-1 items-start gap-4 py-3.5 transition-colors hover:bg-[var(--surface-sunk)]"
       >
-        <span className="code-tag mt-px w-14 shrink-0 justify-center">{meta.shortName}</span>
+        <span className="code-tag mt-px min-w-[6.5rem] shrink-0 justify-center">{meta.shortName}</span>
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium">{ws.problemDescription}</p>

@@ -516,6 +516,7 @@ export function AuditTimeline({ workspace }: { workspace: WsData }) {
     CREATED: "Oluşturma",
     UPDATED: "Güncelleme",
     AI_DRAFT: "AI taslağı",
+    TEMPLATE_DRAFT: "Şablon taslağı",
     REPORT: "Rapor",
     ATTACHMENT: "Dosya",
     LINKED: "Bağlantı",

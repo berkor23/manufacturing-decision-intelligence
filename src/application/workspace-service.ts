@@ -305,9 +305,13 @@ export class WorkspaceService {
     if (!step || !state) throw new Error(`Adım bulunamadı: ${stepKey}`);
 
     let drafted: Record<string, FieldValue>;
+    // Taslağı gerçekte hangi yolun ürettiğini izle: denetim izi ve arayüz
+    // "AI yazdı" ile "şablon yerleştirildi"yi ayırt edebilmeli.
+    let usedAi = false;
     if (this.ai.available) {
       try {
         drafted = await this.llmDraft(ws, playbook, step);
+        usedAi = true;
       } catch {
         // Yerel model ara sıra bozuk JSON döndürür (tek/çift tırnak, kesik çıktı).
         // Tek bir taslak isteği bu yüzden 500 ile ÇÖKMEMELİ — generateReport ile
@@ -328,7 +332,14 @@ export class WorkspaceService {
     }
     if (state.status === "PENDING") state.status = "IN_PROGRESS";
 
-    const updated = await this.persist(id, { steps: ws.steps }, "AI_DRAFT", `${step.name} için AI taslağı üretildi`);
+    const updated = await this.persist(
+      id,
+      { steps: ws.steps },
+      usedAi ? "AI_DRAFT" : "TEMPLATE_DRAFT",
+      usedAi
+        ? `${step.name} için AI taslağı üretildi`
+        : `${step.name} için şablon taslağı yerleştirildi (AI kullanılmadı)`,
+    );
     if (!updated) throw new Error(`Çalışma alanı bulunamadı: ${id}`);
     return updated;
   }

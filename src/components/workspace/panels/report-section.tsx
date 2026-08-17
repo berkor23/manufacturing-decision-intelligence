@@ -50,7 +50,7 @@ export function ReportSection({
       if (!res.ok) throw new Error(data.error ?? "Rapor üretilemedi.");
       onReport(data);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Hata.");
+      setErr(e instanceof Error ? e.message : "Rapor üretilemedi. Yeniden deneyin.");
     } finally {
       setBusy(false);
     }

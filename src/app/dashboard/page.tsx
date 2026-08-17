@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getWorkspaceService } from "@/application/wiring";
+import { METHODOLOGY_META } from "@/domain/diagnosis";
 import { accountAuthEnabled, allowedWorkspaceIds, currentAccount } from "@/lib/account-auth";
 
 export const dynamic = "force-dynamic";
@@ -123,7 +124,7 @@ export default async function DashboardPage() {
                 >
                   <span className="min-w-0 truncate text-[13px]">{w.problemDescription}</span>
                   <span className="flex shrink-0 items-center gap-2.5">
-                    <span className="code-tag">{w.methodologyName}</span>
+                    <span className="code-tag" title={w.methodologyName}>{METHODOLOGY_META[w.methodology].shortName}</span>
                     <span
                       className={`tag ${w.closureStatus ==="REOPENED" ? "state-risk" : w.closureStatus === "MONITORING" ? "state-watch" : "state-idle"}`}
                     >
