@@ -19,13 +19,191 @@ import { buildDecisionTrace, DecisionTrace } from "./decision-trace";
 import { composeMethodologyPlan, MethodologyPlan } from "./methodology-composition";
 import { explainRivals, RivalExplanation } from "./rival-analysis";
 import { evaluateStabilizationGate, StabilizationGate } from "./stabilization";
+import type { Methodology } from "./methodologies";
 
 export interface DiagnosisConfig {
   temperature?: number;
   stop?: Partial<StopPolicy>;
   /** Daha önce sorulmuş ama belirsiz kalan alanlar — tekrar sorulmaz. */
   excludedFeatures?: DiagnosticFeatureKey[];
+  /** Parserdan gelip henüz kullanıcıca teyit edilmemiş alanlar sıralamayı etkiler,
+   * fakat sonucu "doğrulanmış" ilan eden kanıt sayısına girmez. */
+  unconfirmedFeatures?: DiagnosticFeatureKey[];
 }
+
+export interface EvidenceExpectation {
+  feature: DiagnosticFeatureKey;
+  value: boolean;
+}
+
+export interface MethodEvidenceProfile {
+  minimumKnownAnswers: number;
+  minimumSupportingSignals: number;
+  minimumScoreMargin: number;
+  /** Her iç dizi bir bağımsız kanıt boyutudur; gruptan beklenen değerlerden en az biri gerekir. */
+  requiredDimensions: EvidenceExpectation[][];
+}
+
+const yes = (feature: DiagnosticFeatureKey): EvidenceExpectation => ({ feature, value: true });
+const no = (feature: DiagnosticFeatureKey): EvidenceExpectation => ({ feature, value: false });
+
+/** Her metodolojinin doğrulanmadan önce karşılaması gereken bağımsız kanıt omurgası. */
+export const METHOD_EVIDENCE_PROFILES: Record<Methodology, MethodEvidenceProfile> = {
+  FMEA: {
+    minimumKnownAnswers: 4,
+    minimumSupportingSignals: 5,
+    minimumScoreMargin: 2,
+    requiredDimensions: [
+      [no("defectOccurred")],
+      [yes("processChanged"), yes("operatorChanged"), yes("supplierChanged"), yes("isNewDesign")],
+      [yes("failureModeKnown"), yes("humanErrorProne"), yes("safetyOrRegulatory")],
+      [yes("potentialEffectKnown")],
+      [yes("controlAdequacyUncertain")],
+    ],
+  },
+  KEPNER_TREGOE: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("startedRecently")],
+      [yes("processChanged"), yes("operatorChanged"), yes("supplierChanged")],
+      [yes("comparisonAvailable"), yes("intermittent")],
+    ],
+  },
+  RCA: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("defectOccurred")],
+      [no("rootCauseKnown")],
+      [yes("previouslyOccurred"), yes("intermittent"), yes("safetyOrRegulatory")],
+    ],
+  },
+  EIGHT_D: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("defectOccurred")],
+      [yes("externalNonconformance"), yes("customerAffected")],
+      [yes("containmentNeeded"), no("rootCauseKnown")],
+    ],
+  },
+  PDCA_A3: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("isImprovementInitiative")],
+      [yes("standardWorkEstablished")],
+      [yes("basicConditionsStable"), yes("processStable")],
+    ],
+  },
+  DMAIC: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("hasMeasurementData")],
+      [yes("highVariation")],
+      [yes("measurementReliable"), no("processStable")],
+    ],
+  },
+  FIVE_S: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("workplaceDisorganized")],
+      [no("standardWorkEstablished")],
+      [no("basicConditionsStable")],
+    ],
+  },
+  TPM: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("equipmentBreakdown")],
+      [yes("chronicEquipmentLoss")],
+      [yes("previouslyOccurred")],
+    ],
+  },
+  LEAN_VSM: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("flowOrWaste")],
+      [yes("hasMeasurementData"), yes("isImprovementInitiative")],
+      [no("bottleneckThroughput")],
+    ],
+  },
+  DMADV: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("isNewDesign")],
+      [no("defectOccurred")],
+      [yes("hasMeasurementData"), yes("safetyOrRegulatory"), yes("failureModeKnown")],
+    ],
+  },
+  SPC: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("monitoringNeed")],
+      [yes("processStable")],
+      [yes("measurementReliable")],
+    ],
+  },
+  POKA_YOKE: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("humanErrorProne")],
+      [yes("failureModeKnown")],
+      [yes("rootCauseKnown")],
+    ],
+  },
+  TOC: {
+    minimumKnownAnswers: 4,
+    minimumSupportingSignals: 4,
+    minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("bottleneckThroughput")],
+      [yes("constraintQueue"), yes("downstreamStarvation"), yes("flowOrWaste")],
+      [yes("constraintMeasured"), yes("hasMeasurementData")],
+      [yes("constraintLeverageExpected")],
+    ],
+  },
+  SDCA: {
+    minimumKnownAnswers: 4, minimumSupportingSignals: 3, minimumScoreMargin: 2,
+    requiredDimensions: [
+      [no("standardWorkEstablished")],
+      [no("basicConditionsStable")],
+      [no("processStable")],
+    ],
+  },
+  KT_DECISION: {
+    minimumKnownAnswers: 4,
+    minimumSupportingSignals: 5,
+    minimumScoreMargin: 2,
+    requiredDimensions: [
+      [yes("decisionBetweenOptions")],
+      [yes("multipleAlternativesDefined")],
+      [yes("mandatoryCriteriaDefined"), yes("preferenceCriteriaDefined")],
+      [yes("decisionOwnerKnown"), yes("hasMeasurementData")],
+      [no("unresolvedCauseBeforeDecision")],
+    ],
+  },
+};
+
+export interface MethodEvidenceCategories {
+  required: EvidenceExpectation[];
+  strengthening: EvidenceExpectation[];
+  conflicting: EvidenceExpectation[];
+  applicability: EvidenceExpectation[];
+}
+
+/**
+ * Profildeki boyutları denetlenebilir dört kategoriye açar. Aynı kaynak kullanıldığı
+ * için soru rotası ile sonuçlandırma kapısı birbirinden kopuk iki listeye dönüşmez.
+ */
+export const METHOD_EVIDENCE_CATEGORIES = Object.fromEntries(
+  Object.entries(METHOD_EVIDENCE_PROFILES).map(([methodology, profile]) => {
+    const all = profile.requiredDimensions.flat();
+    return [methodology, {
+      required: profile.requiredDimensions.map((dimension) => dimension[0]),
+      strengthening: all,
+      conflicting: all.map((expectation) => ({ ...expectation, value: !expectation.value })),
+      applicability: profile.requiredDimensions[0] ?? [],
+    }];
+  }),
+) as Record<Methodology, MethodEvidenceCategories>;
 
 export interface NextQuestion {
   featureKey: DiagnosticFeatureKey;
@@ -56,7 +234,7 @@ export interface DiagnosisEvidence {
   scoreMargin: number;
   conflicts: string[];
   ready: boolean;
-  status: "PROVISIONAL" | "CONFIRMED";
+  status: "PROVISIONAL" | "CONFIRMED" | "INCONCLUSIVE";
 }
 
 /**
@@ -79,16 +257,24 @@ export function diagnose(
   const rivalAnalysis = explainRivals(p, evaluation, ranking);
   const stabilization = evaluateStabilizationGate(p);
   const leader = ranking[0];
-  const supportingFeatures = new Set<DiagnosticFeatureKey>();
-  for (const firing of evaluation.firings) {
-    if ((firing.effect[leader.methodology] ?? 0) <= 0) continue;
-    for (const key of firing.rule.reads) {
-      if (p.features[key] !== null) supportingFeatures.add(key);
-    }
-  }
+  const unconfirmed = new Set(config.unconfirmedFeatures ?? []);
+  const profile = METHOD_EVIDENCE_PROFILES[leader.methodology];
+  // "Bağımsız destek" kuralın okuduğu her dolu alan değildir. Her requiredDimension
+  // tek bir kanıt boyutudur; boyut içindeki alternatiflerden en az biri beklenen
+  // değerde ve kullanıcı tarafından doğrulanmışsa yalnız bir destek sayılır.
+  const matchedDimensions = profile.requiredDimensions.map((dimension) =>
+    dimension.filter(({ feature, value }) =>
+      !unconfirmed.has(feature) && p.features[feature] === value,
+    ),
+  );
+  const supportingFeatures = new Set<DiagnosticFeatureKey>(
+    matchedDimensions.flat().map(({ feature }) => feature),
+  );
+  const confirmedKnownAnswers = knownFeatures(p)
+    .filter((feature) => !unconfirmed.has(feature)).length;
   const evidenceBase = {
-    knownAnswers: knownFeatures(p).length,
-    supportingSignals: supportingFeatures.size,
+    knownAnswers: confirmedKnownAnswers,
+    supportingSignals: matchedDimensions.filter((matches) => matches.length > 0).length,
     supportingFeatures: [...supportingFeatures],
     scoreMargin: leader.score - (ranking[1]?.score ?? 0),
   };
@@ -102,12 +288,14 @@ export function diagnose(
   if (p.features.monitoringNeed === true && p.features.processStable === false) {
     conflicts.push("Sürekli izleme istenirken proses kararlılığı doğrulanmadı.");
   }
+  const dimensionsReady = matchedDimensions.every((matches) => matches.length > 0);
   const ready =
-    evidenceBase.knownAnswers >= policy.minimumKnownAnswers &&
-    evidenceBase.supportingSignals >= policy.minimumSupportingSignals &&
-    evidenceBase.scoreMargin >= policy.minimumScoreMargin &&
+    evidenceBase.knownAnswers >= profile.minimumKnownAnswers &&
+    evidenceBase.supportingSignals >= profile.minimumSupportingSignals &&
+    evidenceBase.scoreMargin >= profile.minimumScoreMargin &&
+    dimensionsReady &&
     conflicts.length === 0;
-  const evidence: DiagnosisEvidence = {
+  let evidence: DiagnosisEvidence = {
     ...evidenceBase,
     conflicts,
     ready,
@@ -121,6 +309,10 @@ export function diagnose(
   const bestGain = candidate ? candidate.informationGain : null;
 
   const stop = shouldStop(ranking, questionsAsked, bestGain, policy, evidence);
+
+  if (stop && !ready) {
+    evidence = { ...evidence, status: "INCONCLUSIVE" };
+  }
 
   const nextQuestion: NextQuestion | null =
     stop || !candidate

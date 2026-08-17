@@ -11,13 +11,14 @@ import {
   Playbook,
   PlaybookField,
   PlaybookStep,
-  StepState,
   TableRow,
   emptyStepState,
   fieldFilled,
   getPlaybook,
   isTabular,
+  stepIsComplete,
 } from "@/domain/playbook";
+import type { RecordOwner } from "@/domain/access";
 import { IAIProvider } from "./ports/ai-provider";
 import { IKnowledgeRepository } from "./ports/knowledge-repository";
 import {
@@ -33,6 +34,18 @@ import { calculateCapacity, calculateLineBalance, calculateSop } from "@/domain/
 import { evaluateAdvancedAnalysis } from "@/domain/advanced-analysis";
 import { taskTemporalStatus, type UnifiedTask } from "@/domain/production-readiness";
 import { EMPTY_FIELD_PILOT, EMPTY_SELECTION_CONTEXT, fieldQualityFindings } from "@/domain/field-readiness";
+import { generateWorkspaceReport, type WorkspaceReportKind } from "@/domain/workspace-report";
+
+/**
+ * Portföy görünümlerinin (liste, pano, görev merkezi) kiracı kapsamı.
+ * `undefined` = kapsam sınırlaması yok (auth kapalı tek-kiracılı kurulum ve
+ * /api/health gibi toplam sayaçlar). Verilirse yalnız bu kimlikler görünür.
+ */
+export type WorkspaceScope = ReadonlySet<string>;
+
+function inScope<T extends { id: string }>(rows: T[], scope?: WorkspaceScope): T[] {
+  return scope ? rows.filter((row) => scope.has(row.id)) : rows;
+}
 
 export class WorkspaceService {
   constructor(
@@ -41,10 +54,18 @@ export class WorkspaceService {
     private readonly ai: IAIProvider,
   ) {}
 
+  /**
+   * `owner` verilirse çalışma, sahibiyle birlikte tek yazımda oluşturulur.
+   * Route katmanının kaydı oluşturup ardından sahipliği ayrıca yazması
+   * (araya giren hatada sahipsiz kayıt) bu yüzden kaldırıldı.
+   */
   async create(input: {
     conversationId?: string | null;
     methodology: Methodology;
     problemDescription: string;
+    recommendedMethodology?: Methodology;
+    diagnosisRationale?: string;
+    owner?: RecordOwner;
   }): Promise<MethodologyWorkspace> {
     const meta = METHODOLOGY_META[input.methodology];
     const knowledge = await this.knowledge.getByMethodology(input.methodology);
@@ -85,10 +106,10 @@ export class WorkspaceService {
       systemBehaviorAnalyses: [], qmsHealth: [], gembaBehaviorMap: [],
       benchmarkReferences: [], capacityScenarios: [], sopScenarios: [], lineBalanceStudies: [],
       advancedAnalyses: [],
-      recommendationFeedback: {decision:"PENDING",recommendedMethodology:input.methodology,selectedMethodology:input.methodology,reason:"",reviewedAt:null,outcome:"PENDING",outcomeNote:"",outcomeAt:null},
+      recommendationFeedback: {decision:"PENDING",recommendedMethodology:input.recommendedMethodology ?? input.methodology,selectedMethodology:input.methodology,reason:input.diagnosisRationale?.trim() ?? "",reviewedAt:null,outcome:"PENDING",outcomeNote:"",outcomeAt:null},
       methodSelectionContext: { ...EMPTY_SELECTION_CONTEXT }, fieldPilot: { ...EMPTY_FIELD_PILOT }, externalSystemLinks: [],
       auditTrail: [{ id: `audit_${Date.now().toString(36)}`, type: "CREATED", summary: "Çalışma alanı oluşturuldu", changedFields: [], occurredAt: new Date().toISOString() }],
-    });
+    }, input.owner);
   }
 
   /** Getir + eski (playbook öncesi) kayıtları yeni yapıya taşı. */
@@ -118,8 +139,8 @@ export class WorkspaceService {
   }
 
   /** Açık çalışmalar listesi (en son güncellenen önce). */
-  async list(): Promise<WorkspaceSummary[]> {
-    const all = await this.repo.list();
+  async list(scope?: WorkspaceScope): Promise<WorkspaceSummary[]> {
+    const all = inScope(await this.repo.list(), scope);
     return all.map((raw) => {
       const ws = this.migrateLegacy(raw);
       return {
@@ -127,7 +148,7 @@ export class WorkspaceService {
         methodology: ws.methodology,
         methodologyName: ws.methodologyName,
         problemDescription: ws.problemDescription,
-        doneSteps: ws.steps.filter((s) => s.status === "DONE").length,
+        doneSteps: ws.steps.filter((s) => stepIsComplete(s.status)).length,
         totalSteps: ws.steps.length,
         openActions: ws.actions.filter((a) => a.status !== "DONE").length,
         hasReport: Boolean(ws.report),
@@ -156,11 +177,13 @@ export class WorkspaceService {
     return { checks, canClose: canClose(ws) && openCritical.length === 0, similar };
   }
 
-  async createLinked(input: { sourceWorkspaceId: string; methodology: Methodology; reason: string; relation?: "COMPLEMENTARY" | "FOLLOW_UP" | "RECURRENCE" | "HORIZONTAL_DEPLOYMENT"; targetDescription?: string; horizontalTargetId?: string }) {
+  async createLinked(input: { sourceWorkspaceId: string; methodology: Methodology; reason: string; relation?: "COMPLEMENTARY" | "FOLLOW_UP" | "RECURRENCE" | "HORIZONTAL_DEPLOYMENT"; targetDescription?: string; horizontalTargetId?: string; owner?: RecordOwner }) {
     const source = await this.get(input.sourceWorkspaceId);
     if (!source) throw new Error("Kaynak çalışma bulunamadı.");
     const relation = input.relation ?? "COMPLEMENTARY";
-    const target = await this.create({ conversationId: source.conversationId, methodology: input.methodology, problemDescription: input.targetDescription ?? source.problemDescription });
+    // Bağlı çalışma kaynağın verisini taşır; sahipliği de baştan almalıdır,
+    // yoksa kaynağa erişebilen kullanıcı türettiği çalışmayı göremez.
+    const target = await this.create({ conversationId: source.conversationId, methodology: input.methodology, problemDescription: input.targetDescription ?? source.problemDescription, owner: input.owner });
     const transferred = transferWorkspace(source, target);
     const hydrated = await this.persist(target.id, {
       steps: transferred.steps, evidence: transferred.evidence, claims: transferred.claims,
@@ -220,8 +243,8 @@ export class WorkspaceService {
     return updated;
   }
 
-  async dashboard() {
-    const all = (await this.repo.list()).map((x) => this.migrateLegacy(x));
+  async dashboard(scope?: WorkspaceScope) {
+    const all = inScope(await this.repo.list(), scope).map((x) => this.migrateLegacy(x));
     return {
       total: all.length,
       open: all.filter((x) => x.closureStatus !== "CLOSED").length,
@@ -256,8 +279,8 @@ export class WorkspaceService {
     };
   }
 
-  async taskCenter():Promise<UnifiedTask[]> {
-    const all=(await this.repo.list()).map(x=>this.migrateLegacy(x));const tasks:UnifiedTask[]=[];
+  async taskCenter(scope?: WorkspaceScope):Promise<UnifiedTask[]> {
+    const all=inScope(await this.repo.list(),scope).map(x=>this.migrateLegacy(x));const tasks:UnifiedTask[]=[];
     for(const ws of all){const href=`/workspace/${ws.id}`;
       ws.actions.forEach((x,i)=>tasks.push({id:x.id??`action_${i}`,workspaceId:ws.id,workspaceTitle:ws.problemDescription,kind:"ACTION",title:x.action,owner:x.owner??"",dueDate:x.dueDate??null,status:taskTemporalStatus(["DONE","EFFECTIVE"].includes(x.status),x.dueDate??null),href:`${href}?tab=actions`}));
       ws.containmentControls.forEach(x=>tasks.push({id:x.id,workspaceId:ws.id,workspaceTitle:ws.problemDescription,kind:"CONTAINMENT",title:x.purpose||"Containment",owner:x.owner,dueDate:null,status:taskTemporalStatus(["REMOVED","TRANSFERRED"].includes(x.status),null),href:`${href}?tab=validation`}));
@@ -311,47 +334,11 @@ export class WorkspaceService {
   }
 
   /** Doldurulan adımlardan profesyonel kapanış/durum raporu üretir. */
-  async generateReport(id: string): Promise<MethodologyWorkspace> {
+  async generateReport(id: string, kind: WorkspaceReportKind = "INTERIM"): Promise<MethodologyWorkspace> {
     const ws = await this.get(id);
     if (!ws) throw new Error(`Çalışma alanı bulunamadı: ${id}`);
-    const playbook = getPlaybook(ws.methodology);
-
-    const learning = this.renderLearningRecord(ws);
-    const governance = this.renderGovernanceOutputs(ws);
-    const body = this.renderFilledSteps(ws, playbook) + learning + governance;
-    const done = ws.steps.filter((s) => s.status === "DONE").length;
-    const header = [
-      `# ${ws.methodologyName} Uygulama Raporu`,
-      "",
-      `**Problem:** ${ws.problemDescription}`,
-      `**Durum:** ${done}/${ws.steps.length} adım tamamlandı · ${new Date().toLocaleDateString("tr-TR")}`,
-      "",
-    ].join("\n");
-
-    let report = header + body;
-    if (this.ai.available && body.trim()) {
-      try {
-        const system = [
-          "Sen kıdemli bir kalite mühendisisin; metodoloji uygulama raporu yazıyorsun.",
-          "Aşağıdaki doldurulmuş çalışma alanı içeriğini PROFESYONEL, akıcı bir Türkçe rapora dönüştür.",
-          "Başta 3-4 cümlelik 'Yönetici Özeti' bölümü olsun; sonra adımları başlıklarıyla aktar.",
-          "SADECE verilen içeriği kullan; yeni veri veya sonuç UYDURMA.",
-          "Boş bırakılmış adımları 'henüz tamamlanmadı' diye kısaca belirt.",
-          "Markdown kullan.",
-        ].join("\n");
-        const polished = await this.ai.complete({
-          system,
-          prompt: report,
-          temperature: 0.3,
-          maxTokens: 2400,
-        });
-        if (polished.trim()) report = polished.trim();
-      } catch {
-        // LLM başarısız olursa deterministik rapor zaten elimizde.
-      }
-    }
-
-    const updated = await this.persist(id, { report }, "REPORT", "Profesyonel uygulama raporu üretildi");
+    const report = generateWorkspaceReport(ws, kind) + this.renderLearningRecord(ws) + this.renderGovernanceOutputs(ws);
+    const updated = await this.persist(id, { report }, "REPORT", `${kind === "OFFICIAL" ? "Resmî kapanış" : "Ara durum"} raporu üretildi`);
     if (!updated) throw new Error(`Çalışma alanı bulunamadı: ${id}`);
     return updated;
   }

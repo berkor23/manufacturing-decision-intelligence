@@ -1,12 +1,19 @@
 import { rm } from "node:fs/promises";
 import path from "node:path";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getWorkspaceService } from "@/application/wiring";
+import { ADMIN_SESSION_COOKIE, SESSION_COOKIE, isValidAdminSession } from "@/lib/auth";
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Yıkıcı bir işlem: proxy kapısına ek olarak route da kendi kontrolünü yapar.
+  const store = await cookies();
+  if (!(await isValidAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value, store.get(SESSION_COOKIE)?.value))) {
+    return NextResponse.json({ error: "Platform yöneticisi oturumu gerekli." }, { status: 403 });
+  }
   const { id } = await params;
   const service = getWorkspaceService();
   const workspace = await service.get(id);

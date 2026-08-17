@@ -15,6 +15,7 @@ import {
   unknownFeatures,
   withFeature,
   FEATURE_KEYS,
+  knownFeatures,
 } from "./features";
 import { Rule, RULES, referencedFeatures } from "./rules";
 import {
@@ -43,10 +44,10 @@ export interface StopPolicy {
 export const DEFAULT_STOP_POLICY: StopPolicy = {
   // Geniş metodoloji havuzunda lider mutlak güveni daha düşük seyreder; eşik ona göre.
   confidenceThreshold: 0.72,
-  // Daha zengin soru havuzu → daha derin teşhise izin ver.
-  maxQuestions: 18,
+  // Tutarlı olmayan vakalarda kesinlik üretmek yerine 12 soruda bilgi planına dön.
+  maxQuestions: 12,
   minimumKnownAnswers: 4,
-  minimumQuestionsAsked: 4,
+  minimumQuestionsAsked: 3,
   minimumSupportingSignals: 3,
   minimumScoreMargin: 2,
 };
@@ -55,6 +56,8 @@ export interface DecisionReadiness {
   knownAnswers: number;
   supportingSignals: number;
   scoreMargin: number;
+  /** Yönteme özgü zorunlu kanıt boyutları ve çelişki kapısı karşılandı. */
+  ready?: boolean;
 }
 
 export interface QuestionCandidate {
@@ -62,6 +65,10 @@ export interface QuestionCandidate {
   informationGain: number;
   /** Statik teşhis önceliği (kurallarda aldığı en büyük ağırlık). */
   priority: number;
+  /** Evet veya hayır yanıtlarından en az biri mevcut lideri değiştirebilir. */
+  changesLeader: boolean;
+  /** Soru, mevcut liderin kendi kanıt profilini güçlendiren bir kuralda kullanılır. */
+  supportsLeader: boolean;
 }
 
 export interface QuestionEngineOptions {
@@ -98,8 +105,51 @@ function featurePriority(key: DiagnosticFeatureKey, rules: Rule[]): number {
  */
 export function isQuestionRelevant(key: DiagnosticFeatureKey, p: StructuredProblem): boolean {
   const f = p.features;
-  const common = new Set<DiagnosticFeatureKey>(["defectOccurred", "customerAffected", "safetyOrRegulatory", "standardWorkEstablished", "basicConditionsStable", "decisionBetweenOptions"]);
+
+  if (f.decisionBetweenOptions === true) {
+    return new Set<DiagnosticFeatureKey>([
+      "decisionBetweenOptions",
+      "multipleAlternativesDefined",
+      "mandatoryCriteriaDefined",
+      "preferenceCriteriaDefined",
+      "decisionOwnerKnown",
+      "unresolvedCauseBeforeDecision",
+      "hasMeasurementData",
+      "safetyOrRegulatory",
+    ]).has(key);
+  }
+
+  if (f.bottleneckThroughput === true) {
+    return new Set<DiagnosticFeatureKey>([
+      "bottleneckThroughput", "flowOrWaste", "constraintQueue",
+      "downstreamStarvation", "constraintMeasured", "constraintLeverageExpected", "hasMeasurementData",
+      "measurementReliable", "equipmentBreakdown", "isImprovementInitiative",
+      "defectOccurred",
+    ]).has(key);
+  }
+
+  const plannedChange = f.processChanged === true || f.operatorChanged === true || f.supplierChanged === true;
+  if (f.defectOccurred === false && plannedChange) {
+    return new Set<DiagnosticFeatureKey>([
+      "defectOccurred", "processChanged", "operatorChanged", "supplierChanged",
+      "failureModeKnown", "humanErrorProne", "safetyOrRegulatory",
+      "potentialEffectKnown", "controlAdequacyUncertain",
+      "standardWorkEstablished", "basicConditionsStable", "isNewDesign",
+    ]).has(key);
+  }
+
+  const common = new Set<DiagnosticFeatureKey>(["defectOccurred", "customerAffected", "safetyOrRegulatory", "standardWorkEstablished", "basicConditionsStable"]);
   if (common.has(key)) return true;
+
+  if (f.chronicEquipmentLoss === true || f.equipmentBreakdown === true) {
+    return new Set<DiagnosticFeatureKey>([
+      "rootCauseKnown", "startedRecently", "previouslyOccurred", "processChanged",
+      "operatorChanged", "supplierChanged", "comparisonAvailable", "hasMeasurementData",
+      "measurementReliable", "intermittent", "isImprovementInitiative", "safetyOrRegulatory",
+      "customerAffected", "defectOccurred", "equipmentBreakdown", "chronicEquipmentLoss",
+      "standardWorkEstablished", "basicConditionsStable",
+    ]).has(key);
+  }
 
   if (f.isNewDesign === true) {
     return new Set<DiagnosticFeatureKey>(["isNewDesign", "humanErrorProne", "failureModeKnown", "hasMeasurementData", "measurementReliable", "highVariation", "safetyOrRegulatory", "customerAffected", "defectOccurred"]).has(key);
@@ -113,16 +163,12 @@ export function isQuestionRelevant(key: DiagnosticFeatureKey, p: StructuredProbl
     return new Set<DiagnosticFeatureKey>(["rootCauseKnown", "startedRecently", "previouslyOccurred", "processChanged", "operatorChanged", "supplierChanged", "comparisonAvailable", "hasMeasurementData", "measurementReliable", "safetyOrRegulatory", "intermittent", "equipmentBreakdown", "failureModeKnown", "humanErrorProne", "customerAffected", "externalNonconformance", "containmentNeeded", "defectOccurred"]).has(key);
   }
 
-  if (f.equipmentBreakdown === true) {
-    return new Set<DiagnosticFeatureKey>(["rootCauseKnown", "startedRecently", "previouslyOccurred", "processChanged", "operatorChanged", "supplierChanged", "comparisonAvailable", "hasMeasurementData", "measurementReliable", "intermittent", "isImprovementInitiative", "safetyOrRegulatory", "customerAffected", "defectOccurred", "equipmentBreakdown", "chronicEquipmentLoss"]).has(key);
-  }
-
   if (f.highVariation === true) {
     return new Set<DiagnosticFeatureKey>(["hasMeasurementData", "measurementReliable", "processStable", "rootCauseKnown", "intermittent", "monitoringNeed", "startedRecently", "previouslyOccurred", "processChanged", "comparisonAvailable", "isImprovementInitiative", "safetyOrRegulatory", "customerAffected", "defectOccurred", "highVariation"]).has(key);
   }
 
-  if (f.bottleneckThroughput === true || f.flowOrWaste === true) {
-    return new Set<DiagnosticFeatureKey>(["bottleneckThroughput", "flowOrWaste", "equipmentBreakdown", "chronicEquipmentLoss", "hasMeasurementData", "measurementReliable", "monitoringNeed", "processStable", "isImprovementInitiative", "safetyOrRegulatory", "customerAffected", "defectOccurred"]).has(key);
+  if (f.flowOrWaste === true) {
+    return new Set<DiagnosticFeatureKey>(["bottleneckThroughput", "flowOrWaste", "constraintQueue", "downstreamStarvation", "constraintMeasured", "equipmentBreakdown", "chronicEquipmentLoss", "hasMeasurementData", "measurementReliable", "monitoringNeed", "processStable", "isImprovementInitiative", "safetyOrRegulatory", "customerAffected", "defectOccurred"]).has(key);
   }
 
   return true;
@@ -146,6 +192,7 @@ export function rankQuestions(
   const excluded = new Set(options.excludedFeatures ?? []);
 
   const hBefore = rankingEntropy(confidenceFor(p, rules, temperature));
+  const currentLeader = confidenceFor(p, rules, temperature)[0]?.methodology;
 
   const candidates: QuestionCandidate[] = [];
   for (const key of unknownFeatures(p)) {
@@ -153,12 +200,10 @@ export function rankQuestions(
     if (excluded.has(key)) continue; // zaten sorulmuş, yanıtı belirsiz kalmış
     if (!isQuestionRelevant(key, p)) continue; // problem ailesiyle anlamsız soruyu sorma
 
-    const hTrue = rankingEntropy(
-      confidenceFor(withFeature(p, key, true), rules, temperature),
-    );
-    const hFalse = rankingEntropy(
-      confidenceFor(withFeature(p, key, false), rules, temperature),
-    );
+    const trueRanking = confidenceFor(withFeature(p, key, true), rules, temperature);
+    const falseRanking = confidenceFor(withFeature(p, key, false), rules, temperature);
+    const hTrue = rankingEntropy(trueRanking);
+    const hFalse = rankingEntropy(falseRanking);
     const expectedAfter = 0.5 * hTrue + 0.5 * hFalse;
     const informationGain = hBefore - expectedAfter;
 
@@ -166,10 +211,21 @@ export function rankQuestions(
       featureKey: key,
       informationGain,
       priority: featurePriority(key, rules),
+      changesLeader: trueRanking[0]?.methodology !== currentLeader || falseRanking[0]?.methodology !== currentLeader,
+      supportsLeader: rules.some((rule) => rule.reads.includes(key) && currentLeader != null && (rule.effect[currentLeader] ?? 0) > 0),
     });
   }
 
-  return candidates.sort(
+  const familyEstablished = knownFeatures(p).length >= 2;
+  const useful = familyEstablished
+    ? candidates.filter((candidate) => candidate.supportsLeader || candidate.changesLeader)
+    : candidates;
+  // Bileşik kurallarda lideri tek başına değiştirmeyen ama asgari doğrulama
+  // turunu tamamlayan sorular kalabilir. Dar liste boşsa teşhisi bir soruda
+  // kapatmak yerine aile filtresinden geçmiş adaylara geri dön.
+  const rankedCandidates = useful.length > 0 ? useful : candidates;
+
+  return rankedCandidates.sort(
     (a, b) =>
       Math.max(b.informationGain, 0) - Math.max(a.informationGain, 0) ||
       b.priority - a.priority ||
@@ -211,6 +267,10 @@ export function shouldStop(
   if (readiness.knownAnswers < policy.minimumKnownAnswers) return false;
   if (readiness.supportingSignals < policy.minimumSupportingSignals) return false;
   if (readiness.scoreMargin < policy.minimumScoreMargin) return false;
+  // Profil tabanlı çağrıda zorunlu kanıt boyutları tamamlanmadan yalnız yüksek
+  // softmax değeriyle durma. `ready` verilmemiş eski/genel çağrılar confidence
+  // eşiğini kullanmaya devam eder.
+  if (readiness.ready !== undefined) return readiness.ready;
 
   const top = ranking[0]?.confidence ?? 0;
   if (top >= policy.confidenceThreshold) return true;

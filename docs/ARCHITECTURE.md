@@ -60,6 +60,9 @@ src/
       decision-trace.ts         # kararın nedenini zincir olarak üretir
       diagnose.ts               # domain fasadı: classify() / nextQuestion() / trace()
       diagnose.test.ts          # golden-case regresyon testleri
+    access/                     # SAF kiracılık kuralları (bkz. §16)
+      ownership.ts              # canReadRecord / canWriteRecord / ownershipQuery
+      ownership.test.ts         # rol × sahiplik golden-case matrisi
   application/                  # use-case orkestrasyonu (domain'i LLM/DB ile birleştirir)
     diagnosis-service.ts        # parse -> classify -> soru -> cevap döngüsü
     report-service.ts           # (Faz 4) decision trace + knowledge -> LLM raporu
@@ -78,6 +81,10 @@ src/
     persistence/
       prisma.ts
       conversation-repository.prisma.ts
+    storage/                    # ek dosya BAYTLARI (IAttachmentStorage)
+      local-disk-attachment-storage.ts   # tek makine (varsayılan)
+      prisma-attachment-storage.ts       # Postgres bytea — serverless/çok örnekli
+      storage-factory.ts                 # ATTACHMENT_STORAGE=disk|postgres
     knowledge/
       file-knowledge-repository.ts  # knowledge/*.md okur
   app/                          # Next.js arayüz katmanı (ince)
@@ -429,7 +436,160 @@ sistemin kalbi, hiçbir LLM olmadan çalışır ve kanıtlanır.
 
 ---
 
-## 16. Açık Kararlar ve Riskler
+## 16. Hesap ve Kiracılık (SaaS'a evrilme)
+
+> **Kapsam değişikliği — bilinçli.** Proje tek kiracılı bir iç araç olarak tasarlandı.
+> Ürün büyüdükçe **çok kiracılı bir SaaS'a evriliyor**: bireysel ve şirket hesapları,
+> roller, davet ve e-posta doğrulama akışları. Bu bölüm o katmanın sözleşmesidir.
+> Tek-kiracılı mod kaldırılmadı: hesap sistemi `ACCOUNT_AUTH_ENABLED=1` ile açılan
+> bir katmandır ve kapalıyken uygulama eskisi gibi (hatta auth'suz) çalışır.
+
+### 16.1 Üç auth modu
+
+| Mod | Anahtar | Davranış |
+|-----|---------|----------|
+| Kapalı | (yok) | Auth yok — out-of-box kurulum. |
+| Tek parola | `APP_PASSWORD` | Tek kiracılı iç araç; oturum çerezi HMAC(APP_PASSWORD). |
+| Hesap sistemi | `ACCOUNT_AUTH_ENABLED=1` | Çok kiracılı; oturum DB'de, token'ın sha256'sı saklanır. |
+
+### 16.2 İlke: kiracılık kuralı da domain'dedir
+
+Karar mantığı için geçerli olan ilke erişim kararı için de geçerlidir: **kural saf
+çekirdekte yaşar, altyapıda değil.** `src/domain/access/ownership.ts` yalnız iki şey
+alır — çözümlenmiş kimlik (`AccessIdentity`) ve kaydın sahiplik alanları
+(`RecordOwner`) — ve bir boolean döndürür. DB, Prisma, çerez, Next bilmez.
+
+```ts
+canReadRecord(identity, record): boolean
+canWriteRecord(identity, record): boolean   // VIEWER daima false
+ownershipQuery(identity): OwnershipQuery    // liste ekranlarının WHERE'i
+```
+
+`src/lib/account-auth.ts` bu kuralın **uygulayıcısıdır, sahibi değil**: kaydı
+Postgres'ten okur, kararı domain'e sorar. Kuralın ikinci bir kopyası hiçbir route
+veya sayfada tutulmaz.
+
+### 16.3 Rol matrisi
+
+| Kimlik | Görebildiği kayıtlar | Yazma |
+|--------|----------------------|-------|
+| Bireysel hesap | Yalnız kendi **kişisel** kaydı (`organizationId = null`) | Evet |
+| `OWNER` / `ADMIN` / `MANAGER` | Şirketin tüm kayıtları | Evet |
+| `MEMBER` | Şirket içinde yalnız kendi oluşturduğu | Evet |
+| `VIEWER` | Şirketin tüm kayıtları | **Hayır** (salt-okunur) |
+| Herkes | Sahipsiz kayıt (`ownerUserId` ve `organizationId` null) **görünmez** | — |
+
+Kritik kenar durum: **şirket kaydı, aynı kullanıcının bireysel hesabına sızmaz.**
+Üyelik düşerse (ör. şirket pasifleştirilir) hesap bireysele döner; kendi oluşturduğu
+şirket kayıtları ona **geri açılmaz**. Veri şirkette kalır.
+
+`ownership.test.ts` bu matrisi golden-case suiti olarak sabitler ve ayrıca
+`ownershipQuery` ile `canReadRecord`'un **aynı sonucu verdiğini** doğrular — liste
+ekranı ile tekil erişim ayrışırsa test kırılır.
+
+### 16.4 Sahiplik oluşturmanın parçasıdır
+
+Repository portları sahipliği `create`'in ikinci argümanı olarak alır:
+
+```ts
+create(seed, owner?: RecordOwner): Promise<T>
+```
+
+Kayıt ve sahibi **tek yazımda** kalıcılaşır. Önceki tasarımda route katmanı kaydı
+oluşturup sahipliği ikinci bir `prisma.update` ile yazıyordu; araya giren bir hata,
+hiçbir hesaba bağlı olmayan — ve bu yüzden kimseye görünmeyen — kalıcı bir kayıt
+bırakıyordu. Ayrıca bu desen route'u Prisma'ya bağımlı kılarak katman sözleşmesini
+deliyordu.
+
+### 16.5 Kalıcılık kısıtı
+
+Sahiplik sütunları (`ownerUserId`, `organizationId`) yalnız Postgres modellerinde
+vardır. Bu yüzden `ACCOUNT_AUTH_ENABLED=1` **`PERSISTENCE=prisma` gerektirir**;
+bellek kalıcılığıyla birleştirilirse composition root açık bir hata fırlatır
+(sessizce sahipsiz kayıt üretmek yerine).
+
+### 16.6 Hesap akışlarının karar kuralları
+
+Erişim gibi, hesap akışlarının kararları da domain'dedir
+(`src/domain/access/account-policy.ts`) ve `account-policy.test.ts` ile korunur:
+
+| Kural | Karar |
+|-------|-------|
+| `loginDecision` | Olmayan hesap, pasif hesap ve yanlış parola **ayırt edilemez** (`INVALID_CREDENTIALS`); doğrulanmamış e-posta ancak parola doğruyken bildirilir. |
+| `credentialTokenUsable` | Tür eşleşmeli + kullanılmamış + süresi dolmamış. Jeton başka amaç için kullanılamaz. |
+| `TOKEN_TTL_HOURS` | Doğrulama 24s · parola yenileme 1s · davet 72s. |
+| `seatAvailable` / `seatLimitReducible` | Davet koltuk rezerve eder; sınır kullanılanın altına indirilemez. |
+| `invitationAcceptable` | Davet yalnız `INVITED` üyelik için kabul edilir. |
+| `membershipMutable` | `OWNER` üyeliği değiştirilemez/silinemez — şirket sahipsiz kalamaz. |
+
+### 16.7 Hesap akışlarının katmanlanması
+
+Kiracılık katmanı artık teşhis çekirdeğiyle aynı deseni izler:
+
+```
+route (ince: HTTP, çerez, hız sınırı)
+  → AccountService (akış orkestrasyonu)
+      → domain/access (KARAR: giriş, jeton, koltuk, davet)
+      → IAccountRepository / IPasswordHasher / IEmailSender (I/O)
+```
+
+- **Servis HTTP bilmez.** Oturumu servis açar ve ham jetonu döndürür; çereze
+  yazmak route'un işidir (`setSessionCookie`). Böylece akışlar `next/headers`
+  olmadan test edilebilir.
+- **Parola özetleyici ayrı bir porttur.** Gerçek scrypt bilinçli olarak ~0,5 sn
+  sürer; akış testleri hızlı bir sahte uygulama takar.
+- **`account-service.test.ts`** kayıt, doğrulama, giriş, parola yenileme,
+  oturum içi parola değişimi ve davet akışlarını bellek içi depo ile uçtan uca
+  koşar — Postgres ve e-posta sağlayıcısı olmadan.
+- Oturum çözümlemesi tek yerdedir (`resolveSession`): süre dolması, **pasif
+  kullanıcı** ve aktif üyelik seçimi kuralları hem Prisma hem bellek
+  uygulamasında aynıdır.
+
+### 16.8 Misafir, yerel kayıt ve hesaba taşıma
+
+Üyeliksiz kullanım ayrı ve açık bir veri sınırıdır:
+
+```text
+/api/guest/diagnosis (durumsuz istek)
+  → TransientConversationRepository (yalnız istek ömrü)
+  → teşhis görünümü + istemciye dönen devam durumu
+  → IndexedDB (kullanıcının tarayıcısı)
+```
+
+- Misafir teşhisi sunucudaki `ConversationRecord` veya `WorkspaceRecord`
+  tablolarına yazılmaz. Devam durumu her istekte istemciden gelir ve geçici depo
+  istek sona erdiğinde atılır.
+- Teşhisler, uygulama alanları ve desteklenen ek dosyalar sürümlü IndexedDB
+  şemasında tutulur. Arayüz bu depoya yalnız `guest-storage.ts` veri kapısı
+  üzerinden erişir.
+- Yerel çalışma kimlikleri `local_ws_` öneki taşır; ortak çalışma arayüzü bu
+  kimlikleri sunucu API'sine göndermeden yerel depodan açar ve kaydeder.
+- Üyelik açılması otomatik aktarım başlatmaz. Kullanıcı hesabında yerel kayıtları
+  seçer ve açıkça aktarır.
+- `/api/account/local-workspaces` sahipliği istemciden kabul etmez; oturumdan
+  türetir. `specialty.localOriginId` doğal anahtarı aynı yerel çalışmanın yeniden
+  denenmesinde ikinci bir bulut kaydı oluşmasını engeller.
+- Ek dosya baytları çalışma JSON'una gömülmez. Ana kayıt başarıyla oluşturulduktan
+  sonra korumalı ek dosya ucuna ayrı ayrı yüklenir. Başarısız aktarım yerel
+  kopyayı silmez; tekrar deneme güvenlidir.
+
+Bu sınırın amacı yalnız deneme kolaylığı değildir: kullanıcıya verinin nerede
+tutulduğunu doğru söylemek, üyelik baskısını azaltmak ve anonim verinin fark
+edilmeden kurumsal veritabanına karışmasını önlemektir.
+
+### 16.9 Kalan borç
+
+- Sayfaların okuma modelleri (`/hesabim`, `/sirket`, `/admin`) ve `/api/health`
+  hâlâ doğrudan Prisma okur. Bunlar yazma yapmayan görüntüleme sorgularıdır;
+  bir okuma-modeli portu ileride eklenebilir.
+- `lib/account-auth.ts` çalışma kaydı erişim kontrollerinde (workspace/rca/
+  conversation) doğrudan Prisma okur — kural domain'de, sorgu burada.
+- Hız sınırlayıcı süreç-içidir; yatay ölçekte paylaşımlı depoya taşınmalıdır (bkz. §17).
+- Süresi geçmiş `UserSession` ve `CredentialToken` kayıtları için süpürme işi yok.
+
+---
+
+## 17. Açık Kararlar ve Riskler
 
 - **Kural ağırlıkları el ile belirleniyor (prior).** Risk: öznel. Azaltma: golden-case
   suiti + Faz 6 kalibrasyonu; ağırlıklar konfigürasyon olarak tutulur, koda gömülmez.

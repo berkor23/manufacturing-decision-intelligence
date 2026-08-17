@@ -14,6 +14,7 @@ import type { Methodology } from "../diagnosis";
  * farklıdır. Böylece kalıcılık/doğrulama/AI taslağı tek yoldan akar.
  */
 export type PlaybookFieldType = "text" | "textarea" | "table" | "fivewhy" | "fishbone";
+export type PlaybookFieldImportance = "REQUIRED" | "CONDITIONAL" | "OPTIONAL";
 
 export interface PlaybookColumn {
   key: string;
@@ -34,6 +35,12 @@ export interface PlaybookField {
   example?: string;
   /** Alanın yeterli sayılması için kullanıcıya gösterilen kontrol ölçütü. */
   acceptance?: string;
+  /** Alanın kapanış kapısındaki ağırlığı. Belirtilmezse ana çıktı olduğu için zorunlu kabul edilir. */
+  importance?: PlaybookFieldImportance;
+  /** Koşullu alanın hangi durumda doldurulacağını açıklar. */
+  condition?: string;
+  /** Serbest metnin anlamlı kabul edilmesi için gereken en düşük karakter sayısı. */
+  minimumLength?: number;
   /** table/fivewhy/fishbone için: sütunlar. */
   columns?: PlaybookColumn[];
 }
@@ -64,7 +71,13 @@ export interface Playbook {
 export type TableRow = Record<string, string>;
 export type FieldValue = string | TableRow[];
 
-export type StepStatus = "PENDING" | "IN_PROGRESS" | "DONE";
+export type StepStatus =
+  | "PENDING"
+  | "IN_PROGRESS"
+  | "READY"
+  | "VERIFIED"
+  | "SKIPPED"
+  | "DONE"; // eski kayıt uyumluluğu
 
 /** Bir adımın doldurulmuş durumu (workspace'te saklanır). */
 export interface StepState {
@@ -89,6 +102,42 @@ export function isTabular(field: PlaybookField): boolean {
 export function fieldFilled(v: FieldValue | undefined): boolean {
   if (v == null) return false;
   return typeof v === "string" ? v.trim().length > 0 : v.length > 0;
+}
+
+/** Eski playbook kayıtlarını da kapsayan tek ve görünür önem sınıflandırması. */
+export function fieldImportance(field: PlaybookField): PlaybookFieldImportance {
+  if (field.importance) return field.importance;
+  if (/(not|notes|observation|comment|additional|ek_|notlar|gözlem)/i.test(field.key)) return "OPTIONAL";
+  if (/(contain|customer|regulat|fallback|alternative|escalat|tedarik|müşteri)/i.test(`${field.key} ${field.label}`)) return "CONDITIONAL";
+  return "REQUIRED";
+}
+
+const THIN_GENERIC_ANSWERS = new Set([
+  "tamam", "yapıldı", "kontrol edildi", "uygun", "ok", "evet", "hayır", "yok", "var",
+]);
+
+/** Boş olmanın ötesinde, alanın karar verilebilir içerik taşıyıp taşımadığını denetler. */
+export function fieldQualityIssue(field: PlaybookField, value: FieldValue | undefined): string | null {
+  const importance = fieldImportance(field);
+  if (!fieldFilled(value)) return importance === "OPTIONAL" ? null : "Alan boş.";
+  if (typeof value === "string") {
+    const normalized = value.trim().replace(/\s+/g, " ");
+    if (THIN_GENERIC_ANSWERS.has(normalized.toLocaleLowerCase("tr-TR"))) return "Tek kelimelik genel ifade kanıt veya karar gerekçesi taşımıyor.";
+    const minimum = field.minimumLength ?? (field.type === "textarea" ? 20 : 3);
+    if (normalized.length < minimum) return `En az ${minimum} karakterlik somut açıklama gerekli.`;
+    return null;
+  }
+  if (!Array.isArray(value)) return "Alan biçimi geçersiz.";
+  const meaningfulRows = value.filter((row) => Object.values(row).some((cell) => cell.trim().length > 0));
+  if (meaningfulRows.length === 0) return "En az bir dolu satır gerekli.";
+  if ((field.columns?.length ?? 0) > 1 && !meaningfulRows.some((row) => Object.values(row).filter((cell) => cell.trim().length > 0).length >= 2)) {
+    return "En az bir satırda iki ilişkili hücreyi doldurun.";
+  }
+  return null;
+}
+
+export function stepIsComplete(status: StepStatus | string | undefined): boolean {
+  return status === "VERIFIED" || status === "SKIPPED" || status === "DONE";
 }
 
 // ── 5 Neden aracı ─────────────────────────────────────────────────

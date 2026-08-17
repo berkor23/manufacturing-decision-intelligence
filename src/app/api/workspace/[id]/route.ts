@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWorkspaceService } from "@/application/wiring";
 import { workspacePatchSchema as patchSchema } from "@/application/workspace-patch-schema";
+import { denyWorkspaceAccess } from "@/lib/workspace-guard";
 /*
 const legacyPatchSchema = z.object({
   steps: z
     .array(
       z.object({
         key: z.string(),
-        status: z.enum(["PENDING", "IN_PROGRESS", "DONE"]),
+        status: z.enum(["PENDING", "IN_PROGRESS", "READY", "VERIFIED", "SKIPPED", "DONE"]),
         values: z.record(z.string(), fieldValueSchema),
       }),
     )
@@ -65,10 +66,12 @@ const legacyPatchSchema = z.object({
 
 // GET /api/workspace/{id}
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const denied = await denyWorkspaceAccess(req, id, "read");
+  if (denied) return denied;
   const ws = await getWorkspaceService().get(id);
   if (!ws) return NextResponse.json({ error: "Çalışma alanı bulunamadı." }, { status: 404 });
   return NextResponse.json(ws);
@@ -80,6 +83,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  // "write": VIEWER rolü okuyabilir ama yazamaz. Önceden burada okuma yetkisi
+  // (canAccessWorkspace) kontrol ediliyordu; salt-okunur rol yalnız proxy'de duruyordu.
+  const denied = await denyWorkspaceAccess(req, id, "write");
+  if (denied) return denied;
   const json = await req.json().catch(() => null);
   const parsed = patchSchema.safeParse(json);
   if (!parsed.success) {

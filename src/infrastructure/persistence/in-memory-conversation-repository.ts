@@ -7,11 +7,10 @@ import {
   ConversationMessage,
 } from "@/application/ports/conversation-repository";
 import { StructuredProblem } from "@/domain/diagnosis";
+import { newResourceId } from "./resource-id";
 
-let counter = 0;
 function newId(): string {
-  counter += 1;
-  return `conv_${Date.now().toString(36)}_${counter}`;
+  return newResourceId("conv");
 }
 
 export class InMemoryConversationRepository implements IConversationRepository {
@@ -20,12 +19,14 @@ export class InMemoryConversationRepository implements IConversationRepository {
   async create(seed: {
     structuredProblem: StructuredProblem;
     messages?: ConversationMessage[];
+    featureSources?: Conversation["featureSources"];
   }): Promise<Conversation> {
     const now = new Date().toISOString();
     const conversation: Conversation = {
       id: newId(),
       status: "ACTIVE",
       structuredProblem: seed.structuredProblem,
+      featureSources: seed.featureSources ?? {},
       questionsAsked: 0,
       askedFeatures: [],
       pendingFeature: null,

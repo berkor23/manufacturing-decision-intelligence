@@ -375,4 +375,28 @@ describe("profesyonel çoklu kanıt doğrulaması", () => {
     expect(snap.evidence.conflicts.length).toBeGreaterThan(0);
     expect(snap.evidence.status).toBe("PROVISIONAL");
   });
+
+  it("bileşik kuralın desteklemeyen false alanlarını bağımsız kanıt saymaz", () => {
+    const snap = diagnose(problemWith({
+      defectOccurred: false,
+      processChanged: false,
+      operatorChanged: false,
+      supplierChanged: true,
+      failureModeKnown: true,
+      potentialEffectKnown: true,
+      controlAdequacyUncertain: true,
+    }), 3);
+    expect(snap.ranking[0].methodology).toBe("FMEA");
+    expect(snap.evidence.supportingSignals).toBe(5);
+    expect(snap.evidence.supportingFeatures).toContain("supplierChanged");
+    expect(snap.evidence.supportingFeatures).not.toContain("processChanged");
+    expect(snap.evidence.supportingFeatures).not.toContain("operatorChanged");
+  });
+
+  it("soru bütçesi bitip kanıt kapısı geçilmezse sonucu doğrulanmış gibi kapatmaz", () => {
+    const snap = diagnose(problemWith({ defectOccurred: true }), 12);
+    expect(snap.concluded).toBe(true);
+    expect(snap.evidence.status).toBe("INCONCLUSIVE");
+    expect(snap.evidence.ready).toBe(false);
+  });
 });

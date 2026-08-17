@@ -1,6 +1,7 @@
 import type { Methodology } from "./diagnosis";
 import type { MethodologyWorkspace } from "@/application/ports/methodology-workspace-repository";
 import { fieldQualityFindings } from "./field-readiness";
+import { stepIsComplete } from "./playbook";
 
 export type ClaimStatus = "CLAIMED" | "VERIFIED" | "REJECTED";
 export type ClosureStatus = "OPEN" | "CLOSURE_CANDIDATE" | "MONITORING" | "CLOSED" | "REOPENED";
@@ -190,7 +191,7 @@ export function closureChecks(ws: MethodologyWorkspace): ClosureCheck[] {
     : learning?.decision === "NO_UPDATE_REQUIRED" && Boolean(learning.rationale.trim() && learning.approvedBy.trim());
   const blockingQuality = fieldQualityFindings(ws).filter((item) => item.severity === "BLOCKING");
   return [
-    { key: "steps", label: "Tüm metodoloji adımları tamamlandı", passed: ws.steps.every((s) => s.status === "DONE"), detail: `${ws.steps.filter((s) => s.status === "DONE").length}/${ws.steps.length}` },
+    { key: "steps", label: "Tüm metodoloji adımları doğrulandı veya gerekçeli atlandı", passed: ws.steps.every((s) => stepIsComplete(s.status)), detail: `${ws.steps.filter((s) => stepIsComplete(s.status)).length}/${ws.steps.length}` },
     { key: "evidence", label: "Kritik iddialar kanıtla doğrulandı", passed: criticalClaims.length > 0 && criticalClaims.every((c) => c.status === "VERIFIED" && c.evidenceIds.length > 0), detail: `${criticalClaims.filter((c) => c.status === "VERIFIED").length}/${criticalClaims.length}` },
     { key: "actions", label: "Kritik aksiyonların etkinliği doğrulandı", passed: actions.length > 0 && effective.length === actions.length, detail: `${effective.length}/${actions.length}` },
     { key: "monitoring", label: "Erken uyarı ve izleme planı tanımlandı", passed: Boolean(ws.monitoring?.metric && ws.monitoring?.trigger && ws.monitoring?.reviewDate), detail: ws.monitoring?.reviewDate ?? "Tarih yok" },

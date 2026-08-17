@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { DiagnosisService } from "./diagnosis-service";
 import { InMemoryConversationRepository } from "@/infrastructure/persistence/in-memory-conversation-repository";
 import { KeywordProblemParser } from "@/infrastructure/parser/keyword-problem-parser";
+import type { DiagnosticFeatureKey, Methodology } from "@/domain/diagnosis";
 
 function makeService() {
   return new DiagnosisService(
@@ -21,6 +22,33 @@ async function runToConclusion(
     view = await service.answer(view.conversationId, answer);
   }
   return view;
+}
+
+async function runReviewedCase(
+  text: string,
+  expected: Methodology,
+  answers: Partial<Record<DiagnosticFeatureKey, boolean>>,
+  maxQuestions: number,
+) {
+  const service = makeService();
+  let view = await service.start(text);
+  const parserConfirmations = Object.fromEntries(
+    Object.entries(view.featureSources)
+      .filter(([, source]) => source === "PARSER")
+      .map(([key]) => [key, view.structuredProblem.features[key as DiagnosticFeatureKey]]),
+  ) as Partial<Record<DiagnosticFeatureKey, boolean | null>>;
+  view = await service.reviewFeatures(view.conversationId, parserConfirmations);
+  const asked: DiagnosticFeatureKey[] = [];
+  while (view.status === "ASKING" && asked.length < 20) {
+    const feature = view.nextQuestion!.featureKey;
+    asked.push(feature);
+    view = await service.answer(view.conversationId, answers[feature] === true ? "evet" : "hayır");
+  }
+  expect(view.result?.methodology).toBe(expected);
+  expect(asked.length).toBeGreaterThanOrEqual(3);
+  expect(asked.length).toBeLessThanOrEqual(maxQuestions);
+  expect(new Set(asked).size).toBe(asked.length);
+  return { view, asked };
 }
 
 describe("DiagnosisService — uçtan uca (keyword parser + in-memory)", () => {
@@ -84,6 +112,27 @@ describe("DiagnosisService — uçtan uca (keyword parser + in-memory)", () => {
     expect(view.structuredProblem.features.customerAffected).toBe(true);
   });
 
+  it("parser çıkarımlarını kullanıcı teyidiyle düzeltir ve kaynağını izler", async () => {
+    const service = makeService();
+    const started = await service.start(
+      "Yeni tedarikçiye geçeceğiz, henüz hata yaşanmadı fakat gelecekte kalite riski oluşabilir.",
+    );
+
+    expect(started.structuredProblem.features.supplierChanged).toBe(true);
+    expect(started.structuredProblem.features.defectOccurred).toBe(false);
+    expect(started.featureSources.supplierChanged).toBe("PARSER");
+
+    const reviewed = await service.reviewFeatures(started.conversationId, {
+      supplierChanged: false,
+      defectOccurred: false,
+    });
+
+    expect(reviewed.structuredProblem.features.supplierChanged).toBe(false);
+    expect(reviewed.featureSources.supplierChanged).toBe("USER_CONFIRMED");
+    expect(reviewed.featureSources.defectOccurred).toBe("USER_CONFIRMED");
+    expect(reviewed.questionsAsked).toBe(started.questionsAsked);
+  });
+
   it("süreç bağlamı soru anlamından ayrı taşınır", async () => {
     const service = makeService();
     const view = await service.start("Kaynak hattında çatlak oluştu.");
@@ -114,5 +163,30 @@ describe("DiagnosisService — uçtan uca (keyword parser + in-memory)", () => {
     expect(fetched).not.toBeNull();
     expect(fetched!.conversationId).toBe(started.conversationId);
     expect(fetched!.structuredProblem.features.defectOccurred).toBe(true);
+  });
+
+  it("gerçek servis akışında TPM sinyalleri doğrulanır ve ilgisiz dallara sapılmaz", async () => {
+    const { view, asked } = await runReviewedCase(
+      "Paketleme makinesindeki kısa duruşlar aylardır tekrarlıyor; OEE ve bakım kayıtları mevcut.",
+      "TPM",
+      { equipmentBreakdown: true, chronicEquipmentLoss: true, previouslyOccurred: true, hasMeasurementData: true, standardWorkEstablished: false, isImprovementInitiative: false },
+      8,
+    );
+    expect(asked).not.toContain("decisionBetweenOptions");
+    expect(asked).not.toContain("isNewDesign");
+    expect(asked).not.toContain("workplaceDisorganized");
+    expect(asked).not.toContain("externalNonconformance");
+    expect(view.evidence.status).not.toBe("INCONCLUSIVE");
+  });
+
+  it("gerçek servis akışında müşteri uygunsuzluğu çelişkisiz 8D'ye gider", async () => {
+    const { view } = await runReviewedCase(
+      "Otomotiv müşterisine ulaşan kaynak çatlağı tekrar etti; kök neden bilinmiyor ve acil ayıklama gerekiyor.",
+      "EIGHT_D",
+      { defectOccurred: true, customerAffected: true, rootCauseKnown: false, externalNonconformance: true, containmentNeeded: true, hasMeasurementData: true },
+      8,
+    );
+    expect(view.evidence.conflicts).toEqual([]);
+    expect(view.evidence.scoreMargin).toBeGreaterThanOrEqual(2);
   });
 });

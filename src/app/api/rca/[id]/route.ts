@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getRcaRepository } from "@/application/wiring";
+import { accountAuthEnabled, accountFromRequest, canAccessRca } from "@/lib/account-auth";
+
+/** RCA kaydı kiracıya bağlıdır: proxy'ye ek olarak route da kendi kapısını tutar. */
+async function denyUnlessAllowed(req: Request, id: string) {
+  if (!accountAuthEnabled()) return null;
+  const account = await accountFromRequest(req);
+  if (!account || !(await canAccessRca(account, id))) {
+    return NextResponse.json({ error: "Bu RCA kaydına erişiminiz yok." }, { status: 403 });
+  }
+  return null;
+}
 
 const fishboneCategory = z.enum([
   "MAN",
@@ -32,10 +43,12 @@ const patchSchema = z.object({
 
 // GET /api/rca/{id}
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const denied = await denyUnlessAllowed(req, id);
+  if (denied) return denied;
   const ws = await getRcaRepository().get(id);
   if (!ws) return NextResponse.json({ error: "RCA bulunamadı." }, { status: 404 });
   return NextResponse.json(ws);
@@ -47,6 +60,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const denied = await denyUnlessAllowed(req, id);
+  if (denied) return denied;
   const json = await req.json().catch(() => null);
   const parsed = patchSchema.safeParse(json);
   if (!parsed.success) {

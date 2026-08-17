@@ -3,6 +3,7 @@
 // playbook'tan tohumlanır; burada yalnızca DURUM (doldurulan değerler) yaşar.
 
 import { Methodology } from "@/domain/diagnosis";
+import type { RecordOwner } from "@/domain/access";
 import { StepState } from "@/domain/playbook";
 import { ActionItem } from "./rca-repository";
 import type { Approval, ClaimItem, ClosureStatus, ContainmentControl, EvidenceItem, HorizontalDeploymentTarget, LearningDecision, MonitoringPlan, ProblemDNA, RedTeamReview, SystemDocument, WorkspaceAttachment, WorkspaceAuditEvent, WorkspaceLink, WorkspaceMetric } from "@/domain/workspace-intelligence";
@@ -97,8 +98,15 @@ export interface WorkspaceSummary {
 }
 
 export interface IMethodologyWorkspaceRepository {
+  /**
+   * `owner` verilirse sahiplik kaydın kendisiyle AYNI yazımda kalıcılaşır.
+   * Kayıt oluşturup sahibini ikinci bir çağrıyla yazmak, araya giren hatada
+   * hiçbir hesaba bağlı olmayan (ve bu yüzden kimseye görünmeyen) çalışma
+   * bırakıyordu; sahiplik artık oluşturmanın ayrılmaz parçasıdır.
+   */
   create(
     seed: Omit<MethodologyWorkspace, "id" | "createdAt" | "updatedAt">,
+    owner?: RecordOwner,
   ): Promise<MethodologyWorkspace>;
   get(id: string): Promise<MethodologyWorkspace | null>;
   update(id: string, patch: WorkspacePatch): Promise<MethodologyWorkspace | null>;

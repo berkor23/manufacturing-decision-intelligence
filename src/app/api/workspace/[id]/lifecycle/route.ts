@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getWorkspaceService } from "@/application/wiring";
+import { denyWorkspaceAccess } from "@/lib/workspace-guard";
 
 const schema = z.discriminatedUnion("operation", [
   z.object({ operation: z.literal("CLOSE") }),
@@ -8,6 +9,8 @@ const schema = z.discriminatedUnion("operation", [
 ]);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await denyWorkspaceAccess(req, (await params).id, "write");
+  if (denied) return denied;
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Geçersiz yaşam döngüsü işlemi." }, { status: 400 });
   try {

@@ -5,10 +5,10 @@ import {
   MethodologyWorkspace,
   WorkspacePatch,
 } from "@/application/ports/methodology-workspace-repository";
+import type { RecordOwner } from "@/domain/access";
+import { newResourceId } from "./resource-id";
 
-function newId(): string {
-  return `ws_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
+const newId = () => newResourceId("ws");
 
 const asJson = (v: unknown) => v as unknown as Prisma.InputJsonValue;
 
@@ -17,11 +17,18 @@ export class PrismaMethodologyWorkspaceRepository
 {
   async create(
     seed: Omit<MethodologyWorkspace, "id" | "createdAt" | "updatedAt">,
+    owner?: RecordOwner,
   ): Promise<MethodologyWorkspace> {
     const now = new Date().toISOString();
     const ws: MethodologyWorkspace = { ...seed, id: newId(), createdAt: now, updatedAt: now };
     await prisma.workspaceRecord.create({
-      data: { id: ws.id, methodology: ws.methodology, data: asJson(ws) },
+      data: {
+        id: ws.id,
+        methodology: ws.methodology,
+        data: asJson(ws),
+        ownerUserId: owner?.ownerUserId ?? null,
+        organizationId: owner?.organizationId ?? null,
+      },
     });
     return ws;
   }

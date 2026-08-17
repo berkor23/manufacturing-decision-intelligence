@@ -1,6 +1,8 @@
 // RCA çalışma alanı PORTU. Metodoloji uygulama modülü (Faz 5).
 // Karar mantığı değil, yapılandırılmış çalışma alanı (5 Why + Balık kılçığı + aksiyon).
 
+import type { RecordOwner } from "@/domain/access";
+
 export type FishboneCategory =
   | "MAN"
   | "MACHINE"
@@ -66,7 +68,11 @@ export type RcaPatch = Partial<
 >;
 
 export interface IRcaRepository {
-  create(seed: { conversationId?: string | null; problemDescription: string }): Promise<RcaWorkspace>;
+  /** `owner` verilirse sahiplik kayıtla aynı yazımda kalıcılaşır (bkz. workspace portu). */
+  create(
+    seed: { conversationId?: string | null; problemDescription: string },
+    owner?: RecordOwner,
+  ): Promise<RcaWorkspace>;
   get(id: string): Promise<RcaWorkspace | null>;
   update(id: string, patch: RcaPatch): Promise<RcaWorkspace | null>;
 }

@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "methodology": "EIGHT_D",
+    "problemDescription": "X-model fren kaliper braketinin robotik MIG kaynak dikişinde aralıklı gözenek ve mikro-çatlak. Müşteri (OEM) montaj hattında son üç sevkiyatta toplam 1.240 parça karantinaya alındı, montaj hattı 45 dk durdu ve iç PPM 900'den 8.500'e yükseldi. Kusur görsel kontrolden kaçıyor; kök neden bilinmiyor ve son üç haftada tekrar ediyor.",
+    "patch": {
+      "closureStatus": "MONITORING",
+      "steps": [
+        {
+          "key": "d0",
+          "status": "DONE",
+          "values": {
+            "warrant": "8D gerekli: (1) Önem — müşteri hattı durdu, OEM resmi 8D talep etti; (2) Tekrar — üç haftada üç ayrı sevkiyat; (3) Bilinmeyen neden — görsel kontrolden kaçan bir kaynak kusuru, kök neden belirsiz. KT veya tekil düzeltici aksiyon yetersiz.",
+            "era": [
+              { "action": "Sevkiyatı durdur, sahadaki üç şüpheli parti (1.240 parça) bloke edildi", "owner": "M. Aydın (Sevkiyat)", "status": "Tamamlandı" },
+              { "action": "OEM müşteri kalite temsilcisine 4 saat içinde bildirim ve geçici sertifika", "owner": "S. Demir (Müşteri Kalite)", "status": "Tamamlandı" },
+              { "action": "Kaynak hücresi 07-A geçici durduruldu, üretim 07-B'ye alındı", "owner": "E. Koç (Üretim)", "status": "Tamamlandı" }
+            ]
+          }
+        },
+        {
+          "key": "d1",
+          "status": "DONE",
+          "values": {
+            "team": [
+              { "name": "S. Demir", "role": "Ekip Lideri", "dept": "Müşteri Kalite" },
+              { "name": "A. Yılmaz", "role": "Kaynak Süreç Mühendisi", "dept": "Süreç Müh." },
+              { "name": "E. Koç", "role": "Üretim Sorumlusu", "dept": "Üretim" },
+              { "name": "B. Şahin", "role": "Kalite Mühendisi", "dept": "Kalite Güvence" },
+              { "name": "H. Arslan", "role": "Bakım Teknisyeni", "dept": "Bakım" }
+            ],
+            "leader": "Ekip Lideri: S. Demir · Şampiyon/Sponsor: Fabrika Kalite Müdürü R. Öztürk"
+          }
+        },
+        {
+          "key": "d2",
+          "status": "DONE",
+          "values": {
+            "what": "X-model fren kaliper braketi (P/N BR-4471), robotik MIG kaynak dikişi D-2 (üst flanş)",
+            "whereWhen": "Kaynak hücresi 07-A, gündüz vardiyası; ilk vaka 01.06.2026, son vaka 24.06.2026",
+            "magnitude": "3 sevkiyatta 1.240 karantina parça; iç PPM 900 → 8.500; müşteri hattı 45 dk duruş; kusur oranı D-2 dikişinde %1,4",
+            "statement": "01–24 Haziran 2026 arasında, kaynak hücresi 07-A'da üretilen BR-4471 fren kaliper braketlerinin D-2 kaynak dikişinde aralıklı gözenek ve mikro-çatlak gözlendi. Kusur görsel kontrolden geçti ve müşteri montajında ortaya çıktı; etkilenen parça sayısı 1.240, iç PPM 8.500. Belirti dikiş içi gözenekliliktir; kök neden bu aşamada atfedilmemiştir."
+          }
+        },
+        {
+          "key": "d3",
+          "status": "DONE",
+          "values": {
+            "containmentActions": [
+              { "action": "Sahadaki + transitteki tüm BR-4471'de %100 X-ray / tahribatsız muayene ile ayıklama", "scope": "Stok + transit + müşteri deposu", "owner": "B. Şahin", "verification": "1.240 parça tarandı, 47 kusurlu ayrıldı; ayıklama sonrası müşteride kaçak 0" },
+              { "action": "Kaynak hücresi 07-A üretimi 07-B'ye kaydırıldı, 07-A karantina", "scope": "Hat", "owner": "E. Koç", "verification": "07-B çıktısında D-2 kusuru 0 (300 parça örneklem)" },
+              { "action": "Her sevkiyata geçici %100 X-ray sertifikası eklendi", "scope": "Müşteri sevkiyatı", "owner": "S. Demir", "verification": "OEM giriş kalitesi 3 sevkiyat üst üste 0 red teyit etti" }
+            ],
+            "effectiveness": "Containment etkin: %100 tahribatsız muayene devrede olduğu sürece müşteriye kaçak 0. Ancak maliyetli (parça başına +12 sn X-ray, +2 kişi/vardiya) ve geçicidir — kök neden kapatılınca kaldırılacak."
+          }
+        },
+        {
+          "key": "d4",
+          "status": "DONE",
+          "values": {
+            "fiveWhy": [
+              { "level": "1", "why": "Kaynak dikişi D-2'de gözenek/mikro-çatlak oluştu", "evidence": "X-ray + metalografik kesit: dikiş içi gaz gözenekliliği", "isRoot": "Hayır" },
+              { "level": "2", "why": "Ergimiş banyoya atmosferik nem/hava karıştı", "evidence": "Gözenek morfolojisi hidrojen/gaz kaynaklı; koruyucu gaz analizi", "isRoot": "Hayır" },
+              { "level": "3", "why": "Koruyucu gaz debisi 18 L/dk'dan 12 L/dk'ya düştü", "evidence": "Debi log kaydı; regülatör çıkış basıncı sapması ölçüldü", "isRoot": "Hayır" },
+              { "level": "4", "why": "Basınç regülatörü kalibrasyonu drift etti ve alarm eşiği yoktu", "evidence": "Regülatör kalibrasyon kaydı 14 ay eski; SCADA'da debi alarmı tanımsız", "isRoot": "Evet" },
+              { "level": "5", "why": "Önleyici bakım planında gaz regülatörü periyodik kalibrasyonu ve düşük-debi alarmı kapsanmıyordu", "evidence": "PM planı revizyonu; kontrol planında gaz debisi kritik parametre değil", "isRoot": "Kök neden" }
+            ],
+            "occurrenceRoot": "OLUŞMA KÖK NEDENİ: Koruyucu gaz basınç regülatörünün kalibrasyon driftine karşı önleyici bakım ve düşük-debi alarmı bulunmadığından, gaz debisi kademeli olarak 18→12 L/dk'ya düştü; yetersiz gaz koruması ergimiş banyoya nem/hava karışmasına ve dikiş içi gözenekliliğe yol açtı. Regülatör değiştirildiğinde ve debi 18 L/dk'ya sabitlendiğinde kusur tekrar üretilemedi (doğrulandı).",
+            "escapeRoot": "KAÇIŞ KÖK NEDENİ: Kontrol planı D-2 dikişi için yalnızca görsel kontrol öngörüyordu; dikiş içi (yüzey altı) gözeneklilik için tahribatsız muayene veya debi izleme kritik-kontrol olarak tanımlı değildi. Bu nedenle kusur üretim içi kontrolden kaçıp müşteriye ulaştı."
+          }
+        },
+        {
+          "key": "d5",
+          "status": "DONE",
+          "values": {
+            "correctiveActions": [
+              { "rootCause": "Regülatör drifti + alarm yok (oluşma)", "action": "Gaz hattına kalibreli dijital debimetre + otomatik düşük-debi kilit (16 L/dk altında hücre durur)", "owner": "A. Yılmaz", "due": "2026-07-10", "status": "Uygulandı" },
+              { "rootCause": "PM planı eksik (oluşma-sistemik)", "action": "Gaz regülatörü ve debimetreyi 3 aylık kalibrasyon planına ekle", "owner": "H. Arslan", "due": "2026-07-05", "status": "Uygulandı" },
+              { "rootCause": "Kontrol planı görsel-only (kaçış)", "action": "D-2 dikişine SPC'li debi izleme + partide %5 tahribatsız muayene örneklemesi ekle", "owner": "B. Şahin", "due": "2026-07-15", "status": "Uygulandı" }
+            ]
+          }
+        },
+        {
+          "key": "d6",
+          "status": "DONE",
+          "values": {
+            "implementation": "Dijital debimetre + düşük-debi kilit 08.07.2026'da hücre 07-A'da devreye alındı; regülatör yenilendi ve kalibre edildi. PM planı ve kontrol planı revizyonları onaylandı (Rev C).",
+            "verification": "Devreye alma sonrası 30 gün izleme (08.07–... ): D-2 kusur oranı %1,4 → %0,0 (4.100 parça, 0 kusur). İç PPM 8.500 → 120. Debi 18 L/dk ±0,5'te stabil. Müşteri girişinde 4 sevkiyat üst üste 0 red.",
+            "containmentRemoval": "%100 X-ray geçici önlemi, 60 günlük etkinlik teyidi sonrası kademeli kaldırılacak (planlı: 08.09.2026); şimdilik %5 örnekleme ile izleme sürüyor."
+          }
+        },
+        {
+          "key": "d7",
+          "status": "DONE",
+          "values": {
+            "systemUpdates": [
+              { "document": "PFMEA (BR-4471)", "change": "Gaz debisi düşüşü yeni hata modu; tespit puanı revize, düşük-debi kilit kontrol olarak eklendi", "owner": "A. Yılmaz" },
+              { "document": "Kontrol Planı Rev C", "change": "Gaz debisi kritik parametre (SPC); D-2 için %5 tahribatsız muayene örneklemesi", "owner": "B. Şahin" },
+              { "document": "Önleyici Bakım Planı", "change": "Gaz regülatörü + debimetre 3 aylık kalibrasyon; düşük-debi alarm testi", "owner": "H. Arslan" },
+              { "document": "Kaynak İş Talimatı WI-07", "change": "Vardiya başı gaz debisi doğrulama adımı ve kabul aralığı (18 ±1 L/dk)", "owner": "E. Koç" }
+            ],
+            "horizontal": "Yatay yayılım: Aynı gaz besleme mimarisine sahip 07-B, 09-A ve 11-C robotik kaynak hücrelerine düşük-debi kilit ve PM kalibrasyonu yaygınlaştırıldı. Diğer MIG kaynaklı braket ailelerinde (BR-4472, BR-5130) kontrol planı gözden geçirmesi açıldı."
+          }
+        },
+        {
+          "key": "d8",
+          "status": "DONE",
+          "values": {
+            "customerReport": "OEM'e 8D kapanış raporu sunuldu (18.07.2026): Problem → D-2 dikişinde gözeneklilik / hat duruşu. Kök neden → gaz regülatörü drifti + kontrol planında tahribatsız muayene eksikliği. Kalıcı önlem → debi kilidi, SPC izleme, PM kalibrasyonu, kontrol planı Rev C. Kanıt → 30 günde PPM 8.500→120, 4 sevkiyat 0 red. Müşteri 8D'yi onayladı; şüpheli parti kapatıldı.",
+            "lessons": "Öğrenilen dersler: (1) 'Görsel kontrol yeterli' varsayımı yüzey altı kusurlarda risklidir — kritik dikişlerde süreç parametresi izleme, son kontrolden daha erken yakalar. (2) Yavaş sürüklenen (drift) parametreler ani arızadan daha sinsidir; alarm eşiği + PM kalibrasyonu şarttır. (3) Containment maliyeti (parça başı +12 sn X-ray) kök nedeni hızlı kapatmanın iş gerekçesini güçlendirdi."
+          }
+        }
+      ],
+      "evidence": [
+        { "id": "ev_metallo_001", "title": "Metalografik kesit raporu", "source": "Laboratuvar Rap. LAB-2026-0611", "finding": "D-2 dikişinde dikiş içi gaz gözenekliliği; hidrojen/atmosferik gaz kaynaklı morfoloji.", "stepKey": "d4", "claimId": "cl_occurrence", "recordedAt": "2026-06-11" },
+        { "id": "ev_flow_002", "title": "Gaz debisi log kaydı", "source": "SCADA debi geçmişi 07-A", "finding": "Koruyucu gaz debisi 3 haftada 18 → 12 L/dk kademeli düştü; alarm tetiklenmedi.", "stepKey": "d4", "claimId": "cl_occurrence", "recordedAt": "2026-06-20" },
+        { "id": "ev_calib_003", "title": "Regülatör kalibrasyon kaydı", "source": "Bakım sistemi CMMS", "finding": "Basınç regülatörü son kalibrasyonu 14 ay önce; PM planında periyot tanımsız.", "stepKey": "d4", "claimId": "cl_occurrence", "recordedAt": "2026-06-21" },
+        { "id": "ev_cplan_004", "title": "Kontrol planı incelemesi", "source": "Kontrol Planı Rev B", "finding": "D-2 dikişi için yalnızca görsel kontrol; yüzey altı gözeneklilik kontrolü yok.", "stepKey": "d4", "claimId": "cl_escape", "recordedAt": "2026-06-22" },
+        { "id": "ev_verify_005", "title": "Devreye alma sonrası izleme", "source": "Üretim kalite panosu", "finding": "30 günde D-2 kusur oranı %1,4 → %0,0; iç PPM 8.500 → 120.", "stepKey": "d6", "claimId": null, "recordedAt": "2026-07-18" }
+      ],
+      "claims": [
+        { "id": "cl_occurrence", "statement": "Koruyucu gaz regülatörü driftine karşı PM/alarm olmaması gaz debisini düşürdü ve dikiş içi gözenekliliğe yol açtı.", "kind": "ROOT_CAUSE", "status": "VERIFIED", "stepKey": "d4", "evidenceIds": ["ev_metallo_001", "ev_flow_002", "ev_calib_003"], "counterfactual": "Regülatör yenilenip debi 18 L/dk'ya sabitlendiğinde kusur tekrar üretilemedi." },
+        { "id": "cl_escape", "statement": "Kontrol planında yüzey altı gözeneklilik için tahribatsız muayene/debi izleme olmadığından kusur kontrolden kaçtı.", "kind": "ROOT_CAUSE", "status": "VERIFIED", "stepKey": "d4", "evidenceIds": ["ev_cplan_004"], "counterfactual": "Debi izleme + %5 tahribatsız muayene eklendiğinde benzer kusur üretim içinde yakalandı." },
+        { "id": "cl_conclusion", "statement": "Kalıcı aksiyonlar (debi kilidi + SPC + PM kalibrasyonu) hem oluşma hem kaçış kök nedenini kapattı; 30 günlük veri etkinliği doğruladı.", "kind": "CONCLUSION", "status": "VERIFIED", "stepKey": "d6", "evidenceIds": ["ev_verify_005"] }
+      ],
+      "actions": [
+        { "id": "act_flowlock_1", "action": "Gaz hattına kalibreli dijital debimetre + otomatik düşük-debi kilit (16 L/dk altında hücre durur)", "owner": "A. Yılmaz", "status": "EFFECTIVE", "dueDate": "2026-07-10", "successMetric": "D-2 kusur oranı", "baseline": "%1,4", "target": "<%0,1", "actual": "%0,0", "verificationDueDate": "2026-08-08", "evidenceIds": ["ev_verify_005"] },
+        { "id": "act_pm_2", "action": "Gaz regülatörü ve debimetreyi 3 aylık kalibrasyon planına ekle", "owner": "H. Arslan", "status": "IMPLEMENTED", "dueDate": "2026-07-05", "successMetric": "PM tamamlanma", "baseline": "0", "target": "%100", "actual": "%100" },
+        { "id": "act_cplan_3", "action": "Kontrol planına SPC'li debi izleme + %5 tahribatsız muayene örneklemesi ekle", "owner": "B. Şahin", "status": "EFFECTIVE", "dueDate": "2026-07-15", "successMetric": "Müşteri red sayısı", "baseline": "3 sevkiyat red", "target": "0", "actual": "0 (4 sevkiyat)" }
+      ],
+      "containmentControls": [
+        {
+          "id": "cc_xray_100",
+          "purpose": "Müşteriyi yüzey altı gözeneklilikten izole etmek için %100 tahribatsız muayene",
+          "scope": "Stok + transit + müşteri deposundaki tüm BR-4471",
+          "startedAt": "2026-06-25",
+          "owner": "B. Şahin",
+          "effectivenessMetric": "Müşteriye ulaşan kusurlu parça (kaçak)",
+          "currentResult": "0 kaçak (1.240 parça tarandı, 47 ayrıldı)",
+          "costOrBurden": "Parça başı +12 sn X-ray, +2 kişi/vardiya",
+          "removalCriteria": "Kalıcı aksiyonların 60 günlük etkinlik teyidi (planlı 2026-09-08)",
+          "status": "VERIFYING",
+          "removalApprovedBy": "",
+          "removedAt": null,
+          "permanentActionId": "act_flowlock_1",
+          "evidenceIds": ["ev_verify_005"]
+        }
+      ],
+      "monitoring": {
+        "metric": "D-2 dikişi iç PPM ve gaz debisi (SPC)",
+        "trigger": "PPM > 500 veya debi < 16 L/dk",
+        "reviewDate": "2026-09-08",
+        "owner": "B. Şahin",
+        "result": "PASSED"
+      },
+      "contextContract": {
+        "purpose": "BR-4471 kaynak gözeneklilik problemini kalıcı olarak kapatmak ve müşteri güvenini geri kazanmak",
+        "scope": "Kaynak hücresi 07-A, D-2 dikişi, BR-4471 ürün ailesi",
+        "outOfScope": "Diğer ürün ailelerinin tasarım değişiklikleri; tedarikçi tel spesifikasyonu revizyonu",
+        "successMetric": "İç PPM < 500 ve 60 gün müşteri redsiz",
+        "methodRole": "8D — müşteri etkili, tekrar eden, kök nedeni bilinmeyen problem için yönetişim çerçevesi",
+        "pivotCondition": "Kök neden tasarım kaynaklı çıkarsa DMADV/PFMEA'ya devret",
+        "misuseRisk": "8D'nin sadece containment ile kapatılıp kalıcı aksiyonun atlanması",
+        "undesiredBehavior": "Kök neden yerine 'operatör hatası' atfı",
+        "owner": "S. Demir",
+        "approvedBy": "R. Öztürk"
+      }
+    }
+  }
+}

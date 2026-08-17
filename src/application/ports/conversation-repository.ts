@@ -10,10 +10,12 @@ import {
   MethodologyPlan,
   StabilizationGate,
 } from "@/domain/diagnosis";
+import type { RecordOwner } from "@/domain/access";
 
 export type ConversationStatus = "ACTIVE" | "CONCLUDED" | "ABANDONED";
 export type MessageRole = "USER" | "ASSISTANT" | "SYSTEM";
 export type MessageKind = "FREE_TEXT" | "QUESTION" | "ANSWER" | "REPORT";
+export type FeatureSource = "PARSER" | "USER_CONFIRMED" | "USER_ANSWERED" | "UNKNOWN";
 
 export interface ConversationMessage {
   role: MessageRole;
@@ -28,7 +30,7 @@ export interface DiagnosisResultRecord {
   confidence: number;
   ranking: MethodologyConfidence[];
   trace: DecisionTrace;
-  evidenceStatus: "PROVISIONAL" | "CONFIRMED";
+  evidenceStatus: "PROVISIONAL" | "CONFIRMED" | "INCONCLUSIVE";
   methodPlan: MethodologyPlan;
   stabilization: StabilizationGate;
 }
@@ -58,6 +60,7 @@ export interface Conversation {
   id: string;
   status: ConversationStatus;
   structuredProblem: StructuredProblem;
+  featureSources: Partial<Record<DiagnosticFeatureKey, FeatureSource>>;
   /** Sorulan soru sayısı (durma politikası için). */
   questionsAsked: number;
   /** Sorulmuş ama yanıtı belirsiz kalan alanlar — tekrar sorulmaz. */
@@ -73,9 +76,14 @@ export interface Conversation {
 }
 
 export interface IConversationRepository {
-  create(seed: Pick<Conversation, "structuredProblem"> & {
-    messages?: ConversationMessage[];
-  }): Promise<Conversation>;
+  /** `owner` verilirse sahiplik kayıtla aynı yazımda kalıcılaşır (bkz. workspace portu). */
+  create(
+    seed: Pick<Conversation, "structuredProblem"> & {
+      messages?: ConversationMessage[];
+      featureSources?: Partial<Record<DiagnosticFeatureKey, FeatureSource>>;
+    },
+    owner?: RecordOwner,
+  ): Promise<Conversation>;
   get(id: string): Promise<Conversation | null>;
   save(conversation: Conversation): Promise<Conversation>;
 }

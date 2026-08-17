@@ -6,23 +6,24 @@ import {
   ConversationMessage,
 } from "@/application/ports/conversation-repository";
 import { StructuredProblem } from "@/domain/diagnosis";
+import type { RecordOwner } from "@/domain/access";
+import { newResourceId } from "./resource-id";
 
-function newId(): string {
-  return `conv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
+const newId = () => newResourceId("conv");
 
 const asJson = (v: unknown) => v as unknown as Prisma.InputJsonValue;
 
 export class PrismaConversationRepository implements IConversationRepository {
-  async create(seed: {
-    structuredProblem: StructuredProblem;
-    messages?: ConversationMessage[];
-  }): Promise<Conversation> {
+  async create(
+    seed: { structuredProblem: StructuredProblem; messages?: ConversationMessage[]; featureSources?: Conversation["featureSources"] },
+    owner?: RecordOwner,
+  ): Promise<Conversation> {
     const now = new Date().toISOString();
     const conversation: Conversation = {
       id: newId(),
       status: "ACTIVE",
       structuredProblem: seed.structuredProblem,
+      featureSources: seed.featureSources ?? {},
       questionsAsked: 0,
       askedFeatures: [],
       pendingFeature: null,
@@ -34,7 +35,13 @@ export class PrismaConversationRepository implements IConversationRepository {
       updatedAt: now,
     };
     await prisma.conversationRecord.create({
-      data: { id: conversation.id, status: conversation.status, data: asJson(conversation) },
+      data: {
+        id: conversation.id,
+        status: conversation.status,
+        data: asJson(conversation),
+        ownerUserId: owner?.ownerUserId ?? null,
+        organizationId: owner?.organizationId ?? null,
+      },
     });
     return conversation;
   }

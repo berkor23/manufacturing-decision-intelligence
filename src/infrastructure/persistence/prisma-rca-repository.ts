@@ -5,18 +5,18 @@ import {
   RcaWorkspace,
   RcaPatch,
 } from "@/application/ports/rca-repository";
+import type { RecordOwner } from "@/domain/access";
+import { newResourceId } from "./resource-id";
 
-function newId(): string {
-  return `rca_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
+const newId = () => newResourceId("rca");
 
 const asJson = (v: unknown) => v as unknown as Prisma.InputJsonValue;
 
 export class PrismaRcaRepository implements IRcaRepository {
-  async create(seed: {
-    conversationId?: string | null;
-    problemDescription: string;
-  }): Promise<RcaWorkspace> {
+  async create(
+    seed: { conversationId?: string | null; problemDescription: string },
+    owner?: RecordOwner,
+  ): Promise<RcaWorkspace> {
     const now = new Date().toISOString();
     const ws: RcaWorkspace = {
       id: newId(),
@@ -28,7 +28,14 @@ export class PrismaRcaRepository implements IRcaRepository {
       createdAt: now,
       updatedAt: now,
     };
-    await prisma.rcaRecord.create({ data: { id: ws.id, data: asJson(ws) } });
+    await prisma.rcaRecord.create({
+      data: {
+        id: ws.id,
+        data: asJson(ws),
+        ownerUserId: owner?.ownerUserId ?? null,
+        organizationId: owner?.organizationId ?? null,
+      },
+    });
     return ws;
   }
 

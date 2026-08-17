@@ -5,11 +5,10 @@ import {
   RcaWorkspace,
   RcaPatch,
 } from "@/application/ports/rca-repository";
+import { newResourceId } from "./resource-id";
 
-let counter = 0;
 function newId(): string {
-  counter += 1;
-  return `rca_${Date.now().toString(36)}_${counter}`;
+  return newResourceId("rca");
 }
 
 export class InMemoryRcaRepository implements IRcaRepository {

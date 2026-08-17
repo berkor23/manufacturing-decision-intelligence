@@ -9,9 +9,12 @@ import {
   FIVE_WHY_COLUMNS,
   emptyStepState,
   fieldFilled,
+  fieldImportance,
+  fieldQualityIssue,
   isCellMarked,
   isTabular,
   normalizeFishboneCategory,
+  stepIsComplete,
 } from "./types";
 
 describe("playbook kataloğu", () => {
@@ -72,6 +75,31 @@ describe("playbook kataloğu", () => {
       expect(state.values[f.key]).toEqual(isTabular(f) ? [] : "");
       expect(fieldFilled(state.values[f.key])).toBe(false);
     }
+  });
+
+  it("yalnız doğrulanmış, gerekçeli atlanmış ve eski tamamlanmış adımlar ilerlemeye girer", () => {
+    expect(stepIsComplete("PENDING")).toBe(false);
+    expect(stepIsComplete("IN_PROGRESS")).toBe(false);
+    expect(stepIsComplete("READY")).toBe(false);
+    expect(stepIsComplete("VERIFIED")).toBe(true);
+    expect(stepIsComplete("SKIPPED")).toBe(true);
+    expect(stepIsComplete("DONE")).toBe(true);
+  });
+
+  it("her alan zorunlu, koşullu veya isteğe bağlı olarak sınıflanır", () => {
+    for (const field of Object.values(PLAYBOOKS).flatMap((pb) => pb.steps).flatMap((step) => step.fields)) {
+      expect(["REQUIRED", "CONDITIONAL", "OPTIONAL"]).toContain(fieldImportance(field));
+    }
+  });
+
+  it("anlamsız kısa metni ve göstermelik tablo satırını kalite kapısından geçirmez", () => {
+    const textField = { key: "finding", label: "Bulgu", type: "textarea" as const };
+    const tableField = { key: "actions", label: "Aksiyonlar", type: "table" as const, columns: [{ key: "what", label: "Ne" }, { key: "why", label: "Neden" }] };
+    expect(fieldQualityIssue(textField, "tamam")).toContain("genel ifade");
+    expect(fieldQualityIssue(textField, "kısa")).toContain("20 karakter");
+    expect(fieldQualityIssue(textField, "Vardiya B ölçümünde çatlak oranı %4,2 bulundu.")).toBeNull();
+    expect(fieldQualityIssue(tableField, [{ what: "Kontrol et", why: "" }])).toContain("iki ilişkili");
+    expect(fieldQualityIssue(tableField, [{ what: "Torku ölç", why: "Sapmayı doğrula" }])).toBeNull();
   });
 });
 

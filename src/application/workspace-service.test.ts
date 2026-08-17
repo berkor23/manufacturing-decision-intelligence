@@ -6,7 +6,8 @@ import { WorkspaceService } from "./workspace-service";
 import { InMemoryMethodologyWorkspaceRepository } from "@/infrastructure/persistence/in-memory-methodology-workspace-repository";
 import type { IAIProvider } from "./ports/ai-provider";
 import type { IKnowledgeRepository } from "./ports/knowledge-repository";
-import type { MethodologyWorkspace } from "./ports/methodology-workspace-repository";
+import type { IMethodologyWorkspaceRepository, MethodologyWorkspace } from "./ports/methodology-workspace-repository";
+import type { RecordOwner } from "@/domain/access";
 import { PLAYBOOKS } from "@/domain/playbook";
 
 const knowledgeStub: IKnowledgeRepository = {
@@ -332,5 +333,58 @@ describe("WorkspaceService (playbook tabanlı)", () => {
     expect(await service.delete(ws.id)).toBe(true);
     expect(await service.get(ws.id)).toBeNull();
     expect(await service.delete(ws.id)).toBe(false);
+  });
+});
+
+// Sahiplik, kayıt oluşturmanın AYNI yazımında verilmelidir. Önceki tasarımda
+// route katmanı kaydı oluşturup sahibini ikinci bir yazımla ekliyordu; araya
+// giren bir hata, hiçbir hesaba bağlı olmayan (ve kimseye görünmeyen) çalışma
+// bırakıyordu. Bu testler o desenin geri gelmesini engeller.
+describe("sahiplik oluşturma anında verilir", () => {
+  /** repo.create'e geçen `owner` argümanını yakalayan casus repo. */
+  function spyRepo() {
+    const inner = new InMemoryMethodologyWorkspaceRepository();
+    const owners: (RecordOwner | undefined)[] = [];
+    const repo: IMethodologyWorkspaceRepository = {
+      create: (seed, owner) => {
+        owners.push(owner);
+        return inner.create(seed, owner);
+      },
+      get: (id) => inner.get(id),
+      update: (id, patch) => inner.update(id, patch),
+      list: () => inner.list(),
+      delete: (id) => inner.delete(id),
+    };
+    return { repo, owners };
+  }
+
+  const sahip: RecordOwner = { ownerUserId: "user_ali", organizationId: "org_acme" };
+
+  it("create: sahibi repository'ye ilk yazımda iletir", async () => {
+    const { repo, owners } = spyRepo();
+    const service = new WorkspaceService(repo, knowledgeStub, noneAI);
+    await service.create({ methodology: "RCA", problemDescription: "Çapak", owner: sahip });
+    expect(owners).toEqual([sahip]);
+  });
+
+  it("createLinked: türetilen çalışma da sahibi baştan alır", async () => {
+    const { repo, owners } = spyRepo();
+    const service = new WorkspaceService(repo, knowledgeStub, noneAI);
+    const source = await service.create({ methodology: "RCA", problemDescription: "Kaynak", owner: sahip });
+    await service.createLinked({
+      sourceWorkspaceId: source.id,
+      methodology: "EIGHT_D",
+      reason: "Müşteri etkilendi",
+      owner: sahip,
+    });
+    // Hem kaynak hem hedef sahiplikle oluşturulmuş olmalı.
+    expect(owners).toEqual([sahip, sahip]);
+  });
+
+  it("hesap sistemi kapalıyken sahiplik verilmez (out-of-box kurulum)", async () => {
+    const { repo, owners } = spyRepo();
+    const service = new WorkspaceService(repo, knowledgeStub, noneAI);
+    await service.create({ methodology: "FMEA", problemDescription: "Sahipsiz" });
+    expect(owners).toEqual([undefined]);
   });
 });

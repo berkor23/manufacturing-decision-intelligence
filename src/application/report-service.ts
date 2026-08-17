@@ -42,8 +42,10 @@ export class ReportService {
     // Rapor gövdesi LLM'li olsa bile diziyi DETERMİNİSTİK ekle (uydurma yok):
     // hangi yöntemler yarışıyor + liderden sonra hangileri gelir.
     const evidenceNotice = evidenceStatus === "CONFIRMED"
-      ? "\n\n> Karar durumu: En az üç bağımsız destek ve dört doğrulanmış cevapla doğrulandı.\n"
-      : "\n\n> Karar durumu: Bu metodoloji mevcut bilgilerle ön adaydır; eksik saha bilgileri doğrulanmadan kesin seçim olarak değerlendirilmemelidir.\n";
+      ? "\n\n> Karar durumu: Yönteme özgü bağımsız kanıt boyutları ve doğrulanmış cevaplarla desteklendi.\n"
+      : evidenceStatus === "INCONCLUSIVE"
+        ? "\n\n> Karar durumu: Sonuçlandırılamadı. Gösterilen metodoloji yalnız mevcut puanlamadaki ön adaydır; yöntemler kesin olarak ayrılmadan resmî seçim sayılmamalıdır.\n"
+        : "\n\n> Karar durumu: Bu metodoloji mevcut bilgilerle ön adaydır; eksik saha bilgileri doğrulanmadan kesin seçim olarak değerlendirilmemelidir.\n";
     const methodPlanSection = [methodPlan.primary, ...methodPlan.supporting]
       .map((entry) => `- **${entry.layerLabel}:** ${METHODOLOGY_META[entry.methodology].shortName} — ${entry.roleLabel}`)
       .join("\n");

@@ -32,6 +32,7 @@ function concludedConversation(): Conversation {
     id: "c1",
     status: "CONCLUDED",
     structuredProblem: { ...createEmptyProblem(), problemDescription: "Müşteri şikayeti + darboğaz." },
+    featureSources: {},
     questionsAsked: 3,
     askedFeatures: [],
     pendingFeature: null,

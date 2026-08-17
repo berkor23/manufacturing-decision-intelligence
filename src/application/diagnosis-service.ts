@@ -19,6 +19,7 @@ import {
   composeMethodologyPlan,
   evaluateStabilizationGate,
 } from "@/domain/diagnosis";
+import type { RecordOwner } from "@/domain/access";
 import { IProblemParser } from "./ports/problem-parser";
 import {
   IConversationRepository,
@@ -28,12 +29,14 @@ import {
   MessageKind,
   InformationTask,
   RecommendationChange,
+  FeatureSource,
 } from "./ports/conversation-repository";
 
 export interface DiagnosisView {
   conversationId: string;
   status: "ASKING" | "CONCLUDED";
   structuredProblem: StructuredProblem;
+  featureSources: Partial<Record<DiagnosticFeatureKey, FeatureSource>>;
   ranking: MethodologyConfidence[];
   entropy: number;
   questionsAsked: number;
@@ -57,7 +60,8 @@ export class DiagnosisService {
   ) {}
 
   /** Yeni teşhis başlatır: serbest metni yapılandırır, ilk adımı üretir. */
-  async start(text: string): Promise<DiagnosisView> {
+  /** `owner` verilirse konuşma kaydı sahibiyle birlikte tek yazımda oluşturulur. */
+  async start(text: string, owner?: RecordOwner): Promise<DiagnosisView> {
     const parse = await this.parser.parseInitial(text);
     const sp: StructuredProblem = createEmptyProblem();
     // Süreç adı: parser verdiyse onu, yoksa deterministik saptama.
@@ -67,10 +71,15 @@ export class DiagnosisService {
       if (v !== undefined && v !== null) sp.features[k as DiagnosticFeatureKey] = v;
     }
 
+    const featureSources: Partial<Record<DiagnosticFeatureKey, FeatureSource>> = {};
+    for (const [key, value] of Object.entries(sp.features)) {
+      if (value !== null) featureSources[key as DiagnosticFeatureKey] = "PARSER";
+    }
     const conv = await this.repo.create({
       structuredProblem: sp,
+      featureSources,
       messages: [message("USER", "FREE_TEXT", text)],
-    });
+    }, owner);
 
     return this.advance(conv);
   }
@@ -105,6 +114,7 @@ export class DiagnosisService {
       });
       if (value !== null) {
         conv.structuredProblem = withFeature(conv.structuredProblem, feature, value);
+        conv.featureSources[feature] = "USER_ANSWERED";
       } else {
         const exists = conv.informationTasks.some((t) => t.featureKey === feature && t.status === "OPEN");
         if (!exists) conv.informationTasks.push({
@@ -131,6 +141,42 @@ export class DiagnosisService {
     return conv ? this.toView(conv, this.snapshot(conv)) : null;
   }
 
+  /** İlk metinden çıkarılan kritik alanları kullanıcı onayıyla düzeltir. */
+  async reviewFeatures(
+    conversationId: string,
+    corrections: Partial<Record<DiagnosticFeatureKey, boolean | null>>,
+  ): Promise<DiagnosisView> {
+    const raw = await this.repo.get(conversationId);
+    if (!raw) throw new Error(`Conversation bulunamadı: ${conversationId}`);
+    const conv = this.normalize(raw);
+    if (conv.status === "ABANDONED") throw new Error("Terk edilmiş teşhis düzenlenemez.");
+
+    if (conv.status === "CONCLUDED") {
+      conv.status = "ACTIVE";
+      conv.result = null;
+      const last = conv.messages.at(-1);
+      if (last?.role === "ASSISTANT" && last.kind === "REPORT") conv.messages.pop();
+    }
+
+    for (const [rawKey, value] of Object.entries(corrections)) {
+      const key = rawKey as DiagnosticFeatureKey;
+      conv.structuredProblem = withFeature(conv.structuredProblem, key, value ?? null);
+      conv.featureSources[key] = value === null ? "UNKNOWN" : "USER_CONFIRMED";
+    }
+
+    // start() ilk soruyu önceden üretir. Onaydan sonra eski varsayımla seçilmiş
+    // soruyu kaldırıp güncel problem üzerinden yeniden seçiyoruz.
+    if (conv.pendingFeature) {
+      const last = conv.messages.at(-1);
+      if (last?.role === "ASSISTANT" && last.kind === "QUESTION") conv.messages.pop();
+      conv.questionsAsked = Math.max(0, conv.questionsAsked - 1);
+      conv.pendingFeature = null;
+    }
+    conv.result = null;
+    conv.messages.push(message("SYSTEM", "REPORT", "İlk metinden çıkarılan kritik bilgiler kullanıcı tarafından gözden geçirildi."));
+    return this.advance(conv);
+  }
+
   async updateInformationTask(conversationId: string, taskId: string, patch: { owner?: string | null; dueDate?: string | null }) {
     const raw = await this.repo.get(conversationId);
     if (!raw) throw new Error(`Conversation bulunamadı: ${conversationId}`);
@@ -153,6 +199,7 @@ export class DiagnosisService {
     if (value === null) throw new Error("Cevap evet/hayır olarak yorumlanamadı; daha açık yazın.");
     const before = conv.result?.methodology ?? this.snapshot(conv).ranking[0]?.methodology ?? null;
     conv.structuredProblem = withFeature(conv.structuredProblem, task.featureKey, value);
+    conv.featureSources[task.featureKey] = "USER_ANSWERED";
     task.status = "RESOLVED"; task.answer = answerText; task.resolvedAt = new Date().toISOString(); task.previousMethodology = before;
     conv.pendingFeature = null; conv.result = null; conv.status = "ACTIVE";
     conv.messages.push(message("USER", "ANSWER", `[Bilgi görevi tamamlandı] ${answerText}`, task.featureKey));
@@ -170,6 +217,9 @@ export class DiagnosisService {
     return diagnose(conv.structuredProblem, conv.questionsAsked, {
       ...this.config,
       excludedFeatures: conv.askedFeatures,
+      unconfirmedFeatures: Object.entries(conv.featureSources)
+        .filter(([, source]) => source === "PARSER")
+        .map(([key]) => key as DiagnosticFeatureKey),
     });
   }
 
@@ -206,6 +256,7 @@ export class DiagnosisService {
       conversationId: conv.id,
       status: conv.status === "CONCLUDED" ? "CONCLUDED" : "ASKING",
       structuredProblem: conv.structuredProblem,
+      featureSources: conv.featureSources,
       ranking: snap.ranking,
       entropy: snap.entropy,
       questionsAsked: conv.questionsAsked,
@@ -244,6 +295,7 @@ export class DiagnosisService {
         ...conv.structuredProblem,
         features: { ...empty.features, ...conv.structuredProblem.features },
       },
+      featureSources: conv.featureSources ?? {},
       result: conv.result
         ? {
             ...conv.result,

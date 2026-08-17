@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getGuideService } from "@/application/wiring";
 import { METHODOLOGIES } from "@/domain/diagnosis";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // LLM (Ollama, gerekirse tünel üzerinden) yavaş olabilir; Vercel varsayılan
 // 10sn limitini 60sn'ye çıkar (Hobby üst sınırı).
@@ -15,6 +16,9 @@ const bodySchema = z.object({
 
 // POST /api/guide — seçilen metodoloji hakkında "nasıl uygularım?" sorusu
 export async function POST(req: NextRequest) {
+  // LLM çağrısı pahalı ve yavaş (60 sn); sınırsız erişim kaynak tüketimi demek.
+  const limited = enforceRateLimit(req, "ai-generate");
+  if (limited) return limited;
   const json = await req.json().catch(() => null);
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
@@ -27,9 +31,7 @@ export async function POST(req: NextRequest) {
     const answer = await getGuideService().ask(parsed.data);
     return NextResponse.json({ answer });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Bilinmeyen hata." },
-      { status: 500 },
-    );
+    console.error("[guide] ask failed", err);
+    return NextResponse.json({ error: "Rehber yanıtı üretilemedi." }, { status: 500 });
   }
 }

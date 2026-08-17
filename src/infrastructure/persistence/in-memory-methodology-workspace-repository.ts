@@ -3,13 +3,20 @@ import {
   MethodologyWorkspace,
   WorkspacePatch,
 } from "@/application/ports/methodology-workspace-repository";
+import type { RecordOwner } from "@/domain/access";
+import { newResourceId } from "./resource-id";
 
-let counter = 0;
 function newId(): string {
-  counter += 1;
-  return `ws_${Date.now().toString(36)}_${counter}`;
+  return newResourceId("ws");
 }
 
+/**
+ * Bellek içi kalıcılık — LLM'siz/DB'siz out-of-box kurulum içindir.
+ *
+ * Sahiplik (`owner`) alanlarını TUTMAZ: kiracılık yalnız Prisma yolunda
+ * anlamlıdır. Hesap sistemi açıkken (ACCOUNT_AUTH_ENABLED=1) bu repository
+ * seçilemez; composition root bu bileşimi reddeder (bkz. application/wiring.ts).
+ */
 export class InMemoryMethodologyWorkspaceRepository
   implements IMethodologyWorkspaceRepository
 {
@@ -17,6 +24,8 @@ export class InMemoryMethodologyWorkspaceRepository
 
   async create(
     seed: Omit<MethodologyWorkspace, "id" | "createdAt" | "updatedAt">,
+    // Port sözleşmesi gereği alınır; bellek deposunda sahiplik sütunu yoktur.
+    _owner?: RecordOwner,
   ): Promise<MethodologyWorkspace> {
     const now = new Date().toISOString();
     const ws: MethodologyWorkspace = { ...seed, id: newId(), createdAt: now, updatedAt: now };

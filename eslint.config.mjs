@@ -11,8 +11,23 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "playwright-report/**",
+    "test-results/**",
+    "dokumantasyon/**",
+    "docs/visual-assets/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Alt çizgiyle başlayan argüman "bilerek kullanılmıyor" demektir: port
+      // sözleşmesini karşılamak için alınan ama o uygulamada anlamı olmayan
+      // parametreler (ör. bellek deposunda `_owner`) böyle işaretlenir.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
