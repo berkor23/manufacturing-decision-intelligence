@@ -7,7 +7,6 @@ import type {
   WhyStep,
   FishboneItem,
   ActionItem,
-  FishboneCategory,
   ActionStatus,
 } from "@/application/ports/rca-repository";
 import { FISHBONE_CATEGORIES } from "@/application/ports/rca-repository";
@@ -59,8 +58,8 @@ export function RcaWorkspace({ id }: { id: string }) {
     }
   }
 
-  if (error) return <Shell><p className="text-red-600">{error}</p></Shell>;
-  if (!ws) return <Shell><p className="text-slate-500">Yükleniyor…</p></Shell>;
+  if (error) return <Shell><p className="text-[var(--st-risk)]">{error}</p></Shell>;
+  if (!ws) return <Shell><p className="text-[var(--muted)]">Yükleniyor…</p></Shell>;
 
   return (
     <Shell>
@@ -109,15 +108,15 @@ export function Head({
       <div>
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+        <p className="mt-1 text-sm text-[var(--muted)]">{subtitle}</p>
         {extra}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1.5">
         <button onClick={onSave} disabled={saving || !dirty} className="btn btn-primary">
           {saving ? "Kaydediliyor…" : dirty ? "Kaydet" : "Kaydedildi ✓"}
         </button>
-        <Link href="/diagnoz" className="text-xs text-slate-400 hover:underline">
-          ← Teşhise dön
+        <Link href="/diagnoz" className="text-xs text-[var(--muted-2)] hover:underline">
+          Teşhise dön
         </Link>
       </div>
     </div>
@@ -127,8 +126,8 @@ export function Head({
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="card p-6">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {hint && <p className="mb-3 mt-0.5 text-xs text-slate-400">{hint}</p>}
+      <h2 className="text-[15px] font-semibold tracking-[-0.012em]">{title}</h2>
+      {hint && <p className="mb-3 mt-0.5 text-xs text-[var(--muted-2)]">{hint}</p>}
       <div className={hint ? "" : "mt-3"}>{children}</div>
     </section>
   );
@@ -146,7 +145,7 @@ function FiveWhy({ steps, onChange }: { steps: WhyStep[]; onChange: (s: WhyStep[
       <ol className="flex flex-col gap-2">
         {steps.map((s, i) => (
           <li key={i} className="flex items-center gap-2">
-            <span className="w-6 shrink-0 text-sm text-slate-400">{i + 1}.</span>
+            <span className="w-6 shrink-0 text-sm text-[var(--muted-2)]">{i + 1}.</span>
             <input
               value={s.statement}
               onChange={(e) => onChange(steps.map((x, j) => (j === i ? { ...x, statement: e.target.value } : x)))}
@@ -154,11 +153,11 @@ function FiveWhy({ steps, onChange }: { steps: WhyStep[]; onChange: (s: WhyStep[
             />
             <button
               onClick={() => onChange(steps.map((x, j) => (j === i ? { ...x, isRootCause: !x.isRootCause } : x)))}
-              className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${s.isRootCause ? "bg-emerald-500 text-white" : "border border-slate-300 text-slate-500 dark:border-slate-700"}`}
+              className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${s.isRootCause ? "bg-[var(--st-ok)] text-[var(--on-ink)]" : "border border-[var(--rule-strong)] text-[var(--muted)]"}`}
             >
               Kök neden
             </button>
-            <button onClick={() => onChange(steps.filter((_, j) => j !== i))} className="shrink-0 text-slate-400 hover:text-red-500">✕</button>
+            <button onClick={() => onChange(steps.filter((_, j) => j !== i))} className="shrink-0 text-[var(--muted-2)] hover:text-[var(--st-risk)]">✕</button>
           </li>
         ))}
       </ol>
@@ -201,13 +200,13 @@ function FishboneColumn({
 }) {
   const [draft, setDraft] = useState("");
   return (
-    <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
-      <div className="mb-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">{label}</div>
+    <div className="record-row">
+      <div className="mb-2 text-sm font-semibold text-[var(--ink)]">{label}</div>
       <ul className="mb-2 flex flex-col gap-1">
         {causes.map((c, i) => (
           <li key={i} className="flex items-center justify-between gap-2 text-sm">
             <span>{c.cause}</span>
-            <button onClick={() => onRemove(c.cause)} className="text-slate-400 hover:text-red-500">✕</button>
+            <button onClick={() => onRemove(c.cause)} className="text-[var(--muted-2)] hover:text-[var(--st-risk)]">✕</button>
           </li>
         ))}
       </ul>
@@ -250,7 +249,7 @@ function Actions({ actions, onChange }: { actions: ActionItem[]; onChange: (a: A
                 <option key={s} value={s}>{STATUS_LABEL[s]}</option>
               ))}
             </select>
-            <button onClick={() => onChange(actions.filter((_, j) => j !== i))} className="shrink-0 text-slate-400 hover:text-red-500">✕</button>
+            <button onClick={() => onChange(actions.filter((_, j) => j !== i))} className="shrink-0 text-[var(--muted-2)] hover:text-[var(--st-risk)]">✕</button>
           </li>
         ))}
       </ul>

@@ -1,8 +1,135 @@
 import Link from "next/link";
-import {getWorkspaceService} from "@/application/wiring";
-import type {UnifiedTask,UnifiedTaskKind} from "@/domain/production-readiness";
-export const dynamic="force-dynamic";
-export const metadata={title:"Görev Merkezi · MDI"};
-const KIND:Record<UnifiedTaskKind,string>={INFORMATION:"Bilgi",ACTION:"Aksiyon",CONTAINMENT:"Geçici kontrol",WEAK_SIGNAL:"Zayıf sinyal",QMS:"QMS",MONITORING:"İzleme",OPL:"OPL"};
-const STATUS:Record<UnifiedTask["status"],{label:string;className:string}>={OVERDUE:{label:"Gecikmiş",className:"bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"},DUE_SOON:{label:"Yaklaşıyor",className:"bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"},OPEN:{label:"Açık",className:"bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"},DONE:{label:"Tamam",className:"bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"}};
-export default async function TasksPage(){const tasks=await getWorkspaceService().taskCenter();const open=tasks.filter(x=>x.status!=="DONE");const cards=[{label:"Geciken",value:open.filter(x=>x.status==="OVERDUE").length,tone:"rgba(244,63,94,.14)"},{label:"3 gün içinde",value:open.filter(x=>x.status==="DUE_SOON").length,tone:"rgba(245,158,11,.15)"},{label:"Tarihsiz açık",value:open.filter(x=>x.status==="OPEN").length,tone:"rgba(99,102,241,.13)"},{label:"Tamamlanan",value:tasks.filter(x=>x.status==="DONE").length,tone:"rgba(16,185,129,.14)"}];return <main className="page-shell"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">Portföy iş listesi</p><h1 className="page-heading mt-1">Görev ve takip merkezi</h1><p className="mt-2 max-w-2xl text-sm text-slate-500">Farklı çalışmalardaki aksiyon, containment, sinyal, QMS, OPL ve izleme yükümlülüklerini termin önceliğiyle bir araya getirir.</p></div><Link href="/calismalar" className="btn btn-secondary">Çalışmalara git</Link></div><section className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Görev özeti">{cards.map(card=><div className="card stat-card" style={{"--stat-color":card.tone} as React.CSSProperties} key={card.label}><p className="text-xs font-medium text-slate-500">{card.label}</p><strong className="mt-1 block text-3xl tracking-tight">{card.value}</strong></div>)}</section><section className="card mt-6 overflow-hidden"><div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800"><div><h2 className="section-heading">Öncelikli iş listesi</h2><p className="text-xs text-slate-400">Geciken ve yaklaşan işler otomatik olarak üstte gösterilir.</p></div><span className="text-xs text-slate-400">{open.length} açık</span></div><div className="divide-y divide-slate-200 dark:divide-slate-800">{tasks.map((task,index)=>{const status=STATUS[task.status];return <Link href={task.href} key={`${task.workspaceId}-${task.kind}-${task.id}-${index}`} className="group grid gap-3 p-4 transition hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 sm:grid-cols-[130px_1fr_160px_120px] sm:items-center"><span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{KIND[task.kind]}</span><span className="min-w-0"><strong className="block truncate text-sm group-hover:text-indigo-700 dark:group-hover:text-indigo-300">{task.title||"Başlıksız görev"}</strong><small className="mt-0.5 block truncate text-slate-400">{task.workspaceTitle}</small></span><span className={`text-xs ${task.owner?"text-slate-600 dark:text-slate-300":"font-medium text-amber-600"}`}>{task.owner||"Sahip atanmadı"}{task.dueDate&&<small className="mt-0.5 block text-slate-400">{new Date(task.dueDate).toLocaleDateString("tr-TR")}</small>}</span><span className={`status-badge w-fit ${status.className}`}>{status.label}</span></Link>})}{!tasks.length&&<div className="p-10 text-center"><p className="font-medium">Takip edilecek görev yok</p><p className="mt-1 text-sm text-slate-400">Çalışmalardaki aksiyonlar ve izleme işleri burada otomatik görünür.</p></div>}</div></section></main>}
+import { redirect } from "next/navigation";
+import { getWorkspaceService } from "@/application/wiring";
+import { accountAuthEnabled, allowedWorkspaceIds, currentAccount } from "@/lib/account-auth";
+import { ReadoutBand, type ReadoutItem } from "@/components/readout";
+import type { UnifiedTask, UnifiedTaskKind } from "@/domain/production-readiness";
+
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Görev Merkezi · MDI" };
+
+/** Hesap modunda görev merkezi yalnız erişilebilen çalışmaları toplar. */
+async function tenantScope() {
+  if (!accountAuthEnabled()) return undefined;
+  const account = await currentAccount();
+  if (!account) redirect("/giris?next=/gorevler");
+  return allowedWorkspaceIds(account);
+}
+
+const KIND: Record<UnifiedTaskKind, string> = {
+  INFORMATION: "Bilgi",
+  ACTION: "Aksiyon",
+  CONTAINMENT: "Geçici kontrol",
+  WEAK_SIGNAL: "Zayıf sinyal",
+  QMS: "QMS",
+  MONITORING: "İzleme",
+  OPL: "OPL",
+};
+
+const STATUS: Record<UnifiedTask["status"], { label: string; tone: string }> = {
+  OVERDUE: { label: "Gecikmiş", tone: "state-risk" },
+  DUE_SOON: { label: "Yaklaşıyor", tone: "state-warn" },
+  OPEN: { label: "Açık", tone: "state-idle" },
+  DONE: { label: "Tamam", tone: "state-ok" },
+};
+
+export default async function TasksPage() {
+  const scope = await tenantScope();
+  const tasks = await getWorkspaceService().taskCenter(scope);
+  const open = tasks.filter((task) => task.status !== "DONE");
+
+  const summary: ReadoutItem[] = [
+    { label: "Geciken", value: open.filter((t) => t.status === "OVERDUE").length, tone: "risk" },
+    { label: "3 gün içinde", value: open.filter((t) => t.status === "DUE_SOON").length, tone: "warn" },
+    { label: "Tarihsiz açık", value: open.filter((t) => t.status === "OPEN").length, tone: "info" },
+    { label: "Tamamlanan", value: tasks.filter((t) => t.status === "DONE").length, tone: "ok" },
+  ];
+
+  return (
+    <main className="page-shell">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--rule-strong)] pb-5">
+        <div>
+          <p className="eyebrow">Portföy iş listesi</p>
+          <h1 className="page-heading mt-1.5">Görev ve takip merkezi</h1>
+          <p className="page-lead">
+            Farklı çalışmalardaki aksiyon, containment, sinyal, QMS, OPL ve izleme yükümlülüklerini
+            termin önceliğiyle bir araya getirir.
+          </p>
+        </div>
+        <Link href="/calismalar" className="btn btn-secondary">Çalışmalara git</Link>
+      </div>
+
+      <div className="mt-7" aria-label="Görev özeti">
+        <ReadoutBand items={summary} />
+      </div>
+
+      <section className="mt-9">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-[var(--rule-strong)] pb-2">
+          <div>
+            <h2 className="section-heading">Öncelikli iş listesi</h2>
+            <p className="mt-0.5 text-[11px] text-[var(--muted-2)]">
+              Geciken ve yaklaşan işler otomatik olarak üstte gösterilir.
+            </p>
+          </div>
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-[var(--muted-2)]">
+            {String(open.length).padStart(2, "0")} açık
+          </span>
+        </div>
+
+        {tasks.length === 0 ? (
+          <div className="empty-state mt-4">
+            <div>
+              <p className="text-[13px] text-[var(--ink-soft)]">Takip edilecek görev yok</p>
+              <p className="mt-1.5 text-[12px] text-[var(--muted-2)]">
+                Çalışmalardaki aksiyonlar ve izleme işleri burada otomatik görünür.
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* Satır kolonları bütün listede hizalı: tür · iş · sahip/termin · durum.
+             Göz tek sütunda aşağı tarayarak önceliği görebilir. */
+          <ul>
+            {tasks.map((task, index) => {
+              const status = STATUS[task.status];
+              return (
+                <li
+                  key={`${task.workspaceId}-${task.kind}-${task.id}-${index}`}
+                  className="border-b border-[var(--rule)]"
+                >
+                  <Link
+                    href={task.href}
+                    className="grid gap-x-4 gap-y-2 py-3 transition-colors hover:bg-[var(--surface-sunk)] sm:grid-cols-[7.5rem_1fr_11rem_6rem] sm:items-center"
+                  >
+                    <span className="eyebrow">{KIND[task.kind]}</span>
+
+                    <span className="min-w-0">
+                      <strong className="block truncate text-[13px] font-medium">
+                        {task.title || "Başlıksız görev"}
+                      </strong>
+                      <small className="mt-0.5 block truncate text-[11px] text-[var(--muted-2)]">
+                        {task.workspaceTitle}
+                      </small>
+                    </span>
+
+                    <span
+                      className={`text-[11px] ${task.owner ? "text-[var(--ink-soft)]" : "text-[var(--st-warn)]"}`}
+                    >
+                      {task.owner || "Sahip atanmadı"}
+                      {task.dueDate && (
+                        <small className="mt-0.5 block font-mono tabular-nums text-[var(--muted-2)]">
+                          {new Date(task.dueDate).toLocaleDateString("tr-TR")}
+                        </small>
+                      )}
+                    </span>
+
+                    <span className={`tag w-fit ${status.tone}`}>{status.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </main>
+  );
+}

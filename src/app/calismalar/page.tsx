@@ -5,120 +5,146 @@ import Link from "next/link";
 import { getWorkspaceService } from "@/application/wiring";
 import type { WorkspaceSummary } from "@/application/ports/methodology-workspace-repository";
 import { METHODOLOGY_META } from "@/domain/diagnosis";
+import { accountAuthEnabled, allowedWorkspaceIds, currentAccount } from "@/lib/account-auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Çalışmalar · Manufacturing Diagnosis Engine" };
 
 export default async function WorkspacesPage() {
-  const items = await getWorkspaceService().list();
+  let scope: Awaited<ReturnType<typeof allowedWorkspaceIds>> | undefined;
+  if (accountAuthEnabled()) {
+    const account = await currentAccount();
+    if (!account) redirect("/giris?next=/calismalar");
+    scope = await allowedWorkspaceIds(account);
+  }
+  const items = await getWorkspaceService().list(scope);
   const open = items.filter((w) => w.doneSteps < w.totalSteps);
   const done = items.filter((w) => w.doneSteps === w.totalSteps);
 
   return (
     <main className="page-shell flex-1">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--rule-strong)] pb-5">
         <div>
           <p className="eyebrow">Uygulama alanları</p>
-          <h1 className="page-heading mt-1">Çalışmalar</h1>
+          <h1 className="page-heading mt-1.5">Çalışmalar</h1>
           <p className="page-lead">
             Başlattığın metodoloji uygulamaları — kaldığın yerden devam et.
           </p>
         </div>
-        <Link href="/diagnoz" className="btn btn-primary">Yeni teşhis →</Link>
+        <Link href="/diagnoz" className="btn btn-primary">Yeni teşhis</Link>
       </div>
 
       {items.length === 0 ? (
-        <div className="card mt-8 p-10 text-center">
-          <p className="text-slate-600 dark:text-slate-400">Henüz bir çalışma alanı açılmamış.</p>
-          <p className="mt-1 text-sm text-slate-400">
-            Bir teşhisle başla; önerilen metodolojinin uygulama alanı buraya düşer.
-          </p>
-          <Link href="/diagnoz" className="btn btn-primary mt-5 inline-flex">Teşhise başla →</Link>
+        <div className="empty-state mt-8">
+          <div>
+            <p className="text-[13px] text-[var(--ink-soft)]">Henüz bir çalışma alanı açılmamış.</p>
+            <p className="mt-1.5 text-[12px] text-[var(--muted-2)]">
+              Bir teşhisle başla; önerilen metodolojinin uygulama alanı buraya düşer.
+            </p>
+            <Link href="/diagnoz" className="btn btn-primary mt-5">Teşhise başla</Link>
+          </div>
         </div>
       ) : (
         <>
-          <Group title="Devam eden" count={open.length} items={open} />
-          <Group title="Tamamlanan" count={done.length} items={done} />
+          <Group title="Devam eden" items={open} />
+          <Group title="Tamamlanan" items={done} />
         </>
       )}
     </main>
   );
 }
 
-function Group({ title, count, items }: { title: string; count: number; items: WorkspaceSummary[] }) {
-  if (count === 0) return null;
+function Group({ title, items }: { title: string; items: WorkspaceSummary[] }) {
+  if (items.length === 0) return null;
   return (
-    <section className="mt-8">
-      <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h2>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-          {count}
+    <section className="mt-9">
+      <div className="flex items-baseline justify-between gap-4 border-b border-[var(--rule-strong)] pb-2">
+        <h2 className="eyebrow">{title}</h2>
+        <span className="font-mono text-[11px] tabular-nums text-[var(--muted-2)]">
+          {String(items.length).padStart(2, "0")}
         </span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <ul>
         {items.map((w) => (
-          <WorkspaceCard key={w.id} ws={w} />
+          <WorkspaceRow key={w.id} ws={w} />
         ))}
-      </div>
+      </ul>
     </section>
   );
 }
 
-function WorkspaceCard({ ws }: { ws: WorkspaceSummary }) {
+function Chevron() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <path d="M6 3.5 10.5 8 6 12.5" />
+    </svg>
+  );
+}
+
+/**
+ * Kart değil satır. Kolonlar bütün listede hizalıdır (kod · başlık · ilerleme ·
+ * durum), böylece göz tek sütunda aşağı tarayarak karşılaştırma yapabilir.
+ * Renk yalnız gerçek bir uyarı olduğunda görünür.
+ */
+function WorkspaceRow({ ws }: { ws: WorkspaceSummary }) {
   const meta = METHODOLOGY_META[ws.methodology];
   const pct = ws.totalSteps === 0 ? 0 : Math.round((ws.doneSteps / ws.totalSteps) * 100);
   const complete = ws.doneSteps === ws.totalSteps;
+  // Kapanış riski: yeniden açılmış vaka veya doğrulama zincirinde açık kalan iddia.
+  const risk = ws.closureStatus === "REOPENED" || ws.unverifiedClaims > 0;
+  const warn = !risk && ws.effectivenessDue > 0;
 
   return (
-    <div className="card card-interactive flex flex-col p-5">
-      <div className="flex items-start justify-between gap-3">
-        <Link href={`/workspace/${ws.id}`} className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-              {meta.shortName}
+    <li className="flex items-stretch border-b border-[var(--rule)]">
+      <Link
+        href={`/workspace/${ws.id}`}
+        className="group flex min-w-0 flex-1 items-start gap-4 py-3.5 transition-colors hover:bg-[var(--surface-sunk)]"
+      >
+        <span className="code-tag mt-px w-14 shrink-0 justify-center">{meta.shortName}</span>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium">{ws.problemDescription}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <div className="meter w-28 shrink-0">
+              <div
+                className={`meter-fill ${complete ? "meter-fill-ok" : ""}`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">
+              {ws.doneSteps}/{ws.totalSteps} adım
             </span>
-            {complete && (
-              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-                Tamamlandı
-              </span>
-            )}
+            <span className="text-[11px] text-[var(--muted-2)]">
+              {ws.openActions > 0 ? `${ws.openActions} açık aksiyon` : "açık aksiyon yok"}
+            </span>
+            <time
+              dateTime={ws.updatedAt}
+              className="font-mono text-[11px] tabular-nums text-[var(--muted-2)]"
+            >
+              {new Date(ws.updatedAt).toLocaleDateString("tr-TR")}
+            </time>
           </div>
-          <p className="mt-2 line-clamp-2 text-sm text-slate-700 dark:text-slate-300">
-            {ws.problemDescription}
-          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-3 self-center">
+          {risk && <span className="tag state-risk">Risk</span>}
+          {warn && <span className="tag state-warn">Etkinlik</span>}
+          <span className="text-[var(--muted-2)] transition-colors group-hover:text-[var(--ink)]">
+            <Chevron />
+          </span>
+        </div>
+      </Link>
+
+      {ws.hasReport && (
+        <Link
+          href={`/workspace/${ws.id}/rapor`}
+          title="Raporu görüntüle veya yazdır"
+          className="flex shrink-0 items-center border-l border-[var(--rule)] px-3 text-[11px] text-[var(--muted-2)] transition-colors hover:bg-[var(--surface-sunk)] hover:text-[var(--ink)]"
+        >
+          Rapor
         </Link>
-      </div>
-
-      <div className="mt-4">
-        <div className="mb-1 flex items-center justify-between text-[11px] text-slate-400">
-          <span>{ws.doneSteps}/{ws.totalSteps} adım</span>
-          <span>%{pct}</span>
-        </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-          <div
-            className={`h-full rounded-full transition-all ${complete ? "bg-emerald-500" : "bg-indigo-500"}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs dark:border-slate-800/60">
-        <span className="text-slate-400">
-          {ws.openActions > 0 ? `${ws.openActions} açık aksiyon` : "Açık aksiyon yok"}
-          {" · "}
-          {new Date(ws.updatedAt).toLocaleDateString("tr-TR")}
-        </span>
-        <div className="flex shrink-0 gap-2">
-          {ws.hasReport && (
-            <Link href={`/workspace/${ws.id}/rapor`} className="text-slate-400 hover:text-indigo-600" title="Raporu yazdır">
-              🖨 Rapor
-            </Link>
-          )}
-          <Link href={`/workspace/${ws.id}`} className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
-            Devam et →
-          </Link>
-        </div>
-      </div>
-    </div>
+      )}
+    </li>
   );
 }

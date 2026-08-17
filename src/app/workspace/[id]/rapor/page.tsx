@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getWorkspaceService } from "@/application/wiring";
-import { getPlaybook } from "@/domain/playbook";
+import { getPlaybook, stepIsComplete } from "@/domain/playbook";
 import { Markdown } from "@/components/markdown";
 import { PrintButton } from "@/components/print-button";
 
@@ -15,15 +15,15 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   if (!ws) notFound();
 
   const playbook = getPlaybook(ws.methodology);
-  const done = ws.steps.filter((s) => s.status === "DONE").length;
+  const done = ws.steps.filter((s) => stepIsComplete(s.status)).length;
   const openActions = ws.actions.filter((a) => a.status !== "DONE").length;
 
   return (
     <main className="print-sheet mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6">
       {/* Ekran kontrolleri — baskıda gizlenir */}
       <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link href={`/workspace/${id}`} className="text-sm text-slate-500 hover:underline">
-          ← Çalışma alanına dön
+        <Link href={`/workspace/${id}`} className="text-[12px] text-[var(--muted)] underline decoration-[var(--rule-strong)] underline-offset-[3px] hover:text-[var(--ink)] hover:decoration-[var(--ink)]">
+          Çalışma alanına dön
         </Link>
         <PrintButton />
       </div>
@@ -31,13 +31,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       {ws.report ? (
         <article className="card p-8">
           {/* Rapor başlığı (antet) */}
-          <header className="mb-6 border-b border-slate-200 pb-5 dark:border-slate-800">
+          <header className="mb-6 border-b border-[var(--rule-strong)] pb-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="eyebrow">{playbook.methodology} · Uygulama Raporu</p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight">{ws.methodologyName}</h1>
+                <h1 className="mt-1.5 text-[1.375rem] font-semibold tracking-[-0.018em]">{ws.methodologyName}</h1>
               </div>
-              <div className="shrink-0 text-right text-xs text-slate-500">
+              <div className="shrink-0 text-right font-mono text-[11px] tabular-nums text-[var(--muted)]">
                 <div>
                   {new Date(ws.updatedAt).toLocaleDateString("tr-TR", {
                     day: "2-digit",
@@ -45,7 +45,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                     year: "numeric",
                   })}
                 </div>
-                <div className="mt-0.5 font-mono text-[10px] text-slate-400">{ws.id}</div>
+                <div className="mt-0.5 text-[10px] text-[var(--muted-2)]">{ws.id}</div>
               </div>
             </div>
             <dl className="mt-4 grid gap-x-6 gap-y-2 text-xs sm:grid-cols-3">
@@ -89,15 +89,15 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             </section>
           )}
 
-          <footer className="mt-8 border-t border-slate-200 pt-4 text-[10px] text-slate-400 dark:border-slate-800">
+          <footer className="mt-8 border-t border-[var(--rule)] pt-4 text-[10px] text-[var(--muted-2)]">
             Manufacturing Diagnosis Engine · Bu rapor, çalışma alanına girilen verilerden üretilmiştir.
           </footer>
         </article>
       ) : (
         <div className="card p-8 text-center">
-          <p className="text-slate-600 dark:text-slate-400">Bu çalışma alanı için henüz rapor üretilmemiş.</p>
+          <p className="text-[var(--ink-soft)]">Bu çalışma alanı için henüz rapor üretilmemiş.</p>
           <Link href={`/workspace/${id}`} className="btn btn-primary mt-4 inline-flex">
-            Çalışma alanında rapor oluştur →
+            Çalışma alanında rapor oluştur
           </Link>
         </div>
       )}
@@ -108,8 +108,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 function Meta({ label, value, span = false }: { label: string; value: string; span?: boolean }) {
   return (
     <div className={span ? "sm:col-span-3" : ""}>
-      <dt className="font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
-      <dd className="mt-0.5 text-slate-700 dark:text-slate-300">{value}</dd>
+      <dt className="eyebrow">{label}</dt>
+      <dd className="mt-0.5 text-[12px] leading-relaxed text-[var(--ink-soft)]">{value}</dd>
     </div>
   );
 }

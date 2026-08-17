@@ -29,9 +29,9 @@ export function AdminWorkspaceDeleteButton({ id, name }: { id: string; name: str
   }
 
   return <span className="inline-flex flex-col items-end gap-1">
-    <button type="button" onClick={remove} disabled={busy} className="text-xs font-semibold text-red-600 hover:underline disabled:cursor-wait disabled:opacity-50">
+    <button type="button" onClick={remove} disabled={busy} className="text-xs font-semibold text-[var(--st-risk)] hover:underline disabled:cursor-wait disabled:opacity-50">
       {busy ? "Kaldırılıyor…" : "Kaydı kaldır"}
     </button>
-    {error && <small role="alert" className="max-w-52 text-right text-[10px] text-red-600">{error}</small>}
+    {error && <small role="alert" className="max-w-52 text-right text-[10px] text-[var(--st-risk)]">{error}</small>}
   </span>;
 }

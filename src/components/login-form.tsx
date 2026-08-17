@@ -46,7 +46,7 @@ export function LoginForm() {
       <button type="submit" disabled={busy || !password} className="btn btn-primary">
         {busy ? "Kontrol ediliyor…" : "Giriş yap"}
       </button>
-      {err && <p className="text-xs text-red-600">{err}</p>}
+      {err && <p className="text-xs text-[var(--st-risk)]">{err}</p>}
     </form>
   );
 }
