@@ -207,9 +207,19 @@ export function DiagnosisFlow({ authenticated }: { authenticated: boolean }) {
   }, [authenticated]);
 
   // Görünüm değiştikçe kimliği adres çubuğunda güncel tut.
+  //
+  // SONUÇLANMIŞ teşhis de kimliğini korur. Kimlik eskiden CONCLUDED olunca
+  // düşürülüyordu (muhtemelen "iş bitti, adresi temizle" niyetiyle); sonucu
+  // şuydu: kullanıcı en değerli ekrana — gerekçeli öneri ve karar zinciri —
+  // ulaşıyor, sayfayı yenilediğinde boş forma dönüyordu. Kayıt veritabanında
+  // duruyor ve /diagnoz?c=… ile açılıyor; kaybolan yalnızca ona dönmenin
+  // yoluydu. Adres çubuğu, ekrandaki işin tek kalıcı tutamağı.
+  //
+  // Kimlik yalnız iki durumda düşer: "Yeni teşhis" ile bilinçli sıfırlama
+  // (bkz. reset) ve kaydın okunamaması (bkz. yükleme etkisi).
   useEffect(() => {
     if (!authenticated) return;
-    writeConversationParam(view && view.status !== "CONCLUDED" ? view.conversationId : null);
+    writeConversationParam(view ? view.conversationId : null);
   }, [authenticated, view]);
 
   async function call(url: string, body: { text: string }, operation: "START" | "ANSWER") {
