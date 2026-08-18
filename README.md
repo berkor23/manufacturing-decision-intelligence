@@ -12,7 +12,7 @@ The key design choice: **the decision is made by a pure, deterministic domain en
 the LLM.** The language model is used only for *understanding* free text, *asking* natural
 questions and *writing* reports. This makes every recommendation explainable and reproducible.
 
-**🔗 Live demo:** **[manufacturing-decision-intelligence.vercel.app](https://manufacturing-decision-intelligence.vercel.app)**
+**🔗 Live demo:** **[manufacturingdecisionengine.com](https://www.manufacturingdecisionengine.com)**
 · deployment notes: [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md)
 
 ![Landing](docs/assets/01-landing.png)
