@@ -58,6 +58,7 @@ export interface DiagnosisView {
   stabilization: ReturnType<typeof diagnose>["stabilization"];
   contrastive: ReturnType<typeof diagnose>["contrastive"];
   contested: ReturnType<typeof diagnose>["contested"];
+  recommendation: ReturnType<typeof diagnose>["recommendation"];
 }
 
 export class DiagnosisService {
@@ -297,6 +298,7 @@ export class DiagnosisService {
       stabilization: snap.stabilization,
       contrastive: snap.contrastive,
       contested: snap.contested,
+      recommendation: snap.recommendation,
     };
   }
 

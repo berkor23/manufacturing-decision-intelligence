@@ -611,6 +611,58 @@ export const RULES: Rule[] = [
     effect: { FMEA: 2, DMADV: -4 },
   },
   {
+    // ── DMAIC KANIT YOLU B: kronik performans açığı ──────────────────────
+    // DMAIC yalnız "yüksek varyasyon" sinyaline bağlı kalırsa, sahadaki en
+    // yaygın Six Sigma vakası kaçar: uzun süredir aynı seviyede duran,
+    // ölçülebilir ve sürücüleri bilinmeyen bir performans açığı. Bu bir
+    // sapma değil, çok değişkenli bir yetersizliktir.
+    //
+    // Yol A (R9): highVariation + hasMeasurementData
+    // Yol B (bu): chronicPerformanceGap + veri + bilinmeyen neden
+    //
+    // Yol B'nin HER kronik vakayı DMAIC'e çevirmesini üç kapı engeller:
+    //   · adım değişimi / yakın başlangıç varsa özel neden alanıdır (RCA/KT),
+    //   · kronik kayıp EKİPMANda ise güvenilirlik sistemi alanıdır (TPM),
+    //   · kayıp sistem KISITIndan geliyorsa kısıt yönetimi alanıdır (TOC).
+    id: "D10",
+    because: "Ölçülebilir performans açığı kronik ve sürücüleri bilinmiyor; ilişkiler istatistikle ayrıştırılmalı",
+    reads: [
+      "chronicPerformanceGap", "hasMeasurementData", "rootCauseKnown",
+      "startedRecently", "processChanged", "operatorChanged", "supplierChanged",
+      "chronicEquipmentLoss", "bottleneckThroughput",
+    ],
+    when: (p) =>
+      p.features.chronicPerformanceGap === true &&
+      p.features.hasMeasurementData === true &&
+      p.features.rootCauseKnown === false &&
+      p.features.startedRecently !== true &&
+      anyChange(p) !== true &&
+      p.features.chronicEquipmentLoss !== true &&
+      p.features.bottleneckThroughput !== true,
+    effect: { DMAIC: 4, RCA: -1 },
+  },
+  {
+    id: "D10b",
+    because: "Kronik performans açığı kararlı ve standardı oturmuş bir proseste görülüyor; istatistiksel analiz için taban hazır",
+    reads: ["chronicPerformanceGap", "standardWorkEstablished", "basicConditionsStable"],
+    when: (p) =>
+      p.features.chronicPerformanceGap === true &&
+      p.features.standardWorkEstablished === true &&
+      p.features.basicConditionsStable === true,
+    effect: { DMAIC: 2, SDCA: -1 },
+  },
+  {
+    // Kroniklik iddiası varken adım değişimi de varsa, bu kronik bir
+    // yetersizlik değil, kronik zemine BİNEN bir özel nedendir.
+    id: "D10c",
+    because: "Kronik açık var ama sapma belirli bir değişiklikle örtüşüyor; önce değişikliğin etkisi ayrılmalı",
+    reads: ["chronicPerformanceGap", "startedRecently", "processChanged", "operatorChanged", "supplierChanged"],
+    when: (p) =>
+      p.features.chronicPerformanceGap === true &&
+      (p.features.startedRecently === true || anyChange(p) === true),
+    effect: { KEPNER_TREGOE: 1, RCA: 1 },
+  },
+  {
     id: "D9",
     // SDCA ↔ DMAIC. Operatörden operatöre değişen sonuç ölçülebilir olsa bile
     // istatistiksel bir varyasyon problemi DEĞİLDİR: kaynağı yöntem farkıdır.

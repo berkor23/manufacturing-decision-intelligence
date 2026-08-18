@@ -22,6 +22,7 @@ import { explainRivals, RivalExplanation } from "./rival-analysis";
 import { evaluateStabilizationGate, StabilizationGate } from "./stabilization";
 import type { Methodology } from "./methodologies";
 import { METHOD_EVIDENCE_PROFILES } from "./evidence-profiles";
+import { evaluateRecommendation, RecommendationVerdict } from "./recommendation";
 
 // Geriye dönük uyumluluk: profiller bir zamanlar burada tanımlıydı.
 export * from "./evidence-profiles";
@@ -62,6 +63,12 @@ export interface DiagnosisSnapshot {
   contrastive: ContrastiveEntry[];
   /** İki bağımsız kanıt gövdesi birden varsa çakışma ve birleştirme sırası. */
   contested: ContestedSignal | null;
+  /**
+   * SIRALAMA LİDERİ ≠ ÖNERİ. Bu hüküm, öne çıkan adayın gerçekten önerilecek
+   * kadar kanıta dayanıp dayanmadığını söyler; dayanmıyorsa `recommended` null
+   * olur ve adaylar arka planda saklanır.
+   */
+  recommendation: RecommendationVerdict;
 }
 
 export interface DiagnosisEvidence {
@@ -153,6 +160,15 @@ export function diagnose(
     evidence = { ...evidence, status: "INCONCLUSIVE" };
   }
 
+  const recommendation = evaluateRecommendation({
+    problem: p,
+    ranking,
+    contested,
+    knownAnswers: evidence.knownAnswers,
+    contradictionLoad: conflicts.length,
+    evidenceReady: evidence.ready,
+  });
+
   const nextQuestion: NextQuestion | null =
     stop || !candidate
       ? null
@@ -175,5 +191,6 @@ export function diagnose(
     stabilization,
     contrastive,
     contested,
+    recommendation,
   };
 }

@@ -123,8 +123,13 @@ export const HOLDOUT_CASES: ValidationCase[] = [
     title: "Standardize proseste kronik fire, sürücüleri bilinmiyor",
     problem:
       "Proses standardize ve standart fiilen uygulanıyor, temel koşullar sağlanıyor. Fire oranı %4 ve son 18 aydır bu seviyede; belirli bir olayla başlamadı. Hangi proses parametrelerinin fireyi sürüklediği bilinmiyor. 18 aylık ölçüm verisi var ve ölçüm sistemi doğrulandı.",
+    // Phase 2 notu: "18 aydır %4" ifadesi bir VARYASYON davranışı değil, kronik
+    // bir performans açığıdır. Bu ayrım Phase 2'de ayrı bir alana kavuştu;
+    // önceki turda bu bilgi hiçbir alana yazılamıyordu ve DMAIC'in tek kanıt
+    // yolu (varyasyon) tetiklenmiyordu.
     answers: {
       defectOccurred: true,
+      chronicPerformanceGap: true,
       standardWorkEstablished: true,
       basicConditionsStable: true,
       hasMeasurementData: true,
@@ -136,7 +141,7 @@ export const HOLDOUT_CASES: ValidationCase[] = [
     expectedPrimary: "DMAIC",
     acceptableSecondary: ["RCA"],
     shouldNotLead: ["SDCA", "FIVE_S", "EIGHT_D", "TOC", "KT_DECISION", "DMADV"],
-    expectedSignals: ["hasMeasurementData", "rootCauseKnown", "startedRecently"],
+    expectedSignals: ["chronicPerformanceGap", "hasMeasurementData", "rootCauseKnown", "startedRecently"],
     discriminatingEvidence: [
       "Kronik ve belirli bir değişiklikle örtüşmüyor.",
       "Standart ve temel koşullar sağlam — stabilizasyon boşluğu yok.",

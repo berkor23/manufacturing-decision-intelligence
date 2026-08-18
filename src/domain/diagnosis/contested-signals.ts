@@ -79,6 +79,25 @@ function pairKey(a: Methodology, b: Methodology): string {
   return [a, b].sort().join("|");
 }
 
+/**
+ * Verilen yöntemle sahada GERÇEKTEN birlikte görülen yöntemler.
+ *
+ * INTEGRATIONS kataloğu yalnız çakışma metni üretmek için değil, bir alan
+ * bilgisi kaydıdır: hangi iki karakterin aynı problemde birlikte bulunabildiğini
+ * söyler. Soru motoru bunu, lider oturduktan sonra "hangi ikinci karakteri
+ * araştırmalıyım?" sorusunu yanıtlamak için okur — böylece aynı bilgi iki yerde
+ * ayrı ayrı kodlanmaz.
+ */
+export function knownCoOccurringMethodologies(methodology: Methodology): Methodology[] {
+  const out: Methodology[] = [];
+  for (const key of Object.keys(INTEGRATIONS)) {
+    const [a, b] = key.split("|") as [Methodology, Methodology];
+    if (a === methodology) out.push(b);
+    else if (b === methodology) out.push(a);
+  }
+  return out;
+}
+
 /** Bir kural tetiklemesinin dayandığı, kullanıcı yanıtlarından okunan gerçekler. */
 function factsForFiring(firing: RuleFiring, p: StructuredProblem): string[] {
   const keys: DiagnosticFeatureKey[] = firing.rule.traceFeature

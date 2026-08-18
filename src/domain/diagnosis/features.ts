@@ -46,6 +46,7 @@ export const FEATURE_KEYS = [
   "constraintLeverageExpected",
   "potentialEffectKnown",
   "controlAdequacyUncertain",
+  "chronicPerformanceGap",
 ] as const;
 
 export type DiagnosticFeatureKey = (typeof FEATURE_KEYS)[number];
@@ -342,6 +343,18 @@ export const FEATURE_META: Record<DiagnosticFeatureKey, FeatureMeta> = {
     questionTheme: "Olası hata gerçekleşirse müşteri, güvenlik, kalite veya proses üzerinde neye yol açacağı açıkça tarif edilebiliyor mu?",
     traceWhenTrue: "Potansiyel hata etkisi açıkça tanımlı",
     traceWhenFalse: "Potansiyel hata etkisi henüz tanımlı değil",
+  },
+  chronicPerformanceGap: {
+    key: "chronicPerformanceGap",
+    label: "Performans açığı kronik mi",
+    // KRONİKLİK ile VARYASYON aynı şey değildir:
+    //   "18 aydır fire %4 civarında"      → kronik performans açığı (bu alan)
+    //   "fire %1 ile %9 arasında oynuyor" → varyasyon davranışı (highVariation)
+    // İkisi DMAIC'e farklı kanıt yollarından bağlanır; SPC ise varyasyon /
+    // kontrol durumu tarafına duyarlı kalır.
+    questionTheme: "Ölçülebilir bir performans açığı uzun süredir aynı seviyede mi sürüyor; belirli bir olayla başlamadı mı?",
+    traceWhenTrue: "Ölçülebilir performans açığı uzun süredir aynı seviyede sürüyor",
+    traceWhenFalse: "Kronik bir performans açığı yok",
   },
   controlAdequacyUncertain: {
     key: "controlAdequacyUncertain",

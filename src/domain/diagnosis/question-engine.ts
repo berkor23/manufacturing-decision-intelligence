@@ -25,7 +25,9 @@ import {
   DEFAULT_TEMPERATURE,
 } from "./confidence-engine";
 import { evaluateRules } from "./rule-engine";
-import type { Methodology } from "./methodologies";
+import { METHODOLOGIES, type Methodology } from "./methodologies";
+import { METHOD_EVIDENCE_PROFILES } from "./evidence-profiles";
+import { knownCoOccurringMethodologies } from "./contested-signals";
 
 export interface StopPolicy {
   /** Lider MUTLAK güven bu eşiği geçerse dur. */
@@ -70,6 +72,20 @@ export interface QuestionCandidate {
   changesLeader: boolean;
   /** Soru, mevcut liderin kendi kanıt profilini güçlendiren bir kuralda kullanılır. */
   supportsLeader: boolean;
+  /**
+   * İlk iki aday arasındaki puan farkını bu sorunun ne kadar oynattığı.
+   * Tek-adım bilgi kazancı bileşik kurallarda miyop kalır; bu ölçü doğrudan
+   * "şu an yarışan iki hipotezi ne kadar ayırıyor" sorusunu yanıtlar.
+   */
+  pairDelta: number;
+  /**
+   * Bu soru, henüz HİÇBİR kanıt boyutu karşılanmamış bir yöntemin uygunluk
+   * kapısını açıyor mu? Lider zaten oturmuşken asıl değerli soru, belirsizliği
+   * azaltan değil, gözden kaçan ikinci karakteri ortaya çıkarabilecek sorudur.
+   */
+  opensLatentGate: boolean;
+  /** Gizli rakip, liderle sahada birlikte görülen bilinen bir çiftin parçası mı? */
+  opensCoOccurringGate: boolean;
   /**
    * Sorunun AYIRDIĞI yöntem çifti: "evet" denirse öne çıkan ile "hayır" denirse
    * öne çıkan farklıysa doldurulur. Kullanıcıya sorunun neden sorulduğunu
@@ -235,8 +251,45 @@ export function rankQuestions(
   const referenced = referencedFeatures(rules);
   const excluded = new Set(options.excludedFeatures ?? []);
 
-  const hBefore = rankingEntropy(confidenceFor(p, rules, temperature));
-  const currentLeader = confidenceFor(p, rules, temperature)[0]?.methodology;
+  const baseRanking = confidenceFor(p, rules, temperature);
+  const hBefore = rankingEntropy(baseRanking);
+  const currentLeader = baseRanking[0]?.methodology;
+
+  // ── Pair-aware ve gizli-rakip bağlamı ───────────────────────────────────
+  const leaderEntry = baseRanking[0];
+  const runnerUpEntry = baseRanking[1];
+  const scoreIn = (ranking: MethodologyConfidence[], m: Methodology | undefined) =>
+    m ? (ranking.find((entry) => entry.methodology === m)?.score ?? 0) : 0;
+
+  const leaderProfile = leaderEntry ? METHOD_EVIDENCE_PROFILES[leaderEntry.methodology] : null;
+  /** Liderin kendi kanıt profili tamamlandı ve ayrımı rahat mı? */
+  const leaderSettled = Boolean(
+    leaderProfile &&
+      leaderProfile.requiredDimensions.every((dimension) =>
+        dimension.some(({ feature, value }) => p.features[feature] === value),
+      ) &&
+      leaderEntry!.score - (runnerUpEntry?.score ?? 0) >= leaderProfile.minimumScoreMargin,
+  );
+
+  /** Hiçbir kanıt boyutu karşılanmamış yöntemler — henüz görünmemiş karakterler. */
+  const latentRivals = METHODOLOGIES.filter((m) => {
+    if (m === currentLeader) return false;
+    return !METHOD_EVIDENCE_PROFILES[m].requiredDimensions.some((dimension) =>
+      dimension.some(({ feature, value }) => p.features[feature] === value),
+    );
+  });
+  // Gizli rakipler arasında sahada liderle GERÇEKTEN birlikte görülenler önce
+  // araştırılır: kronik arızalı bir makinenin aynı zamanda kısıt olması gibi
+  // bilinen çift-karakterli örüntüler, rastgele bir aileyi yoklamaktan değerlidir.
+  const coOccurring = new Set(currentLeader ? knownCoOccurringMethodologies(currentLeader) : []);
+  const latentGateFeatures = new Set<DiagnosticFeatureKey>();
+  const coOccurringGateFeatures = new Set<DiagnosticFeatureKey>();
+  for (const rival of latentRivals) {
+    for (const expectation of METHOD_EVIDENCE_PROFILES[rival].requiredDimensions[0] ?? []) {
+      latentGateFeatures.add(expectation.feature);
+      if (coOccurring.has(rival)) coOccurringGateFeatures.add(expectation.feature);
+    }
+  }
 
   const candidates: QuestionCandidate[] = [];
   for (const key of unknownFeatures(p)) {
@@ -254,6 +307,13 @@ export function rankQuestions(
     const leaderIfYes = trueRanking[0]?.methodology;
     const leaderIfNo = falseRanking[0]?.methodology;
 
+    // İlk iki adayın puan farkı bu cevapla ne kadar oynuyor? Cevabın kendisi
+    // liderliği çevirmese bile farkı büyük ölçüde oynatıyorsa soru ayırıcıdır.
+    const gapYes =
+      scoreIn(trueRanking, leaderEntry?.methodology) - scoreIn(trueRanking, runnerUpEntry?.methodology);
+    const gapNo =
+      scoreIn(falseRanking, leaderEntry?.methodology) - scoreIn(falseRanking, runnerUpEntry?.methodology);
+
     candidates.push({
       featureKey: key,
       informationGain,
@@ -262,6 +322,9 @@ export function rankQuestions(
         leaderIfYes && leaderIfNo && leaderIfYes !== leaderIfNo
           ? { ifYes: leaderIfYes as Methodology, ifNo: leaderIfNo as Methodology }
           : null,
+      pairDelta: Math.abs(gapYes - gapNo),
+      opensLatentGate: latentGateFeatures.has(key),
+      opensCoOccurringGate: coOccurringGateFeatures.has(key),
       changesLeader: trueRanking[0]?.methodology !== currentLeader || falseRanking[0]?.methodology !== currentLeader,
       supportsLeader: rules.some((rule) => rule.reads.includes(key) && currentLeader != null && (rule.effect[currentLeader] ?? 0) > 0),
     });
@@ -276,17 +339,30 @@ export function rankQuestions(
   // kapatmak yerine aile filtresinden geçmiş adaylara geri dön.
   const rankedCandidates = useful.length > 0 ? useful : candidates;
 
-  // Sıralama: (1) gerçek bilgi kazancı, (2) ADAYLARI AYIRAN soru, (3) statik
-  // teşhis önceliği, (4) determinizm. İkinci ölçüt madde madde şu demektir:
-  // aynı ölçüde bilgilendirici iki sorudan, cevabı liderliği değiştirebilecek
-  // olanı sor. Belirsizliği azaltmayan ama "ilgili" görünen sorular böylece
-  // ayırt edici soruların önüne geçemez.
-  return rankedCandidates.sort(
-    (a, b) =>
-      Math.max(b.informationGain, 0) - Math.max(a.informationGain, 0) ||
-      Number(b.separates !== null) - Number(a.separates !== null) ||
-      b.priority - a.priority ||
-      FEATURE_KEYS.indexOf(a.featureKey) - FEATURE_KEYS.indexOf(b.featureKey),
+  // ── Soru seçim stratejisi: iki mod ──────────────────────────────────────
+  //
+  // Tek-adım bilgi kazancı tek başına yetmez. Bazı yöntemler (TOC gibi) tek
+  // cevaptan değil KANIT BİLEŞİMİNDEN doğar; ilk cevabın anlık etkisi sıfıra
+  // yakın olsa bile soru stratejik olarak çok ayırt edici olabilir.
+  //
+  //  · Lider henüz oturmamışsa  → belirsizliği azalt: bilgi kazancı, sonra
+  //    ilk iki adayı ayıran soru.
+  //  · Lider oturmuşsa          → gözden kaçan ikinci karakteri ara: henüz
+  //    hiç kanıtı olmayan bir yöntemin uygunluk kapısını açan soru öne geçer.
+  //    (Kronik arızalı bir makinenin aynı zamanda kısıt olması gibi.)
+  const byInformation = (a: QuestionCandidate, b: QuestionCandidate) =>
+    Math.max(b.informationGain, 0) - Math.max(a.informationGain, 0) ||
+    b.pairDelta - a.pairDelta ||
+    Number(b.separates !== null) - Number(a.separates !== null) ||
+    b.priority - a.priority ||
+    FEATURE_KEYS.indexOf(a.featureKey) - FEATURE_KEYS.indexOf(b.featureKey);
+
+  return rankedCandidates.sort((a, b) =>
+    leaderSettled
+      ? Number(b.opensCoOccurringGate) - Number(a.opensCoOccurringGate) ||
+        Number(b.opensLatentGate) - Number(a.opensLatentGate) ||
+        byInformation(a, b)
+      : byInformation(a, b),
   );
 }
 
