@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAccountService } from "@/application/wiring";
-import { accountFromRequest, isAllowedMutationOrigin, sessionTokenFromRequest } from "@/lib/account-auth";
+import { accountFromRequest, isAllowedMutationOrigin, requireAccountSystem, sessionTokenFromRequest } from "@/lib/account-auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -10,6 +10,8 @@ const schema = z.object({
 });
 
 export async function PATCH(request: Request) {
+  const closed = requireAccountSystem();
+  if (closed) return closed;
   if (!isAllowedMutationOrigin(request)) {
     return NextResponse.json({ error: "İstek kaynağı doğrulanamadı." }, { status: 403 });
   }

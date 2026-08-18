@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAccountService } from "@/application/wiring";
 import {
@@ -231,4 +232,26 @@ export function isAllowedMutationOrigin(request: Request) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Hesap sistemi kapalıyken hesap uçlarını dürüstçe kapatır.
+ *
+ * `enforceRateLimit` gibi: kapı açıksa null, kapalıysa hazır yanıt döner.
+ *
+ * NEDEN: bu uçların hiçbirinde mod kontrolü yoktu. `ACCOUNT_AUTH_ENABLED`
+ * kapalıyken /api/account/register çağrısı ilk satırdaki
+ * `ensureEmailDeliveryConfigured()`e giriyor ve üretimde EMAIL_WEBHOOK_URL
+ * tanımsız olduğu için YAKALANMAYAN bir hata fırlatıyordu — ziyaretçi kayıt
+ * formunu doldurduğunda boş gövdeli 500 alıyordu. Kapalı bir özellik
+ * "bozuk" değil "kapalı" cevabı vermeli.
+ *
+ * 503 seçildi (404/400 değil): uç vardır, geçici olarak devre dışıdır.
+ */
+export function requireAccountSystem(): NextResponse | null {
+  if (accountAuthEnabled()) return null;
+  return NextResponse.json(
+    { error: "Hesap sistemi bu kurulumda kapalı. Uygulamayı hesap açmadan kullanabilirsiniz." },
+    { status: 503 },
+  );
 }

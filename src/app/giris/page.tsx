@@ -1,11 +1,47 @@
 import Link from "next/link";
 import { AccountAccessForm } from "@/components/account-access-form";
 import { accountAuthEnabled } from "@/lib/account-auth";
+import { authEnabled } from "@/lib/auth";
 import { LoginForm } from "@/components/login-form";
 
 export const metadata = { title: "Giriş · MDI" };
 
 export default function LoginPage() {
+  // Üçüncü durum: ne hesap sistemi ne de APP_PASSWORD var (açık demo).
+  // Girilecek bir kapı yokken parola kutusu göstermek, doldurulduğunda hiçbir
+  // şey yapmayan bir form sunmak demekti.
+  if (!accountAuthEnabled() && !authEnabled()) {
+    return (
+      <main className="page-shell grid min-h-[70vh] place-items-center">
+        <section className="card w-full max-w-lg p-6 sm:p-8">
+          <div className="border-b border-[var(--rule-strong)] pb-4">
+            <p className="eyebrow">Erişim</p>
+            <h1 className="page-heading mt-1.5">Giriş gerekmiyor</h1>
+          </div>
+
+          <div className="alert alert-ok mt-5">
+            Bu kurulumda oturum açmanıza gerek yok — uygulamanın tamamı
+            doğrudan açık.
+          </div>
+
+          <p className="mt-4 text-[13px] leading-relaxed text-[var(--muted)]">
+            Hesap sistemi (bireysel ve şirket hesapları, roller, davet) bu demo
+            dağıtımında devre dışı. Kayıtlar herkese açıktır ve sıfırlanabilir.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3 border-t border-[var(--rule)] pt-5">
+            <Link href="/diagnoz" className="btn btn-primary">
+              Teşhise başla
+            </Link>
+            <Link href="/yerel-calismalar" className="btn">
+              Yerel çalışmalarım
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (!accountAuthEnabled()) {
     return (
       <main className="page-shell grid min-h-[70vh] place-items-center">

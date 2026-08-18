@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getAccountService } from "@/application/wiring";
-import { isAllowedMutationOrigin, safeNextPath, setSessionCookie } from "@/lib/account-auth";
+import { isAllowedMutationOrigin, requireAccountSystem, safeNextPath, setSessionCookie } from "@/lib/account-auth";
 import { loginSchema } from "@/lib/account-schemas";
 import { normalizeEmail } from "@/domain/access";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const closed = requireAccountSystem();
+  if (closed) return closed;
   if (!isAllowedMutationOrigin(request)) {
     return NextResponse.json({ error: "İstek kaynağı doğrulanamadı." }, { status: 403 });
   }

@@ -4,11 +4,11 @@
 // "server-only" olduğu için doğrudan içe aktarılamaz, bu yüzden aynı davranışı
 // kullanan yardımcılar üzerinden gidilir.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 process.env.ACCOUNT_AUTH_ENABLED = "0";
 
-const { hashPassword, verifyPassword, safeNextPath } = await import("./account-auth");
+const { hashPassword, verifyPassword, safeNextPath, requireAccountSystem } = await import("./account-auth");
 
 describe("parola saklama", () => {
   it("yeni hash açık parolayı taşımaz ve doğrulanır", async () => {
@@ -42,5 +42,31 @@ describe("safeNextPath", () => {
     expect(safeNextPath("https://evil.com")).toBe("/hesabim");
     expect(safeNextPath("javascript:alert(1)")).toBe("/hesabim");
     expect(safeNextPath(undefined)).toBe("/hesabim");
+  });
+});
+
+// Kapalı bir özellik "bozuk" değil "kapalı" cevabı vermeli. Bu kapı olmadan
+// /api/account/register, ACCOUNT_AUTH_ENABLED kapalıyken ilk satırdaki
+// ensureEmailDeliveryConfigured()'a giriyor ve üretimde EMAIL_WEBHOOK_URL
+// tanımsız olduğu için yakalanmayan bir hata fırlatıyordu: ziyaretçi kayıt
+// formunu doldurduğunda boş gövdeli 500 alıyordu.
+describe("hesap sistemi kapısı", () => {
+  const original = process.env.ACCOUNT_AUTH_ENABLED;
+  afterEach(() => {
+    if (original === undefined) delete process.env.ACCOUNT_AUTH_ENABLED;
+    else process.env.ACCOUNT_AUTH_ENABLED = original;
+  });
+
+  it("hesap sistemi kapalıyken 503 ve açıklama döner", async () => {
+    process.env.ACCOUNT_AUTH_ENABLED = "0";
+    const response = requireAccountSystem();
+    expect(response).not.toBeNull();
+    expect(response!.status).toBe(503);
+    expect((await response!.json()).error).toContain("kapalı");
+  });
+
+  it("hesap sistemi açıkken kapı geçirir", () => {
+    process.env.ACCOUNT_AUTH_ENABLED = "1";
+    expect(requireAccountSystem()).toBeNull();
   });
 });

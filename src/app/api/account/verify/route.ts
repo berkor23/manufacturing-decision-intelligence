@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAccountService } from "@/application/wiring";
-import { isAllowedMutationOrigin, setSessionCookie } from "@/lib/account-auth";
+import { isAllowedMutationOrigin, requireAccountSystem, setSessionCookie } from "@/lib/account-auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({ token: z.string().min(20) });
 
 export async function POST(request: Request) {
+  const closed = requireAccountSystem();
+  if (closed) return closed;
   if (!isAllowedMutationOrigin(request)) {
     return NextResponse.json({ error: "İstek kaynağı doğrulanamadı." }, { status: 403 });
   }
