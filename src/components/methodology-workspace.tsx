@@ -11,6 +11,7 @@ import type { MethodologyWorkspace as WsData } from "@/application/ports/methodo
 import { StepState, emptyStepState, fieldFilled, getPlaybook, stepIsComplete } from "@/domain/playbook";
 import { BASIC_WORKSPACE_TABS, normalizeWorkspace, WORKSPACE_TAB_GROUPS, WORKSPACE_TABS, type WorkspaceTab, type WorkspaceTabGroup } from "@/components/workspace/workspace-view-model";
 import { loadWorkspace, saveWorkspace } from "@/components/workspace/workspace-api";
+import { RecordMissing } from "@/components/record-missing";
 import { ProactiveOperationsPanel } from "@/components/workspace/panels/proactive-operations-panel";
 import { DecisionLabsIntro, DecisionLabsPanel } from "@/components/workspace/panels/decision-labs-panel";
 import { OrganizationContextPanel } from "@/components/workspace/panels/organization-context-panel";
@@ -153,7 +154,12 @@ export function MethodologyWorkspace({ id, aiEnabled = true }: { id: string; aiE
   if (error && !ws)
     return (
       <Shell>
-        <p className="text-[var(--st-risk)]">{error}</p>
+        <RecordMissing
+          title="Bu çalışma açılamadı"
+          reason={error}
+          backHref="/calismalar"
+          backLabel="Çalışmalara git"
+        />
       </Shell>
     );
   if (!ws || !playbook)

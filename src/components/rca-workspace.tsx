@@ -10,6 +10,7 @@ import type {
   ActionStatus,
 } from "@/application/ports/rca-repository";
 import { FISHBONE_CATEGORIES } from "@/application/ports/rca-repository";
+import { RecordMissing } from "@/components/record-missing";
 
 const STATUS_LABEL: Record<ActionStatus, string> = {
   OPEN: "Açık",
@@ -58,7 +59,22 @@ export function RcaWorkspace({ id }: { id: string }) {
     }
   }
 
-  if (error) return <Shell><p className="text-[var(--st-risk)]">{error}</p></Shell>;
+  // `&& !ws` şart: bu dal yalnız kayıt HİÇ yüklenemediğinde çalışmalı.
+  // Koşul eskiden yalnız `error` idi ve save() bir hata yazdığında tüm çalışma
+  // alanını çıplak bir hata satırıyla değiştiriyordu — kullanıcının ekrandaki
+  // 5-Neden/balık kılçığı çalışması gözden kayboluyor, geri dönüş yolu da
+  // kalmıyordu. Kaydetme hatası artık aşağıda yıkıcı olmayan bir şeritte.
+  if (error && !ws)
+    return (
+      <Shell>
+        <RecordMissing
+          title="Bu RCA açılamadı"
+          reason={error}
+          backHref="/calismalar"
+          backLabel="Çalışmalara git"
+        />
+      </Shell>
+    );
   if (!ws) return <Shell><p className="text-[var(--muted)]">Yükleniyor…</p></Shell>;
 
   return (
@@ -71,6 +87,15 @@ export function RcaWorkspace({ id }: { id: string }) {
         dirty={dirty}
         onSave={save}
       />
+      {error && (
+        <div className="alert alert-error" role="alert">
+          <strong className="block">Değişiklik kaydedilemedi</strong>
+          <span className="mt-0.5 block">{error}</span>
+          <button type="button" onClick={() => void save()} className="mt-2 font-semibold underline">
+            Yeniden dene
+          </button>
+        </div>
+      )}
       <FiveWhy steps={ws.whySteps} onChange={(whySteps) => mutate({ whySteps })} />
       <Fishbone items={ws.fishbone} onChange={(fishbone) => mutate({ fishbone })} />
       <Actions actions={ws.actions} onChange={(actions) => mutate({ actions })} />
