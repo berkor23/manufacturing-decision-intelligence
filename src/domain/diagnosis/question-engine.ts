@@ -111,8 +111,38 @@ function featurePriority(key: DiagnosticFeatureKey, rules: Rule[]): number {
  * ele. Bu karar sonucunu DEĞİŞTİRMEZ; yalnızca kullanıcıya sunulan aday havuzunu
  * daraltır. Henüz aile sinyali yoksa bütün sorular aday kalır.
  */
+/** Yalnız bir karar (alternatif seçimi) bağlamında anlamlı olan alanlar. */
+const DECISION_CONTEXT_ONLY = new Set<DiagnosticFeatureKey>([
+  "multipleAlternativesDefined",
+  "mandatoryCriteriaDefined",
+  "preferenceCriteriaDefined",
+  "decisionOwnerKnown",
+  "unresolvedCauseBeforeDecision",
+]);
+
 export function isQuestionRelevant(key: DiagnosticFeatureKey, p: StructuredProblem): boolean {
   const f = p.features;
+
+  // Hata çoktan oluştuysa "sıfırdan yeni bir şey mi tasarlıyoruz?" sorusu bilgi
+  // üretmez: yeni tasarım dalı gerçekleşmiş hata YOKKEN anlamlıdır. Bu soru
+  // yüksek bilgi kazancı hesaplasa bile kullanıcı için boş bir turdur.
+  if (key === "isNewDesign" && f.defectOccurred === true) return false;
+
+  // `decisionBetweenOptions` bir TEŞHİS alanı değil, ÇERÇEVE alanıdır: problemin
+  // bir seçim kararı olduğu kullanıcının kendi anlatımından gelir. Karar kuralı
+  // KD1 çok büyük ağırlık taşıdığı için bu alan her ailede en yüksek bilgi
+  // kazancını hesaplar ve gerçek ayırt edici soruların önüne geçer. Hata
+  // bildiren bir kullanıcıya "bu aslında alternatif seçimi mi?" diye sormak
+  // hem tuhaf hem de bir tur kaybıdır; anlatımda seçim geçiyorsa alan zaten
+  // ayrıştırmadan dolu gelir (bkz. S vakası).
+  if (key === "decisionBetweenOptions" && f.defectOccurred === true) return false;
+
+  // Karar analizi alanları yalnız KARAR BAĞLAMINDA anlamlıdır. Ortada bir
+  // alternatif seçimi olduğu bilinmeden "zorunlu kriterler tanımlı mı?" ya da
+  // "seçimi engelleyen çözülmemiş bir neden var mı?" diye sormak, kullanıcının
+  // hiç kurmadığı bir çerçeveyi varsayar. Karar bağlamı kurulduğunda (aşağıdaki
+  // decisionBetweenOptions === true dalı) bu alanların hepsi zaten sorulabilir.
+  if (DECISION_CONTEXT_ONLY.has(key) && f.decisionBetweenOptions !== true) return false;
 
   if (f.decisionBetweenOptions === true) {
     return new Set<DiagnosticFeatureKey>([
@@ -156,6 +186,12 @@ export function isQuestionRelevant(key: DiagnosticFeatureKey, p: StructuredProbl
       "measurementReliable", "intermittent", "isImprovementInitiative", "safetyOrRegulatory",
       "customerAffected", "defectOccurred", "equipmentBreakdown", "chronicEquipmentLoss",
       "standardWorkEstablished", "basicConditionsStable",
+      // Kısıt soruları BU ailede de sorulabilmeli. Kronik arızalı bir ekipmanın
+      // aynı zamanda sistem kısıtı olması sahada sık görülen çift-karakterli
+      // vakadır; "arızalanmadığı zaman da çıktıyı sınırlıyor mu?" sorulamazsa
+      // motor güvenilirlik kaybı ile yapısal kısıtı hiçbir zaman ayıramaz.
+      "bottleneckThroughput", "constraintQueue", "downstreamStarvation",
+      "constraintMeasured", "constraintLeverageExpected", "flowOrWaste",
     ]).has(key);
   }
 
@@ -240,9 +276,15 @@ export function rankQuestions(
   // kapatmak yerine aile filtresinden geçmiş adaylara geri dön.
   const rankedCandidates = useful.length > 0 ? useful : candidates;
 
+  // Sıralama: (1) gerçek bilgi kazancı, (2) ADAYLARI AYIRAN soru, (3) statik
+  // teşhis önceliği, (4) determinizm. İkinci ölçüt madde madde şu demektir:
+  // aynı ölçüde bilgilendirici iki sorudan, cevabı liderliği değiştirebilecek
+  // olanı sor. Belirsizliği azaltmayan ama "ilgili" görünen sorular böylece
+  // ayırt edici soruların önüne geçemez.
   return rankedCandidates.sort(
     (a, b) =>
       Math.max(b.informationGain, 0) - Math.max(a.informationGain, 0) ||
+      Number(b.separates !== null) - Number(a.separates !== null) ||
       b.priority - a.priority ||
       FEATURE_KEYS.indexOf(a.featureKey) - FEATURE_KEYS.indexOf(b.featureKey),
   );

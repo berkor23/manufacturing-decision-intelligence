@@ -16,7 +16,11 @@ type Signal = { key: DiagnosticFeatureKey; value: boolean; patterns: RegExp[] };
 const SIGNALS: Signal[] = [
   // rootCauseKnown — önce açık "bilinmiyor", sonra "biliniyor"
   { key: "rootCauseKnown", value: false, patterns: [/kök neden.*(bilinmiyor|belirsiz|yok)/, /neden(i|ini)? bilinmiyor/, /sebeb(i|ini)? belirsiz/] },
-  { key: "rootCauseKnown", value: true, patterns: [/kök neden.*(biliniyor|belli)/, /neden(i|ini)? belli/] },
+  { key: "rootCauseKnown", value: true, patterns: [
+    /kök neden.*(biliniyor|belli|biliyoruz|bulundu|bulduk|belirlendi|tespit edildi|doğrulandı)/,
+    /neden(i|ini)? (?:belli|biliyoruz|bulduk|belirledik|tespit ettik)/,
+    /kök neden.*(?:tespit|teşhis) edil/,
+  ] },
 
   { key: "customerAffected", value: false, patterns: [/müşteri.*etkilenmed/, /müşteri (?:şikâyeti|şikayeti|şikâyet|şikayet).*(?:yok|gelmed)/, /şikâyet yok/, /şikayet yok/] },
   { key: "customerAffected", value: true, patterns: [/müşteri/, /şikayet/, /şikâyet/, /iade/, /sahadan/, /sevkiyat/] },
@@ -72,7 +76,17 @@ const SIGNALS: Signal[] = [
   { key: "comparisonAvailable", value: true, patterns: [/karşılaştır/, /olan.*olmayan/, /is.?is.not/] },
   { key: "chronicEquipmentLoss", value: true, patterns: [/kronik.*(arıza|duruş|kayıp)/, /tekrar eden.*(arıza|duruş)/, /oee.*düş/] },
   { key: "failureModeKnown", value: true, patterns: [/hata modu.*(belli|biliniyor|tanımlı)/, /yanlış işlem.*tanımlı/] },
-  { key: "standardWorkEstablished", value: false, patterns: [/standart iş.*(yok|eksik|uygulanmıyor)/, /vardiya.*farklı yöntem/, /herkes.*farklı yap/] },
+  // Standardın "var" olması YERLEŞİK olduğu anlamına gelmez. Dokümanın varlığını
+  // fiilî uygulamadan ayıran kalıplar önce denenir; aksi hâlde "talimat var ama
+  // kimse uygulamıyor" cümlesi standardı yerleşik sayar ve SDCA'yı bastırır.
+  { key: "standardWorkEstablished", value: false, patterns: [
+    /standart iş.*(yok|eksik|uygulanmıyor)/,
+    /standart.*(?:uygulanmıyor|uygulamıyor|uyulmuyor|takip edilmiyor|geçerli değil)/,
+    /(?:kimse|hiçbiri|hiç kimse).*uygulam(?:ıyor|az)/,
+    /talimat.*(?:uygulanmıyor|uygulamıyor|dikkate alınmıyor)/,
+    /k[aâ]ğıt üzerinde/,
+    /vardiya.*farklı yöntem/, /herkes.*farklı yap/,
+  ] },
   { key: "standardWorkEstablished", value: true, patterns: [/standart iş.*(var|tanımlı|uygulanıyor)/, /standart operasyon.*tanımlı/] },
   { key: "basicConditionsStable", value: false, patterns: [/temel koşul.*(sağlanmıyor|eksik)/, /4m.*(değişken|kararsız)/] },
   { key: "basicConditionsStable", value: true, patterns: [/temel koşul.*(sağlanıyor|kararlı)/, /4m.*(kararlı|kontrol altında)/] },
@@ -107,15 +121,27 @@ function scopedOccurrence(
 ): boolean | undefined {
   const clauses = text.split(/[.!?;\n]+|\b(?:ancak|fakat|ama)\b/).map((item) => item.trim()).filter(Boolean);
   let explicitNegative = false;
+  let hypotheticalOnly = false;
   for (const clause of clauses) {
     const negated = negative.some((pattern) => pattern.test(clause));
     if (negated) {
       explicitNegative = true;
       continue;
     }
-    const hypothetical = /(?:oluşabilir|olabilir|yaşanabilir|görülebilir|gerçekleşebilir|riski|ihtimali|olasılığı)/.test(clause);
-    if (!hypothetical && positive.some((pattern) => pattern.test(clause))) return true;
+    // Karşı-olgusal kip: "arızalar olmasa da yetmiyor" cümlesi bir arıza
+    // BİLDİRMEZ; tersine, olgunun yokluğunda bile sonucun sürdüğünü söyler.
+    // TPM ile TOC'yi ayıran cümleler tam olarak bu kalıptadır ve yüzeysel
+    // okuma burada güvenilirlik kaybı ile yapısal kısıtı birbirine karıştırır.
+    const hypothetical =
+      /(?:oluşabilir|olabilir|yaşanabilir|görülebilir|gerçekleşebilir|riski|ihtimali|olasılığı)/.test(clause) ||
+      /(?:olmasa|olmadığı (?:zaman|günlerde|halde|durumda)|olmadan|yaşanmadığı)/.test(clause);
+    const positiveHere = positive.some((pattern) => pattern.test(clause));
+    if (!hypothetical && positiveHere) return true;
+    if (hypothetical && positiveHere) hypotheticalOnly = true;
   }
+  // Olgu YALNIZCA karşı-olgusal ya da olasılık kipinde geçtiyse bildirilmiş bir
+  // olay yoktur; alanı "hayır" olarak okumak doğru cevaptır.
+  if (hypotheticalOnly) return false;
   return explicitNegative ? false : undefined;
 }
 
@@ -142,7 +168,10 @@ export class KeywordProblemParser implements IProblemParser {
 
     const scopedEquipment = scopedOccurrence(
       t,
-      [/\barıza\b/, /makine durd/, /ekipman.*(?:durd|arıza|bozul)/, /\bduruş\b/, /motor yan/, /rulman/, /tezg[aâ]h durd/],
+      // "arıza / arızalar / arızası" çekimlerini görür, ama "arızalanmadığı"
+      // gibi olumsuz çekimlere takılmaz — karşı-olgusal cümlelerin doğru
+      // sınıflanması buna bağlıdır.
+      [/arıza(?:lar|sı|ları)?\b/, /makine durd/, /ekipman.*(?:durd|arıza|bozul)/, /\bduruş\b/, /motor yan/, /rulman/, /tezg[aâ]h durd/],
       [/(?:makine|ekipman|tezg[aâ]h|arıza|duruş).*(?:yok|oluşmad|yaşanmad|görülmed)/, /(?:makine|ekipman|tezg[aâ]h).*(?:seçim|alternatif|teklif|satın al|yatırım)/],
     );
     if (scopedEquipment !== undefined) features.equipmentBreakdown = scopedEquipment;

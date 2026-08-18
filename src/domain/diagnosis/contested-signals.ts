@@ -13,6 +13,7 @@
 import { StructuredProblem, FEATURE_META, DiagnosticFeatureKey } from "./features";
 import { Methodology, METHODOLOGY_META, METHODOLOGY_IDENTITY } from "./methodologies";
 import { RuleEvaluation, RuleFiring } from "./rule-engine";
+import { METHOD_EVIDENCE_PROFILES } from "./evidence-profiles";
 import { MethodologyConfidence } from "./confidence-engine";
 
 export interface ContestedSide {
@@ -31,6 +32,13 @@ export interface ContestedSignal {
 
 /** İki bağımsız kanıt gövdesi sayılması için gereken asgari pozitif puan. */
 const MIN_SUPPORT = 4;
+/**
+ * Rakibin KENDİ kanıt profilinden bağımsız olarak karşılaması gereken asgari
+ * boyut sayısı. Tek boyut yeterli değildir: "henüz hata yok" gibi liderin de
+ * içinde bulunduğu bağlamdan doğan tek bir eşleşme, ayrı bir problem karakteri
+ * anlamına gelmez — yalnız aynı bağlamın yan ürünüdür.
+ */
+const MIN_INDEPENDENT_DIMENSIONS = 2;
 /**
  * Rakip desteğinin lidere oranı bu eşiğin üstündeyse "çakışma" sayılır.
  * 0.5 = "rakip, liderin bağımsız desteğinin en az yarısına KENDİ BAŞINA sahip".
@@ -85,6 +93,18 @@ function factsForFiring(firing: RuleFiring, p: StructuredProblem): string[] {
   return facts;
 }
 
+/**
+ * Rakip, kendi kanıt profilinin kaç bağımsız boyutunu karşılıyor?
+ * Aynı tanım sonuçlandırma kapısında da kullanılır; çakışma ilanı ile
+ * "doğrulanmış" ilanı böylece tek kaynaktan beslenir.
+ */
+function satisfiedDimensions(methodology: Methodology, p: StructuredProblem): number {
+  const profile = METHOD_EVIDENCE_PROFILES[methodology];
+  return profile.requiredDimensions.filter((dimension) =>
+    dimension.some(({ feature, value }) => p.features[feature] === value),
+  ).length;
+}
+
 function sideFor(
   methodology: Methodology,
   p: StructuredProblem,
@@ -124,8 +144,23 @@ export function detectContestedSignals(
   for (const candidate of ranking) {
     if (candidate.methodology === leader.methodology) continue;
     const side = sideFor(candidate.methodology, p, evaluation);
+
+    // (1) Kendi başına anlamlı bir pozitif kanıt gövdesi olmalı.
     if (side.support < MIN_SUPPORT) continue;
     if (side.support < leaderSide.support * CONTEST_RATIO) continue;
+
+    // (2) Kurallarca AKTİF olarak bastırılmış bir yöntem çakışma sayılmaz.
+    //     Pozitif puanı yüksek olsa bile net puanı çökmüşse, motor onu zaten
+    //     reddetmiştir; onu "eş geçerli ikinci yaklaşım" diye sunmak, verilen
+    //     kararla çelişen bir mesaj üretir.
+    if (candidate.score <= 0) continue;
+    if (candidate.score < leader.score * CONTEST_RATIO) continue;
+
+    // (3) Kanıt gövdesi BAĞIMSIZ olmalı: rakibin kendi profilinden en az iki
+    //     boyut karşılanmalı. Tek boyut, liderle paylaşılan bağlamın yan
+    //     ürünü olabilir ve ayrı bir problem karakteri göstermez.
+    if (satisfiedDimensions(candidate.methodology, p) < MIN_INDEPENDENT_DIMENSIONS) continue;
+
     if (!best || side.support > best.support) best = side;
   }
   if (!best) return null;

@@ -85,6 +85,17 @@ Mimari sözleşme: `docs/ARCHITECTURE.md` · Plan ve fazlar: `docs/PLAN.md` · V
 - `/en` İngilizce genel bakış sayfasıdır (konumlandırma, mimari, ayrım tablosu, TR↔EN sözlük).
   Uygulamanın kendisi Türkçedir; tam i18n yapılmadı — `/en` bunu açıkça söyler.
 - Yeni kural/ağırlık değişikliğinde golden-case testleri (`diagnose.test.ts`) kalkandır.
+- **Engineering Validation Suite: `src/domain/diagnosis/validation/`.** Gri bölge üretim
+  vakalarıyla motorun ayrım kalitesini ölçer. Vakalar test kodundan AYRI fixture
+  dosyalarındadır (bir kalite mühendisi kod bilmeden okuyabilmeli).
+  `manufacturing-cases.ts` (development) · `holdout-cases.ts` (**tuning hedefi DEĞİL**) ·
+  `mutation-families.ts` · `semantic-edge-cases.ts` · `evidence-cases.ts` ·
+  `anti-patterns.test.ts`. Felsefe ve sınırlar: `docs/ENGINEERING_VALIDATION.md`.
+  - Bir vaka başarısız olduğunda **puan ekleyerek düzeltme**. Önce kök nedeni sınıflandır
+    (ayrıştırma / eksik kural / ağırlık / soru seçimi / **ground truth yanlış olabilir**),
+    sonra genellenebilir düzeltme yap.
+  - Sert kural tektir: `shouldNotLead` listesindeki bir yöntem lidere geçemez. Birincil
+    eşleşme oranı bir METRİKtir, iddia değil — arayüzde başarı yüzdesi olarak sunma.
 - **Ayrım kuralları (`D*`) çift yönlüdür.** `discrimination.test.ts` her benzer yöntem çifti
   için iki vaka tutar: yöntemi hak eden VE hak etmeyen. Bir yöntemin ağırlığını yükseltmek,
   ikizinin negatif vakasını bozmadan yapılmalıdır — "doğru seçildi mi" kadar "yanlış olan

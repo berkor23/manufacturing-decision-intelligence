@@ -105,11 +105,11 @@ const TEST_PRINCIPLES = [
   "Müşteri etkisi tek başına 8D seçtirmemeli.",
   "Tekil makine arızası TPM’i kesinleştirmemeli.",
   "Kararlı ve yeterli proseste DMAIC gereksiz yere öne çıkmamalı.",
-  "Sayısal doğrulanmış darboğaz TOC’yi desteklemeli.",
   "Kuyruk ve açlık kanıtı yokken TOC otomatik seçilmemeli.",
-  "Standart iş eksikliği SDCA’yı PDCA’nın önüne taşıyabilmeli.",
+  "Standart iş fiilen uygulanmıyorsa ‘doküman var’ SDCA’yı bastırmamalı.",
   "Yeterli ayırt edici kanıt yoksa sistem kesin sonuç üretmemeli.",
-  "Çakışan sinyaller gizlenmemeli.",
+  "Kurallarca reddedilmiş bir yöntem ‘eş geçerli ikinci yaklaşım’ diye sunulmamalı.",
+  "Tek bir kanıt değiştiğinde karar da değişmeli — değişmiyorsa o kanıt okunmuyor demektir.",
 ];
 
 /* Uygulama tarafı — teşhisten sonra çalışma alanının tuttuğu yapılar. Aşağıdaki
@@ -357,10 +357,18 @@ export default function Home() {
           <span className="eyebrow">Regresyon testleri</span>
         </div>
         <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-[var(--muted)]">
-          Karar kuralları yalnızca doğru metodolojinin seçilip seçilmediğini değil, yanlış
-          metodolojilerin gereksiz yere tetiklenip tetiklenmediğini de kontrol eden vaka
-          testleriyle doğrulanıyor. Bir yöntemin ağırlığını yükseltmek, ikizinin negatif
-          vakasını bozmadan yapılmak zorunda.
+          Karar motoru yalnızca doğru metodolojiyi seçmesine göre değil,{" "}
+          <strong className="font-semibold text-[var(--ink)]">
+            benzer fakat yanlış yaklaşımları reddedebilmesine
+          </strong>{" "}
+          göre de regresyon testli. Her yöntem çifti için iki yönlü vaka tutulur: yöntemi hak
+          eden ve yüzeyde ona benzeyip hak etmeyen. Bir yöntemin ağırlığını yükseltmek,
+          ikizinin negatif vakasını bozmadan yapılmak zorunda.
+        </p>
+        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-[var(--muted-2)]">
+          Vakalar kasten gri bölgede seçilir; ayrıca tek bir kanıt değiştirilerek kararın
+          gerçekten o kanıta tepki verdiği sınanır. Bu ölçümler karar kurallarının beklenen
+          ayrımları koruyup korumadığını gösterir, gerçek dünya başarı olasılığını değil.
         </p>
         <ul className="mt-5 grid gap-px bg-[var(--rule)] sm:grid-cols-2">
           {TEST_PRINCIPLES.map((principle) => (

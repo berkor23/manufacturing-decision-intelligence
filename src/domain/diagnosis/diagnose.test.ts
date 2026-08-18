@@ -239,7 +239,19 @@ describe("question-engine — adaptif soru seçimi", () => {
     expect(keys).not.toContain("workplaceDisorganized");
     expect(keys).not.toContain("isNewDesign");
     expect(keys).not.toContain("humanErrorProne");
-    expect(keys).not.toContain("bottleneckThroughput");
+  });
+
+  it("ekipman arızası vakasında kısıt soruları ELENMEZ", () => {
+    // Bu test bir varsayımı düzeltir. Eskiden kısıt alanları bu ailede
+    // "alakasız" sayılıp eleniyordu; oysa kronik arızalı bir ekipmanın aynı
+    // zamanda sistem kısıtı olması sahada sık görülen çift-karakterli vakadır
+    // (bkz. validation/manufacturing-cases.ts, A vakası). Kısıt sorusu
+    // sorulamazsa motor güvenilirlik kaybı ile yapısal kısıtı HİÇBİR turda
+    // ayıramaz — madde 8'in örnek verdiği ayırt edici soru budur.
+    const keys = rankQuestions(problemWith({ equipmentBreakdown: true }))
+      .map((candidate) => candidate.featureKey);
+
+    expect(keys).toContain("bottleneckThroughput");
   });
 
   it("henüz hata oluşmamış risk vakasında olay-sonrası soruları ele", () => {

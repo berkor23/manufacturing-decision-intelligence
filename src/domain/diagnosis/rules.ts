@@ -36,8 +36,14 @@ export const RULES: Rule[] = [
   {
     id: "R1b",
     because: "Henüz hata yok ve koşul değişikliği planlanıyor; değişiklik kaynaklı riskler önceden öngörülmeli",
-    reads: ["defectOccurred", "processChanged", "operatorChanged", "supplierChanged"],
-    when: (p) => p.features.defectOccurred === false && anyChange(p) === true,
+    // Yeni tasarımda tetiklenmez: sıfırdan kurulan bir şey MEVCUT koşulun
+    // değişmesi değildir. Aksi hâlde "değişiklik" sinyali tasarım vakasında
+    // ikinci kez sayılır ve risk analizi, tasarım çerçevesinin önüne geçer.
+    reads: ["defectOccurred", "processChanged", "operatorChanged", "supplierChanged", "isNewDesign"],
+    when: (p) =>
+      p.features.defectOccurred === false &&
+      p.features.isNewDesign !== true &&
+      anyChange(p) === true,
     effect: { FMEA: 3, SDCA: -1 },
   },
   {
@@ -603,6 +609,18 @@ export const RULES: Rule[] = [
     reads: ["isNewDesign", "defectOccurred"],
     when: (p) => p.features.isNewDesign === false && p.features.defectOccurred === false,
     effect: { FMEA: 2, DMADV: -4 },
+  },
+  {
+    id: "D9",
+    // SDCA ↔ DMAIC. Operatörden operatöre değişen sonuç ölçülebilir olsa bile
+    // istatistiksel bir varyasyon problemi DEĞİLDİR: kaynağı yöntem farkıdır.
+    // Standart yerleşmeden açılan bir iyileştirme projesi, olmayan bir tabanın
+    // üzerine kurulur ve ölçtüğü dağılım prosesin değil uygulamanın dağılımıdır.
+    because: "Yayılım standardı yerleşmemiş bir işten geliyor; bu proses varyasyonu değil yöntem farkı",
+    reads: ["standardWorkEstablished", "highVariation"],
+    when: (p) =>
+      p.features.standardWorkEstablished === false && p.features.highVariation === true,
+    effect: { DMAIC: -3, SDCA: 2, SPC: -1 },
   },
   {
     id: "D8",
