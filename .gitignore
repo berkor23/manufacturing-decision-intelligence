@@ -46,4 +46,8 @@ next-env.d.ts
 # kept out of the repo to keep it lean; source markdown docs are still tracked
 *.pdf
 *.docx
-storage/
+# Ek dosya baytları — YALNIZ kökteki depo. Başındaki "/" şart: kuralın
+# çapasız hâli her derinlikteki "storage" klasörünü eliyordu ve
+# src/infrastructure/storage/ altındaki üç kaynak dosyası repoya hiç
+# girmemişti (yerelde derleniyor, Vercel'de "module not found").
+/storage/
