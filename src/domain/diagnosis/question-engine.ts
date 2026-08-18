@@ -25,6 +25,7 @@ import {
   DEFAULT_TEMPERATURE,
 } from "./confidence-engine";
 import { evaluateRules } from "./rule-engine";
+import type { Methodology } from "./methodologies";
 
 export interface StopPolicy {
   /** Lider MUTLAK güven bu eşiği geçerse dur. */
@@ -69,6 +70,13 @@ export interface QuestionCandidate {
   changesLeader: boolean;
   /** Soru, mevcut liderin kendi kanıt profilini güçlendiren bir kuralda kullanılır. */
   supportsLeader: boolean;
+  /**
+   * Sorunun AYIRDIĞI yöntem çifti: "evet" denirse öne çıkan ile "hayır" denirse
+   * öne çıkan farklıysa doldurulur. Kullanıcıya sorunun neden sorulduğunu
+   * göstermek için kullanılır — soru rastgele değil, iki hipotezi ayırmak
+   * içindir. İki durumda da aynı yöntem lider kalıyorsa null.
+   */
+  separates: { ifYes: Methodology; ifNo: Methodology } | null;
 }
 
 export interface QuestionEngineOptions {
@@ -207,10 +215,17 @@ export function rankQuestions(
     const expectedAfter = 0.5 * hTrue + 0.5 * hFalse;
     const informationGain = hBefore - expectedAfter;
 
+    const leaderIfYes = trueRanking[0]?.methodology;
+    const leaderIfNo = falseRanking[0]?.methodology;
+
     candidates.push({
       featureKey: key,
       informationGain,
       priority: featurePriority(key, rules),
+      separates:
+        leaderIfYes && leaderIfNo && leaderIfYes !== leaderIfNo
+          ? { ifYes: leaderIfYes as Methodology, ifNo: leaderIfNo as Methodology }
+          : null,
       changesLeader: trueRanking[0]?.methodology !== currentLeader || falseRanking[0]?.methodology !== currentLeader,
       supportsLeader: rules.some((rule) => rule.reads.includes(key) && currentLeader != null && (rule.effect[currentLeader] ?? 0) > 0),
     });

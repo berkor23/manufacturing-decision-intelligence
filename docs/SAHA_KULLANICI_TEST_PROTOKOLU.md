@@ -1,4 +1,4 @@
-# MDI Saha Kullanıcı Testi ve Canlıya Çıkış Protokolü
+# MDE Saha Kullanıcı Testi ve Canlıya Çıkış Protokolü
 
 ## Amaç
 
@@ -12,7 +12,7 @@ En az üç farklı kişiyle ayrı oturum yapılır:
 2. Kalite mühendisi veya kalite sistemleri uzmanı.
 3. Operasyonel mükemmellik, bakım ya da proses geliştirme uzmanı.
 
-Katılımcıların daha önce MDI kullanmamış olması tercih edilir. Her katılımcıdan görev öncesi; rolü, sektör deneyimi ve bildiği problem çözme yöntemleri alınır. İsim yerine katılımcı kodu kullanılabilir.
+Katılımcıların daha önce MDE kullanmamış olması tercih edilir. Her katılımcıdan görev öncesi; rolü, sektör deneyimi ve bildiği problem çözme yöntemleri alınır. İsim yerine katılımcı kodu kullanılabilir.
 
 ## Test verisi ve gizlilik
 

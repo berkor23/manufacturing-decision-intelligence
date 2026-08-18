@@ -11,7 +11,7 @@ import { accountAuthEnabled } from "@/lib/account-auth";
 import { parserFallbackMetrics } from "@/infrastructure/parser/resilient-problem-parser";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title:"Admin Paneli · Manufacturing Diagnosis Engine" };
+export const metadata = { title:"Admin Paneli · MDE" };
 
 const closureLabel = { OPEN:"Açık", CLOSURE_CANDIDATE:"Kapanış adayı", MONITORING:"İzlemede", CLOSED:"Kapalı", REOPENED:"Yeniden açıldı" } as const;
 

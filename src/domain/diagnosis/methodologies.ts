@@ -236,3 +236,130 @@ export function zeroScores(): Record<Methodology, number> {
   for (const m of METHODOLOGIES) s[m] = 0;
   return s;
 }
+
+// Ayrım künyesi — bir yöntemi tanımak, onu KOMŞUSUNDAN ayırmakla aynı şey
+// değildir. Aşağıdaki kayıt her yöntem için dört soruyu yanıtlar: ne zaman
+// uygun, ne zaman DEĞİL, en çok hangisiyle karıştırılır ve ikisini ayıran
+// tek soru nedir. Landing sayfası ve metodoloji kataloğu bu kataloğu okur;
+// metinler statik ve gözden geçirilebilirdir — LLM üretimi değildir.
+export interface MethodologyDiscrimination {
+  /** Hangi problem karakterinde uygundur. */
+  fitsWhen: string;
+  /** Hangi durumda seçilmemelidir — yanlış kullanımın tipik hâli. */
+  avoidWhen: string;
+  /** Ön koşul: bu sağlanmadan yöntem çalışmaz. */
+  precondition: string;
+  /** En çok karıştırıldığı yöntem. */
+  confusedWith: Methodology;
+  /** İkisini ayıran tek soru. */
+  discriminator: string;
+}
+
+export const METHODOLOGY_DISCRIMINATION: Record<Methodology, MethodologyDiscrimination> = {
+  RCA: {
+    fitsWhen: "Hata oluşmuş, kök neden bilinmiyor ve tekrarı önlenmek isteniyor.",
+    avoidWhen: "Kök neden zaten kanıtlanmışsa; kalan iş analiz değil uygulamadır.",
+    precondition: "İncelenebilir bir olay ve erişilebilir saha kanıtı.",
+    confusedWith: "DMAIC",
+    discriminator:
+      "Sapma belirli bir tarihten sonra mı başladı, yoksa uzun süredir aynı biçimde mi dalgalanıyor?",
+  },
+  DMAIC: {
+    fitsWhen: "Kronik, ölçülebilir ve yüksek varyasyonlu performans problemi; nedenler bilinmiyor.",
+    avoidWhen: "Problem tek bir değişiklikten sonra ortaya çıkmışsa — bu özel neden, kronik varyasyon değil.",
+    precondition: "Yeterli veri ve güvenilir ölçüm sistemi.",
+    confusedWith: "SPC",
+    discriminator: "Amaç varyasyonun nedenini bulmak mı, yoksa kazanılmış seviyeyi korumak mı?",
+  },
+  SPC: {
+    fitsWhen: "Kararlılığı doğrulanmış süreci izleyip özel neden sapmalarını erken yakalamak.",
+    avoidWhen: "Proses kararlı değilken; kararsız bir sürece çizilen kontrol limitleri anlamsızdır.",
+    precondition: "Doğrulanmış proses kararlılığı ve güvenilir ölçüm.",
+    confusedWith: "DMAIC",
+    discriminator: "Proses bugün yeterli mi, yoksa performansı hâlâ hedefin dışında mı?",
+  },
+  EIGHT_D: {
+    fitsWhen: "Müşteriye ulaşmış uygunsuzluk; koruma, bilinmeyen neden ve tekrar riski bir arada.",
+    avoidWhen: "Kök neden biliniyor, koruma gerekmiyor ve olay tekil ise — disiplin yükü karşılıksız kalır.",
+    precondition: "Disiplinler arası ekip ve müşteriye karşı raporlama yükümlülüğü.",
+    confusedWith: "RCA",
+    discriminator: "Müşteriyi korumak için şu an geçici bir önlem gerekiyor mu?",
+  },
+  KEPNER_TREGOE: {
+    fitsWhen: "Uzun süre sorunsuz çalışan bir sistem belirli bir tarihten sonra bozuldu.",
+    avoidWhen: "Problem hep vardıysa; ‘ne değişti’ sorusunun cevabı yoktur.",
+    precondition: "Problemli ve problemsiz koşulların karşılaştırılabilmesi.",
+    confusedWith: "RCA",
+    discriminator: "Sapmanın başladığı tarihe denk gelen bir değişiklik gösterilebiliyor mu?",
+  },
+  FMEA: {
+    fitsWhen: "Hata henüz oluşmadı; değişen koşulda hangi hata modlarının çıkabileceği önceden değerlendirilecek.",
+    avoidWhen: "Hata çoktan oluşmuşsa; geçmişi açıklamak FMEA'nın işi değildir.",
+    precondition: "Tanımlı proses/tasarım adımları ve mevcut kontrollerin bilinmesi.",
+    confusedWith: "DMADV",
+    discriminator: "Mevcut bir prosesin riskini mi değerlendiriyoruz, yoksa sıfırdan yeni bir şey mi tasarlıyoruz?",
+  },
+  DMADV: {
+    fitsWhen: "Mevcut çözüm müşteri gereksinimini karşılayamıyor; yeni ürün/proses tasarlanacak.",
+    avoidWhen: "Mevcut proses düzeltilebiliyorsa; yeni tasarım projesi pahalı bir yanlış yönlendirmedir.",
+    precondition: "Tanımlanabilir CTQ'lar ve tasarım serbestliği.",
+    confusedWith: "FMEA",
+    discriminator: "Tasarım serbestliğimiz var mı, yoksa var olanı mı korumak zorundayız?",
+  },
+  TOC: {
+    fitsWhen: "Sistemin toplam çıktısını tek bir baskın kapasite kısıtı belirliyor.",
+    avoidWhen: "Kayıplar akış boyunca dağınıksa ve tek bir kısıt sayısal olarak gösterilemiyorsa.",
+    precondition: "Kapasite ile talebin aynı birimde karşılaştırılabilmesi.",
+    confusedWith: "LEAN_VSM",
+    discriminator: "Performansı tek bir sistem kısıtı mı sınırlıyor, yoksa kayıplar akışa mı dağılmış?",
+  },
+  LEAN_VSM: {
+    fitsWhen: "Temin süresinin büyük kısmı bekleme ve ara stok; israf akış boyunca dağınık.",
+    avoidWhen: "Baskın bir kısıt kanıtlanmışsa; kısıt öncesi iyileştirme yalnız stoğu büyütür.",
+    precondition: "Uçtan uca akışın ve gerçek süre verisinin izlenebilmesi.",
+    confusedWith: "TOC",
+    discriminator: "Kısıt olduğu düşünülen noktanın önünde düzenli kuyruk birikiyor mu?",
+  },
+  TPM: {
+    fitsWhen: "Tekrarlayan arıza, kronik duruş ve availability kaybı; bakım sistemi zayıf.",
+    avoidWhen: "Tekil bir arızada; o arızanın nedenini bulmak bir yönetim sistemi kurmaktan önce gelir.",
+    precondition: "Ekipman bazında duruş/kayıp kaydı.",
+    confusedWith: "RCA",
+    discriminator: "Aynı ekipmanda kayıp tekrar ediyor mu, yoksa bu tek seferlik bir olay mı?",
+  },
+  SDCA: {
+    fitsWhen: "Standart iş yok veya uygulanmıyor; aynı işi herkes farklı yapıyor.",
+    avoidWhen: "Standart zaten yerleşik ve uygulanıyorsa; sıra iyileştirmededir.",
+    precondition: "İşin gözlemlenebilmesi ve mevcut en iyi yöntemin belirlenebilmesi.",
+    confusedWith: "PDCA_A3",
+    discriminator: "İyileştirilecek kararlı bir taban var mı?",
+  },
+  PDCA_A3: {
+    fitsWhen: "Süreç standardize; belirli bir performans farkı deneysel olarak kapatılacak.",
+    avoidWhen: "Temel koşullar ve standart oturmamışsa; iyileştirmenin etkisi gürültüden ayrılamaz.",
+    precondition: "Ölçülebilir başlangıç durumu ve hedef.",
+    confusedWith: "SDCA",
+    discriminator: "Mevcut yöntem tanımlı ve tutarlı uygulanıyor mu?",
+  },
+  POKA_YOKE: {
+    fitsWhen: "Önlenecek hata modu net; yanlış işlem sistem tarafından durdurulmuyor.",
+    avoidWhen: "Kök neden hâlâ bilinmiyorsa; neyi engelleyeceğini bilmeden engel kurulmaz.",
+    precondition: "Doğrulanmış hata modu ve mekanizması.",
+    confusedWith: "FMEA",
+    discriminator: "Engellenecek hata zaten kanıtlandı mı, yoksa hâlâ olasılık mı?",
+  },
+  FIVE_S: {
+    fitsWhen: "Kayıpların kaynağı, malzeme ve araçların tanımlı bir yerinin olmaması.",
+    avoidWhen: "Problem teknik bir proses sapmasıysa; düzen onu çözmez.",
+    precondition: "Alanın ve akışın fiziksel olarak düzenlenebilmesi.",
+    confusedWith: "SDCA",
+    discriminator: "Eksik olan fiziksel düzen mi, yöntem standardı mı?",
+  },
+  KT_DECISION: {
+    fitsWhen: "Tanımlı alternatifler arasından kriterlere göre seçim yapılacak.",
+    avoidWhen: "Seçimden önce çözülmesi gereken, nedeni bilinmeyen bir problem varsa.",
+    precondition: "En az iki uygulanabilir alternatif ve tanımlanabilir zorunlu/tercih kriterleri.",
+    confusedWith: "RCA",
+    discriminator: "Bir nedeni mi arıyoruz, yoksa seçenekler arasında mı karar veriyoruz?",
+  },
+};

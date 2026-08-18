@@ -3,7 +3,7 @@ import { AccountAccessForm } from "@/components/account-access-form";
 import { accountAuthEnabled } from "@/lib/account-auth";
 import { AccountSystemClosed } from "@/components/account-system-closed";
 
-export const metadata = { title: "Hesap oluştur · MDI" };
+export const metadata = { title: "Hesap oluştur · MDE" };
 
 export default function RegisterPage() {
   // Hesap sistemi kapalıyken form gösterilmez: doldurulup gönderildiğinde

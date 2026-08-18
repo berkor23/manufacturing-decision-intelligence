@@ -40,7 +40,13 @@ export interface DiagnosisView {
   ranking: MethodologyConfidence[];
   entropy: number;
   questionsAsked: number;
-  nextQuestion?: { featureKey: DiagnosticFeatureKey; text: string; context: string | null };
+  nextQuestion?: {
+    featureKey: DiagnosticFeatureKey;
+    text: string;
+    context: string | null;
+    /** Bu sorunun ayırdığı yöntem çifti — "neden bu soru?" için. */
+    separates: { ifYes: Methodology; ifNo: Methodology } | null;
+  };
   result?: { methodology: Methodology; confidence: number; trace: DecisionTrace };
   messages: ConversationMessage[];
   informationTasks: InformationTask[];
@@ -50,6 +56,8 @@ export interface DiagnosisView {
   methodPlan: ReturnType<typeof diagnose>["methodPlan"];
   rivalAnalysis: ReturnType<typeof diagnose>["rivalAnalysis"];
   stabilization: ReturnType<typeof diagnose>["stabilization"];
+  contrastive: ReturnType<typeof diagnose>["contrastive"];
+  contested: ReturnType<typeof diagnose>["contested"];
 }
 
 export class DiagnosisService {
@@ -266,6 +274,10 @@ export class DiagnosisService {
               featureKey: conv.pendingFeature,
               text: FEATURE_META[conv.pendingFeature].questionTheme,
               context: conv.structuredProblem.processName,
+              separates:
+                snap.nextQuestion?.featureKey === conv.pendingFeature
+                  ? snap.nextQuestion.separates
+                  : null,
             }
           : undefined,
       result: conv.result
@@ -283,6 +295,8 @@ export class DiagnosisService {
       methodPlan: snap.methodPlan,
       rivalAnalysis: snap.rivalAnalysis,
       stabilization: snap.stabilization,
+      contrastive: snap.contrastive,
+      contested: snap.contested,
     };
   }
 
@@ -320,7 +334,7 @@ function message(
 }
 
 function summarize(trace: DecisionTrace): string {
-  const chain = trace.steps.map((s) => s.because).join(" → ");
+  const chain = trace.steps.map((s) => s.because).join("; ");
   const pct = Math.round(trace.conclusion.confidence * 100);
-  return `${chain}${chain ? " → " : ""}Önerilen metodoloji: ${trace.conclusion.methodology} (göreli kural desteği ${pct}/100; kalibre başarı olasılığı değildir)`;
+  return `${chain}${chain ? ". " : ""}Önerilen metodoloji: ${trace.conclusion.methodology} (göreli kural desteği ${pct}/100; kalibre başarı olasılığı değildir)`;
 }

@@ -119,7 +119,7 @@ export class AccountService {
       await this.email
         .send({
           to: email,
-          subject: "MDI kayıt denemesi",
+          subject: "MDE kayıt denemesi",
           title: "Bu adres zaten kayıtlı",
           message:
             "Bu e-posta adresiyle yeni bir hesap açılmaya çalışıldı. Hesap zaten mevcut; parolanızı hatırlamıyorsanız yenileyebilirsiniz.",
@@ -145,7 +145,7 @@ export class AccountService {
     const token = await this.issueToken({ userId: user.id, kind: "EMAIL_VERIFY" });
     const delivery = await this.email.send({
       to: user.email,
-      subject: "MDI hesabınızı doğrulayın",
+      subject: "MDE hesabınızı doğrulayın",
       title: "Hesabınız hazır",
       message: "E-posta adresinizi doğruladıktan sonra çalışma alanınıza giriş yapabilirsiniz.",
       actionLabel: "E-posta adresimi doğrula",
@@ -170,7 +170,7 @@ export class AccountService {
     const token = await this.issueToken({ userId: user.id, kind: "EMAIL_VERIFY" });
     const delivery = await this.email.send({
       to: user.email,
-      subject: "MDI e-posta doğrulama bağlantınız",
+      subject: "MDE e-posta doğrulama bağlantınız",
       title: "E-posta adresinizi doğrulayın",
       message: "Yeni doğrulama bağlantınız 24 saat geçerlidir.",
       actionLabel: "E-postamı doğrula",
@@ -203,7 +203,7 @@ export class AccountService {
     const token = await this.issueToken({ userId: user.id, kind: "PASSWORD_RESET" });
     const delivery = await this.email.send({
       to: user.email,
-      subject: "MDI parola yenileme",
+      subject: "MDE parola yenileme",
       title: "Parolanızı yenileyin",
       message:
         "Bu isteği siz yapmadıysanız e-postayı yok sayabilirsiniz. Bağlantı bir saat geçerlidir.",
@@ -321,7 +321,7 @@ export class AccountService {
     });
     const delivery = await this.email.send({
       to: membership.user.email,
-      subject: `${organization.name} sizi MDI çalışma alanına davet etti`,
+      subject: `${organization.name} sizi MDE çalışma alanına davet etti`,
       title: `${organization.name} ekibine katılın`,
       message:
         "Parolanızı belirleyip daveti kabul ettiğinizde şirket çalışma alanına erişebilirsiniz.",

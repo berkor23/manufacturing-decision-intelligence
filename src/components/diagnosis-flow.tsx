@@ -9,16 +9,15 @@ import { METHODOLOGY_META, METHODOLOGY_ROLES, type Methodology } from "@/domain/
 import { closeAlternatives, nextMethodologies } from "@/domain/diagnosis/sequence";
 import { Markdown } from "@/components/markdown";
 import { LocalStorageNotice } from "@/components/local-storage-notice";
+import {
+  ContestedSignalsPanel,
+  ContrastiveTracePanel,
+  MissingEvidencePanel,
+  ProblemSummaryPanel,
+} from "@/components/diagnosis-result-panels";
 import { listGuestDiagnoses, saveGuestDiagnosis, saveGuestWorkspace, type GuestDiagnosisRecord } from "@/lib/guest-storage";
 import { createGuestWorkspace } from "@/lib/guest-workspace-factory";
-
-const EXAMPLES = [
-  "Müşteriden şikayet geldi, üründe çatlak var ve kök neden bilinmiyor.",
-  "Yeni hat kuruldu, henüz hata yok ama ciddi bir risk görüyoruz.",
-  "İki haftadır kaynak hattında çatlak oluşuyor, geçen ay süreç değişti.",
-  "Ölçüm verilerinde varyasyon sürekli yüksek.",
-  "Makine sürekli arıza yapıyor, üretim duruyor.",
-];
+import { SHOWCASE_CASES } from "@/domain/diagnosis/showcase-cases";
 
 const pct = (c: number) => Math.round(c * 100);
 const supportLabel=(value:number)=>value>=0.55?"Çok güçlü":value>=0.35?"Güçlü":value>=0.2?"Orta":value>=0.1?"Sınırlı":"Zayıf";
@@ -656,7 +655,7 @@ function InformationTasks({ view, loading, onView }: { view: DiagnosisView; load
           <strong className="text-[13px]">Yeni kanıt metodoloji önerisini değiştirdi</strong>
           {view.recommendationChanges.map((c, i) => (
             <p key={i} className="mt-1 font-mono text-[12px]">
-              {c.from} → {c.to}
+              {c.from} yerine {c.to}
             </p>
           ))}
         </div>
@@ -692,17 +691,39 @@ function Intake({
         placeholder="Örn: Müşteriden şikayet geldi, üründe çatlak var ve kök neden bilinmiyor."
         className="field mt-3 resize-y"
       />
+      {/* Vaka kütüphanesi: boş bir metin kutusuyla karşılaşan ziyaretçi ne
+          yazacağını düşünmek zorunda kalmasın. Vakalar landing sayfasındaki
+          vitrinle AYNI kaynaktan gelir; her biri farklı bir problem karakteri
+          ve farklı bir yöntem ayrımı gösterir. Yalnız metni doldururlar —
+          teşhis yine baştan çalışır. */}
       <div className="mt-5">
-        <p className="eyebrow">Örnek ifadeler</p>
-        <ul className="mt-2 border-t border-[var(--rule)]">
-          {EXAMPLES.map((ex, index) => (
-            <li key={ex} className="border-b border-[var(--rule)]">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[var(--rule-strong)] pb-2">
+          <p className="eyebrow">Örnek vakayı yükle</p>
+          <span className="font-mono text-[11px] text-[var(--muted-2)]">
+            {pad2(SHOWCASE_CASES.length)} vaka
+          </span>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-[var(--muted-2)]">
+          Yalnızca metni doldurur; teşhis yine sizin yanıtlarınızla yürür.
+        </p>
+        <ul className="mt-2">
+          {SHOWCASE_CASES.map((showcase, index) => (
+            <li key={showcase.id} className="border-b border-[var(--rule)]">
               <button
-                onClick={() => setText(ex)}
-                className="flex w-full items-baseline gap-3 py-2 text-left text-[12px] leading-relaxed text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+                onClick={() => setText(showcase.problemText)}
+                className="flex w-full items-baseline gap-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-sunk)]"
               >
-                <span className="shrink-0 font-mono text-[11px] text-[var(--muted-2)]">{pad2(index + 1)}</span>
-                <span>{ex}</span>
+                <span className="shrink-0 font-mono text-[11px] text-[var(--muted-2)]">
+                  {pad2(index + 1)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-medium text-[var(--ink)]">
+                    {showcase.title}
+                  </span>
+                  <span className="mt-0.5 block truncate text-[12px] leading-relaxed text-[var(--muted)]">
+                    {showcase.problemText}
+                  </span>
+                </span>
               </button>
             </li>
           ))}
@@ -844,6 +865,19 @@ function AskingView({
               {help[view.nextQuestion.featureKey] ??
                 "Sahada doğrulanmış bilgiye göre yanıtlayın; emin değilseniz tahmin yürütmeyin."}
             </p>
+
+            {/* Soru rastgele değil: hangi iki hipotezi ayırdığı deterministik
+                olarak hesaplanır ve burada açıkça söylenir. Kullanıcı neyi
+                yanıtladığını değil, NEDEN yanıtladığını da görür. */}
+            {view.nextQuestion.separates && (
+              <p className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 border-l-2 border-[var(--rule-strong)] pl-3 text-[11px] leading-relaxed text-[var(--muted-2)]">
+                <span className="eyebrow">Bu soru şunu ayırıyor</span>
+                <span className="text-[var(--ink-soft)]">
+                  Evet ise {label(view.nextQuestion.separates.ifYes)}, hayır ise{" "}
+                  {label(view.nextQuestion.separates.ifNo)} öne çıkar.
+                </span>
+              </p>
+            )}
 
             <div className="mt-5 grid gap-2 sm:grid-cols-3">
               <button onClick={() => onAnswer("evet")} disabled={loading} className="btn btn-answer">
@@ -1003,6 +1037,13 @@ function ResultView({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Sonuç ekranı, her vakada AYNI mantıksal sırayı izler: problem özeti →
+          problem karakteri → birincil yöntem ve destek düzeyi → destekleyen
+          kanıtlar → çelişen/çakışan sinyaller → yakın alternatifler ve neden
+          onlar değil → eksik bilgi → sonraki adım. Kullanıcı ilk bakışta ana
+          sonucu görür, detaya sonra iner. */}
+      <ProblemSummaryPanel view={view} />
+
       {/* Sonuç künyesi. Gradyanlı "hero" yerine enstrüman okuması: yöntem kodu
           mono ve büyük, kanıt düzeyi sağda ayrı bir gösterge, gerekçeler
           numaralı hücrelerde. Renk yalnız kanıt düzeyinde ve uyarılarda. */}
@@ -1113,6 +1154,18 @@ function ResultView({
         </div>
       )}
 
+      <ContestedSignalsPanel view={view} />
+
+      <ContrastiveTracePanel view={view} />
+
+      {/* "Neden bu yöntem?" kadar "neden diğerleri değil?" de birincil bilgidir;
+          bu yüzden katlanmış bir panelde saklanmaz. */}
+      <section className="card p-5 sm:p-6">
+        <RivalAnalysisPanel view={view} />
+      </section>
+
+      <MissingEvidencePanel view={view} />
+
       {/* Karar zinciri: nokta-zaman çizelgesi yerine defter. Her satırın katkısı
           (+delta) sağda mono ve hizalı — toplamın nasıl oluştuğu okunabilir. */}
       <details className="card p-5">
@@ -1136,9 +1189,8 @@ function ResultView({
       </details>
 
       <details className="card p-5">
-        <summary className="text-[13px] font-semibold">Diğer yaklaşımlar ve kararın değişme koşulları</summary>
-        <div className="mt-4 flex flex-col gap-5">
-          <RivalAnalysisPanel view={view} />
+        <summary className="text-[13px] font-semibold">Tamamlayıcı yaklaşımlar ve sonraki adımlar</summary>
+        <div className="mt-4">
           <SequencePanel methodology={result.methodology} ranking={view.ranking} />
         </div>
       </details>
@@ -1174,7 +1226,7 @@ function ResultView({
                     <span className="text-[var(--muted-2)]">Eğer</span> {c.explanation}
                   </span>
                   <span className="shrink-0 font-mono text-[11px] tabular-nums text-[var(--muted)]">
-                    {label(c.from)} → {label(c.to)} · %{pct(c.confidence)}
+                    {label(c.from)} yerine {label(c.to)} · %{pct(c.confidence)}
                   </span>
                 </li>
               ))}
@@ -1194,7 +1246,7 @@ function ResultView({
           <RankingBars
             ranking={view.ranking}
             limit={6}
-            caption="Bu değerler başarı olasılığı değil, kurallarla göreli uyum göstergesidir."
+            caption="Bu değer, metodolojinin başarılı olma olasılığını göstermez. Mevcut cevapların karar kurallarında ilgili metodolojiyi ne ölçüde desteklediğini gösteren göreli bir skordur."
           />
         </div>
       </details>
@@ -1387,7 +1439,7 @@ function RankingBars({
     // Lider dolu mürekkep, diğerleri aynı mürekkebin soluk hâli — sıralama
     // renk kodlamasıyla değil yoğunlukla okunur.
     <div>
-      <p className="eyebrow">Güven sıralaması</p>
+      <p className="eyebrow">Karar desteği skoru</p>
       <ol className="mt-2.5 border-t border-[var(--rule)]">
         {shown.map((r, i) => (
           <li

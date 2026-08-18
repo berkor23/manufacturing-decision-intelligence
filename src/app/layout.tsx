@@ -25,9 +25,35 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const SITE_NAME = "Manufacturing Decision Engine";
+const SITE_DESCRIPTION =
+  "Üretim problemlerini yapılandıran, ayırt edici sorularla problem karakterini belirleyen ve RCA, DMAIC, 8D, TPM, TOC, VSM, SPC ile diğer metodolojiler arasında açık karar kurallarıyla gerekçeli seçim yapan karar destek sistemi.";
+
 export const metadata: Metadata = {
-  title: "MDI · Üretim Problemi Teşhisi ve Uygulama Yönetimi",
-  description: "Üretim ve kalite problemlerini sınıflandırın, uygun metodolojiyi gerekçesiyle seçin ve çalışmayı kanıtla kapanana kadar yönetin.",
+  metadataBase: new URL("https://www.manufacturingdecisionengine.com"),
+  title: {
+    default: `${SITE_NAME} | Üretim Problemleri için Açıklanabilir Karar Desteği`,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "üretim problem çözme", "kök neden analizi", "RCA", "DMAIC", "8D", "FMEA",
+    "TPM", "TOC", "VSM", "SPC", "SDCA", "yalın üretim", "sürekli iyileştirme",
+    "karar destek sistemi", "manufacturing decision support",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "tr_TR",
+    title: `${SITE_NAME} | Üretim Problemleri için Açıklanabilir Karar Desteği`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} | Açıklanabilir Üretim Karar Desteği`,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -54,9 +80,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <footer className="no-print mt-auto border-t border-[var(--rule)]">
           <div className="mx-auto flex max-w-[78rem] flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-7">
             <p className="text-[11px] text-[var(--muted-2)]">
-              <span className="font-semibold tracking-[0.08em] text-[var(--muted)]">MDI</span>
+              <span className="font-semibold tracking-[0.08em] text-[var(--muted)]">MDE</span>
               <span className="mx-2">/</span>
-              Üretim problemi teşhisi ve uygulama yönetimi
+              Manufacturing Decision Engine — açıklanabilir üretim karar desteği
             </p>
             <Link
               href="/gizlilik"

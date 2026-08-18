@@ -6,7 +6,7 @@
 > tek kiracılı, çalışan bir uygulama.
 >
 > **Mimari sözleşme: `ARCHITECTURE.md`.** Bu proje bir AI chatbot değil,
-> **Decision-Engine merkezli bir Manufacturing Diagnosis Engine**'dir. Karar saf/
+> **Decision-Engine merkezli bir Manufacturing Decision Engine**'dir. Karar saf/
 > deterministik karar motorunda verilir; LLM yalnızca anlama, soru sorma ve rapor yazar.
 
 ## Karar Özeti

@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { stepIsComplete } from "@/domain/playbook";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Şirket paneli · MDI" };
+export const metadata = { title: "Şirket paneli · MDE" };
 
 export default async function CompanyPage() {
   const account = await currentAccount();

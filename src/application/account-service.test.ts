@@ -67,7 +67,7 @@ describe("kayıt", () => {
     expect(result.redirectTo).toContain("dogrulama-bekliyor");
     // E-posta normalleştirilerek saklanır.
     expect(await repo.findUserByEmail("ali@ornek.com")).not.toBeNull();
-    expect(email.sent.at(-1)?.subject).toBe("MDI hesabınızı doğrulayın");
+    expect(email.sent.at(-1)?.subject).toBe("MDE hesabınızı doğrulayın");
   });
 
   it("şirket hesabında organizasyon ve OWNER üyeliği birlikte oluşur", async () => {

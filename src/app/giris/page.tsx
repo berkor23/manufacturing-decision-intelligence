@@ -4,7 +4,7 @@ import { accountAuthEnabled } from "@/lib/account-auth";
 import { authEnabled } from "@/lib/auth";
 import { LoginForm } from "@/components/login-form";
 
-export const metadata = { title: "Giriş · MDI" };
+export const metadata = { title: "Giriş · MDE" };
 
 export default function LoginPage() {
   // Üçüncü durum: ne hesap sistemi ne de APP_PASSWORD var (açık demo).

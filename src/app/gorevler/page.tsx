@@ -6,7 +6,7 @@ import { ReadoutBand, type ReadoutItem } from "@/components/readout";
 import type { UnifiedTask, UnifiedTaskKind } from "@/domain/production-readiness";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Görev Merkezi · MDI" };
+export const metadata = { title: "Görev Merkezi · MDE" };
 
 /** Hesap modunda görev merkezi yalnız erişilebilen çalışmaları toplar. */
 async function tenantScope() {

@@ -1,4 +1,4 @@
-# Manufacturing Diagnosis Engine — Kapsamlı Proje Dokümantasyonu
+# Manufacturing Decision Engine — Kapsamlı Proje Dokümantasyonu
 
 > Bu doküman projeyi sıfırdan anlamak isteyen biri için yazıldı. "Ne yapılıyor,
 > nasıl yapılıyor, ne kullanılıyor, neden bu şekilde, sonuç ne, arkasındaki
@@ -38,7 +38,7 @@
 
 ## 1. Tek bakışta proje
 
-**Manufacturing Diagnosis Engine**, üretim/kalite ekiplerinin bir problemi doğal
+**Manufacturing Decision Engine**, üretim/kalite ekiplerinin bir problemi doğal
 dille anlattığında; problemi **yapılandıran**, belirsizliği **ölçen**, en çok
 bilgi kazandıran **soruları sorarak** belirsizliği azaltan ve sonunda **hangi
 problem çözme metodolojisinin** kullanılması gerektiğini **gerekçesi ve güven

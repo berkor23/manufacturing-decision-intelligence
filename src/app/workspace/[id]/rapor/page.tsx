@@ -90,7 +90,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           )}
 
           <footer className="mt-8 border-t border-[var(--rule)] pt-4 text-[10px] text-[var(--muted-2)]">
-            Manufacturing Diagnosis Engine · Bu rapor, çalışma alanına girilen verilerden üretilmiştir.
+            Manufacturing Decision Engine · Bu rapor, çalışma alanına girilen verilerden üretilmiştir.
           </footer>
         </article>
       ) : (

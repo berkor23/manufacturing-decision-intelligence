@@ -8,7 +8,7 @@ import { LocalWorkspaceMigration } from "@/components/local-workspace-migration"
 import { stepIsComplete } from "@/domain/playbook";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Hesabım · MDI" };
+export const metadata = { title: "Hesabım · MDE" };
 
 export default async function AccountPage() {
   const account = await currentAccount();

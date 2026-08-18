@@ -1,4 +1,4 @@
-export const metadata = { title:"Yönetici Girişi · MDI" };
+export const metadata = { title:"Yönetici Girişi · MDE" };
 
 export default async function AdminLoginPage({searchParams}:{searchParams:Promise<{error?:string}>}) {
   const {error}=await searchParams;

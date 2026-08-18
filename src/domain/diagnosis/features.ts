@@ -404,3 +404,26 @@ export function withFeature(
 ): StructuredProblem {
   return { ...p, features: { ...p.features, [key]: value } };
 }
+
+/**
+ * Problem karakteri — kullanıcının yanıtlarının yapılandırılmış özeti.
+ *
+ * Sonuç ekranı "problemin adı"nı değil karakterini gösterir: kronik mi, ölçülebilir
+ * mi, kök nedeni biliniyor mu… Her satır FEATURE_META'daki sabit metindir; burada
+ * hiçbir cümle üretilmez. `exclude` ile parserdan gelip teyit edilmemiş alanlar
+ * dışarıda bırakılabilir.
+ */
+export function problemCharacter(
+  p: StructuredProblem,
+  exclude: DiagnosticFeatureKey[] = [],
+): { featureKey: DiagnosticFeatureKey; value: boolean; text: string }[] {
+  const skip = new Set(exclude);
+  return FEATURE_KEYS.filter((key) => p.features[key] !== null && !skip.has(key)).map((key) => {
+    const value = p.features[key] === true;
+    return {
+      featureKey: key,
+      value,
+      text: value ? FEATURE_META[key].traceWhenTrue : FEATURE_META[key].traceWhenFalse,
+    };
+  });
+}

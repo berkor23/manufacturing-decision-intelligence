@@ -1,4 +1,4 @@
-# MDI Operasyon Runbook
+# MDE Operasyon Runbook
 
 ## Sağlık ve gözlemlenebilirlik
 

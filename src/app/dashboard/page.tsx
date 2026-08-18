@@ -5,7 +5,7 @@ import { METHODOLOGY_META } from "@/domain/diagnosis";
 import { accountAuthEnabled, allowedWorkspaceIds, currentAccount } from "@/lib/account-auth";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Karar Panosu · Manufacturing Diagnosis Engine" };
+export const metadata = { title: "Karar Panosu · MDE" };
 
 /** Pano metrikleri yalnız hesabın erişebildiği çalışmalardan hesaplanır. */
 async function tenantScope() {

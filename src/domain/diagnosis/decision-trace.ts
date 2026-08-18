@@ -59,3 +59,74 @@ export function buildDecisionTrace(
     conclusion: { methodology: winner.methodology, confidence: winner.confidence },
   };
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Karşıtlıklı karar izi (contrastive trace)
+   ─────────────────────────────────────────────────────────────────────────────
+   Yukarıdaki buildDecisionTrace yalnız KAZANANIN lehindeki nedenleri toplar.
+   Bu, kararın neden verildiğini anlatır ama neden ÖTEKİ olmadığını anlatmaz.
+   Aşağıdaki yapı her aday için iki listeyi birlikte tutar: onu destekleyen (+)
+   ve ona itiraz eden (−) kural tetiklemeleri. Böylece kullanıcı iki sütunu yan
+   yana okuyup kararı kendi kafasında yeniden kurabilir.
+
+   Not: burada da hiçbir metin üretilmez; her satır ya kuralın kendi gerekçesi
+   ya da FEATURE_META'daki alan gerçeğidir. */
+
+export interface ContrastiveSignal {
+  because: string;
+  delta: number;
+  featureKey: DiagnosticFeatureKey | null;
+}
+
+export interface ContrastiveEntry {
+  methodology: Methodology;
+  score: number;
+  /** Bu yöntemi ileri iten kural tetiklemeleri (katkıya göre azalan). */
+  supporting: ContrastiveSignal[];
+  /** Bu yönteme itiraz eden kural tetiklemeleri (itiraz gücüne göre azalan). */
+  opposing: ContrastiveSignal[];
+}
+
+function signalsFor(
+  methodology: Methodology,
+  p: StructuredProblem,
+  evaluation: RuleEvaluation,
+  sign: 1 | -1,
+): ContrastiveSignal[] {
+  const out: ContrastiveSignal[] = [];
+  for (const firing of evaluation.firings) {
+    const delta = firing.effect[methodology];
+    if (delta === undefined || delta === 0) continue;
+    if (sign > 0 ? delta < 0 : delta > 0) continue;
+
+    const tf = firing.rule.traceFeature;
+    let because = firing.because;
+    let featureKey: DiagnosticFeatureKey | null = null;
+    if (tf) {
+      const value = p.features[tf];
+      featureKey = tf;
+      const meta = FEATURE_META[tf];
+      because = value === true ? meta.traceWhenTrue : value === false ? meta.traceWhenFalse : because;
+    }
+    out.push({ because, delta, featureKey });
+  }
+  return out.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
+
+/**
+ * Sıralamanın ilk `count` adayı için destek/itiraz çiftini üretir.
+ * Varsayılan 2: karar her zaman bir ikili karşılaştırmayla okunur.
+ */
+export function buildContrastiveTrace(
+  p: StructuredProblem,
+  evaluation: RuleEvaluation,
+  ranking: MethodologyConfidence[],
+  count = 2,
+): ContrastiveEntry[] {
+  return ranking.slice(0, count).map((entry) => ({
+    methodology: entry.methodology,
+    score: entry.score,
+    supporting: signalsFor(entry.methodology, p, evaluation, 1),
+    opposing: signalsFor(entry.methodology, p, evaluation, -1),
+  }));
+}

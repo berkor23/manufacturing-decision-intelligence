@@ -27,7 +27,7 @@ export interface Rule {
 export const RULES: Rule[] = [
   {
     id: "R1",
-    because: "Henüz hata yok, yalnızca risk → proaktif risk analizi",
+    because: "Henüz gerçekleşmiş bir hata yok, yalnızca risk var; bu proaktif risk analizi alanıdır",
     reads: ["defectOccurred"],
     traceFeature: "defectOccurred",
     when: (p) => p.features.defectOccurred === false,
@@ -35,21 +35,21 @@ export const RULES: Rule[] = [
   },
   {
     id: "R1b",
-    because: "Henüz hata yok ve koşul değişikliği planlanıyor → değişiklik kaynaklı riskleri FMEA ile öngör",
+    because: "Henüz hata yok ve koşul değişikliği planlanıyor; değişiklik kaynaklı riskler önceden öngörülmeli",
     reads: ["defectOccurred", "processChanged", "operatorChanged", "supplierChanged"],
     when: (p) => p.features.defectOccurred === false && anyChange(p) === true,
     effect: { FMEA: 3, SDCA: -1 },
   },
   {
     id: "R1c",
-    because: "Potansiyel etki tanımlı ve mevcut kontrollerin yeni koşuldaki yeterliliği belirsiz → FMEA ile önleme/yakalama kontrollerini sınama",
+    because: "Potansiyel etki tanımlı ve mevcut kontrollerin yeni koşuldaki yeterliliği belirsiz; önleme ve yakalama kontrolleri sınanmalı",
     reads: ["potentialEffectKnown", "controlAdequacyUncertain"],
     when: (p) => p.features.potentialEffectKnown === true && p.features.controlAdequacyUncertain === true,
     effect: { FMEA: 3 },
   },
   {
     id: "R2",
-    because: "Gerçek bir hata oluştu → reaktif analiz",
+    because: "Gerçek bir hata oluştu; reaktif analiz gerekir",
     reads: ["defectOccurred"],
     traceFeature: "defectOccurred",
     when: (p) => p.features.defectOccurred === true,
@@ -57,7 +57,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R3",
-    because: "Müşteri etkisi var → müşteri yönetimi önceliği",
+    because: "Müşteri etkisi var; müşteri yönetimi öncelik kazanır",
     reads: ["customerAffected"],
     traceFeature: "customerAffected",
     when: (p) => p.features.customerAffected === true,
@@ -65,7 +65,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R4",
-    because: "Müşteri etkilenmedi → 8D önceliği düşer",
+    because: "Müşteri etkilenmedi; 8D'nin önceliği düşer",
     reads: ["customerAffected"],
     traceFeature: "customerAffected",
     when: (p) => p.features.customerAffected === false,
@@ -73,7 +73,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R5",
-    because: "Kök neden bilinmiyor → kök neden analizi",
+    because: "Kök neden bilinmiyor; önce nedenin bulunması gerekir",
     reads: ["rootCauseKnown"],
     traceFeature: "rootCauseKnown",
     when: (p) => p.features.rootCauseKnown === false,
@@ -81,7 +81,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R6",
-    because: "Kök neden biliniyor → analiz değil, uygulama gerekir",
+    because: "Kök neden biliniyor; kalan iş analiz değil uygulamadır",
     reads: ["rootCauseKnown"],
     traceFeature: "rootCauseKnown",
     when: (p) => p.features.rootCauseKnown === true,
@@ -96,14 +96,14 @@ export const RULES: Rule[] = [
     // Yalnızca rootCauseKnown === false iken tetiklenir → tekil arketipler (bu alanı
     // null bırakan) etkilenmez; sadece "neden bilinmiyor" DENEN vakalarda devreye girer.
     id: "R6b",
-    because: "Kök neden bilinmiyor → önce teşhis; saf karşı-önlem yöntemleri henüz erken",
+    because: "Kök neden bilinmiyor; önce teşhis gerekir, saf karşı-önlem yöntemleri bu aşamada erkendir",
     reads: ["rootCauseKnown"],
     when: (p) => p.features.rootCauseKnown === false,
     effect: { POKA_YOKE: -3, SPC: -2, FIVE_S: -2 },
   },
   {
     id: "R7",
-    because: "Problem yeni başladı ve yakın zamanda bir değişiklik oldu → IS/IS-NOT (Kepner-Tregoe)",
+    because: "Problem yeni başladı ve yakın zamanda bir değişiklik oldu; sapma IS / IS-NOT ile sınırlandırılabilir",
     reads: ["startedRecently", "processChanged", "operatorChanged", "supplierChanged"],
     when: (p) => p.features.startedRecently === true && anyChange(p) === true,
     effect: { KEPNER_TREGOE: 3 },
@@ -118,7 +118,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R7c",
-    because: "Problemli ve problemsiz koşullar karşılaştırılabiliyor → ayırıcı sapma analizi uygulanabilir",
+    because: "Problemli ve problemsiz koşullar karşılaştırılabiliyor; ayırıcı sapma analizi uygulanabilir",
     reads: ["comparisonAvailable"],
     traceFeature: "comparisonAvailable",
     when: (p) => p.features.comparisonAvailable === true,
@@ -126,7 +126,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R8",
-    because: "Tekrar eden problem → daha derin kök neden analizi",
+    because: "Problem tekrar ediyor; yüzeysel düzeltme değil daha derin kök neden analizi gerekir",
     reads: ["previouslyOccurred"],
     traceFeature: "previouslyOccurred",
     when: (p) => p.features.previouslyOccurred === true,
@@ -134,7 +134,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R9",
-    because: "Ölçüm verisi var ve varyasyon yüksek → istatistiksel analiz (DMAIC)",
+    because: "Ölçüm verisi var ve varyasyon yüksek; ilişkiler sezgiyle değil istatistikle doğrulanabilir",
     reads: ["hasMeasurementData", "highVariation"],
     when: (p) =>
       p.features.hasMeasurementData === true && p.features.highVariation === true,
@@ -142,7 +142,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R9b",
-    because: "Ölçüm sistemi güvenilir → istatistiksel karar altyapısı uygun",
+    because: "Ölçüm sistemi güvenilir; istatistiksel karar altyapısı kurulabilir",
     reads: ["measurementReliable"],
     traceFeature: "measurementReliable",
     when: (p) => p.features.measurementReliable === true,
@@ -150,7 +150,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R9c",
-    because: "Ölçüm sistemi güvenilir değil → önce ölçüm sistemini doğrula",
+    because: "Ölçüm sistemi güvenilir değil; önce ölçüm sisteminin doğrulanması gerekir",
     reads: ["measurementReliable"],
     traceFeature: "measurementReliable",
     when: (p) => p.features.measurementReliable === false,
@@ -158,7 +158,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R10",
-    because: "Varyasyon yüksek/sürekli → istatistiksel yaklaşım",
+    because: "Varyasyon yüksek ve sürekli; istatistiksel yaklaşım gerekir",
     reads: ["highVariation"],
     traceFeature: "highVariation",
     when: (p) => p.features.highVariation === true,
@@ -166,7 +166,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "R11",
-    because: "Akut hata değil, sürekli iyileştirme → PDCA/A3",
+    because: "Ortada akut bir hata yok, sürekli iyileştirme çalışması var; döngüsel öğrenme çerçevesi uygundur",
     reads: ["isImprovementInitiative"],
     traceFeature: "isImprovementInitiative",
     when: (p) => p.features.isImprovementInitiative === true,
@@ -176,7 +176,7 @@ export const RULES: Rule[] = [
   // --- Genişletilmiş metodolojiler ---
   {
     id: "N1",
-    because: "İş yeri düzensiz/organizasyonsuz → 5S",
+    because: "Kayıpların kaynağı çalışma alanının düzensizliği; önce düzen ve standart kurulmalı",
     reads: ["workplaceDisorganized"],
     traceFeature: "workplaceDisorganized",
     when: (p) => p.features.workplaceDisorganized === true,
@@ -184,21 +184,21 @@ export const RULES: Rule[] = [
   },
   {
     id: "N1b",
-    because: "Çalışma alanı düzensiz ve standart iş yerleşik değil → 5S standardı görünür kılmalı",
+    because: "Çalışma alanı düzensiz ve standart iş yerleşik değil; standardın görünür kılınması gerekir",
     reads: ["workplaceDisorganized", "standardWorkEstablished"],
     when: (p) => p.features.workplaceDisorganized === true && p.features.standardWorkEstablished === false,
     effect: { FIVE_S: 2 },
   },
   {
     id: "N1c",
-    because: "Çalışma alanı düzensiz ve temel koşullar sağlanmıyor → 5S başlangıç koşulları eksik",
+    because: "Çalışma alanı düzensiz ve temel koşullar sağlanmıyor; başlangıç koşulları eksik",
     reads: ["workplaceDisorganized", "basicConditionsStable"],
     when: (p) => p.features.workplaceDisorganized === true && p.features.basicConditionsStable === false,
     effect: { FIVE_S: 2 },
   },
   {
     id: "N2",
-    because: "Ekipman arızası/duruşu → ekipman odaklı analiz",
+    because: "Ekipman arızası veya duruşu var; analiz ekipmana odaklanmalı",
     reads: ["equipmentBreakdown"],
     traceFeature: "equipmentBreakdown",
     when: (p) => p.features.equipmentBreakdown === true,
@@ -206,7 +206,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N2b",
-    because: "Tekrar eden ekipman arızası → TPM güçlenir",
+    because: "Ekipman arızası tekrar ediyor; tekil müdahale yerine bakım sistemi gerekir",
     reads: ["equipmentBreakdown", "previouslyOccurred"],
     when: (p) =>
       p.features.equipmentBreakdown === true && p.features.previouslyOccurred === true,
@@ -214,7 +214,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N2c",
-    because: "Kronik ekipman kaybı → TPM sistemi gerekir",
+    because: "Ekipman kaybı kronik; bakımın bir yönetim sistemine dönüşmesi gerekir",
     reads: ["chronicEquipmentLoss"],
     traceFeature: "chronicEquipmentLoss",
     when: (p) => p.features.chronicEquipmentLoss === true,
@@ -222,7 +222,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N3",
-    because: "Akış/israf/temin süresi sorunu → Yalın / VSM",
+    because: "Sorun akış, israf ve temin süresinde; uçtan uca değer akışı görünür kılınmalı",
     reads: ["flowOrWaste"],
     traceFeature: "flowOrWaste",
     when: (p) => p.features.flowOrWaste === true,
@@ -230,28 +230,28 @@ export const RULES: Rule[] = [
   },
   {
     id: "N3b",
-    because: "Akış kaybı ölçüm verisiyle görünür → VSM mevcut durum haritası veriye dayanabilir",
+    because: "Akış kaybı ölçüm verisiyle görünür; mevcut durum haritası veriye dayanabilir",
     reads: ["flowOrWaste", "hasMeasurementData"],
     when: (p) => p.features.flowOrWaste === true && p.features.hasMeasurementData === true,
     effect: { LEAN_VSM: 2 },
   },
   {
     id: "N3c",
-    because: "Akış kaybında tek sistem kısıtı doğrulanmadı → uçtan uca VSM, TOC'tan daha uygun",
+    because: "Akış kaybı var ama tek bir sistem kısıtı doğrulanmadı; uçtan uca haritalama kısıt yönetiminden daha uygun",
     reads: ["flowOrWaste", "bottleneckThroughput"],
     when: (p) => p.features.flowOrWaste === true && p.features.bottleneckThroughput === false,
     effect: { LEAN_VSM: 2, TOC: -1 },
   },
   {
     id: "N3d",
-    because: "Akış kaybını iyileştirme amacı açık → VSM gelecek durum tasarımına bağlanabilir",
+    because: "Akış kaybını iyileştirme amacı açık; gelecek durum tasarımına bağlanabilir",
     reads: ["flowOrWaste", "isImprovementInitiative"],
     when: (p) => p.features.flowOrWaste === true && p.features.isImprovementInitiative === true,
     effect: { LEAN_VSM: 1 },
   },
   {
     id: "N4",
-    because: "Mevcut hata değil, yeni ürün/süreç tasarımı → DMADV (DFSS)",
+    because: "Mevcut bir hata değil, yeni ürün veya süreç tasarımı söz konusu; iş düzeltme değil tasarımdır",
     reads: ["isNewDesign"],
     traceFeature: "isNewDesign",
     when: (p) => p.features.isNewDesign === true,
@@ -259,14 +259,14 @@ export const RULES: Rule[] = [
   },
   {
     id: "N4b",
-    because: "Yeni tasarımda mevcut hata yok → reaktif düzeltme yerine tasarım doğrulama gerekir",
+    because: "Yeni tasarımda gerçekleşmiş hata yok; reaktif düzeltme yerine tasarım doğrulaması gerekir",
     reads: ["isNewDesign", "defectOccurred"],
     when: (p) => p.features.isNewDesign === true && p.features.defectOccurred === false,
     effect: { DMADV: 2 },
   },
   {
     id: "N4c",
-    because: "Yeni tasarım için ölçülebilir gereksinim veya kritik risk tanımlı → DMADV doğrulama altyapısı uygulanabilir",
+    because: "Yeni tasarım için ölçülebilir gereksinim veya kritik risk tanımlı; tasarım doğrulama altyapısı kurulabilir",
     reads: ["isNewDesign", "hasMeasurementData", "safetyOrRegulatory", "failureModeKnown"],
     when: (p) => p.features.isNewDesign === true && (
       p.features.hasMeasurementData === true ||
@@ -277,7 +277,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N5",
-    because: "Stabil süreci sürekli izleme/kontrol ihtiyacı → SPC",
+    because: "İhtiyaç, kararlı süreci sürekli izleyip sapmaları erken yakalamak",
     reads: ["monitoringNeed"],
     traceFeature: "monitoringNeed",
     when: (p) => p.features.monitoringNeed === true,
@@ -285,14 +285,14 @@ export const RULES: Rule[] = [
   },
   {
     id: "N5b",
-    because: "Kararlı proses ve izleme ihtiyacı birlikte → SPC uygulanabilir",
+    because: "Proses kararlı ve izleme ihtiyacı var; kontrol kartı uygulanabilir",
     reads: ["processStable", "monitoringNeed"],
     when: (p) => p.features.processStable === true && p.features.monitoringNeed === true,
     effect: { SPC: 3 },
   },
   {
     id: "N5c",
-    because: "Proses kararlı değil → kontrol kartından önce özel nedenleri çöz",
+    because: "Proses kararlı değil; kontrol kartından önce özel nedenlerin çözülmesi gerekir",
     reads: ["processStable"],
     traceFeature: "processStable",
     when: (p) => p.features.processStable === false,
@@ -300,7 +300,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N6",
-    because: "İnsan hatasına açık; hata-önleme gerekli → Poka-Yoke",
+    because: "Yanlış işlem sistem tarafından durdurulmuyor; yapısal hata önleme gerekir",
     reads: ["humanErrorProne"],
     traceFeature: "humanErrorProne",
     when: (p) => p.features.humanErrorProne === true,
@@ -308,7 +308,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N6b",
-    because: "Hata modu açıkça tanımlı → hata önleme çözümü tasarlanabilir",
+    because: "Önlenecek hata modu açıkça tanımlı; hata önleme çözümü tasarlanabilir",
     reads: ["failureModeKnown"],
     traceFeature: "failureModeKnown",
     when: (p) => p.features.failureModeKnown === true,
@@ -316,14 +316,14 @@ export const RULES: Rule[] = [
   },
   {
     id: "N6c",
-    because: "Hata modu ve nedeni doğrulanmış → Poka-Yoke hedefi varsayıma değil bilinen mekanizmaya dayanıyor",
+    because: "Hata modu ve nedeni doğrulanmış; önlem varsayıma değil bilinen mekanizmaya dayanır",
     reads: ["humanErrorProne", "failureModeKnown", "rootCauseKnown"],
     when: (p) => p.features.humanErrorProne === true && p.features.failureModeKnown === true && p.features.rootCauseKnown === true,
     effect: { POKA_YOKE: 2 },
   },
   {
     id: "N7",
-    because: "Dar boğaz/kapasite/çıktı kısıtı → Kısıtlar Teorisi (TOC)",
+    because: "Sistemin çıktısını bir kapasite kısıtı sınırlıyor; önce kısıt yönetilmeli",
     reads: ["bottleneckThroughput"],
     traceFeature: "bottleneckThroughput",
     when: (p) => p.features.bottleneckThroughput === true,
@@ -331,7 +331,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N7b",
-    because: "Akış kaybının açıkça tanımlanmış sistem kısıtından kaynaklanması → önce TOC ile kısıtı yönet",
+    because: "Akış kaybı açıkça tanımlanmış bir sistem kısıtından kaynaklanıyor; önce kısıt yönetilmeli",
     reads: ["bottleneckThroughput", "flowOrWaste"],
     when: (p) => p.features.bottleneckThroughput === true && p.features.flowOrWaste === true,
     effect: { TOC: 3, LEAN_VSM: -1 },
@@ -346,7 +346,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N7d",
-    because: "Kısıt sonrasında istasyonlar aç kalıyor → sistem çıktısını tek nokta sınırlıyor",
+    because: "Kısıt sonrasında istasyonlar aç kalıyor; sistem çıktısını tek nokta sınırlıyor",
     reads: ["downstreamStarvation"],
     traceFeature: "downstreamStarvation",
     when: (p) => p.features.downstreamStarvation === true,
@@ -362,7 +362,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N7f",
-    because: "Kısıt iyileştirmesi toplam sistem çıktısını artıracak → TOC kaldıraç noktası doğrulandı",
+    because: "Kısıt iyileştirmesinin toplam sistem çıktısını artırması bekleniyor; kaldıraç noktası doğrulandı",
     reads: ["constraintLeverageExpected"],
     traceFeature: "constraintLeverageExpected",
     when: (p) => p.features.constraintLeverageExpected === true,
@@ -370,21 +370,21 @@ export const RULES: Rule[] = [
   },
   {
     id: "N8",
-    because: "Gerçekleşmemiş güvenlik/regülasyon riski → proaktif risk analizi",
+    because: "Güvenlik veya regülasyon riski var ama henüz gerçekleşmemiş; proaktif risk analizi gerekir",
     reads: ["safetyOrRegulatory", "defectOccurred"],
     when: (p) => p.features.safetyOrRegulatory === true && p.features.defectOccurred === false,
     effect: { FMEA: 3 },
   },
   {
     id: "N8b",
-    because: "Gerçekleşmiş güvenlik olayı → yapılandırılmış olay ve kök neden analizi",
+    because: "Güvenlik olayı gerçekleşmiş; yapılandırılmış olay ve kök neden analizi gerekir",
     reads: ["safetyOrRegulatory", "defectOccurred"],
     when: (p) => p.features.safetyOrRegulatory === true && p.features.defectOccurred === true,
     effect: { RCA: 2, EIGHT_D: 1 },
   },
   {
     id: "N8c",
-    because: "Müşteriye ulaşmış doğrulanmış uygunsuzluk → 8D",
+    because: "Doğrulanmış uygunsuzluk müşteriye ulaşmış; koruma ve kalıcı düzeltici faaliyet bir arada yürütülmeli",
     reads: ["externalNonconformance"],
     traceFeature: "externalNonconformance",
     when: (p) => p.features.externalNonconformance === true,
@@ -392,7 +392,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N8d",
-    because: "Acil containment ihtiyacı → 8D disiplinli koruma akışı",
+    because: "Acil containment ihtiyacı var; disiplinli bir koruma akışı gerekir",
     reads: ["containmentNeeded"],
     traceFeature: "containmentNeeded",
     when: (p) => p.features.containmentNeeded === true,
@@ -400,7 +400,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "N9",
-    because: "Aralıklı/sporadik ortaya çıkıyor → sapma analizi (KT/RCA)",
+    because: "Problem aralıklı ve sporadik ortaya çıkıyor; sapma analizi gerekir",
     reads: ["intermittent"],
     traceFeature: "intermittent",
     when: (p) => p.features.intermittent === true,
@@ -408,7 +408,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "S1",
-    because: "Proses kararlı değil → iyileştirmeden önce stabilizasyon gerekir",
+    because: "Proses kararlı değil; iyileştirmeden önce stabilizasyon gerekir",
     reads: ["processStable"],
     traceFeature: "processStable",
     when: (p) => p.features.processStable === false,
@@ -416,7 +416,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "S2",
-    because: "Standart iş yerleşik değil → önce mevcut en iyi yöntem sabitlenmeli",
+    because: "Standart iş yerleşik değil; önce mevcut en iyi yöntem sabitlenmeli",
     reads: ["standardWorkEstablished"],
     traceFeature: "standardWorkEstablished",
     when: (p) => p.features.standardWorkEstablished === false,
@@ -424,7 +424,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "S3",
-    because: "Temel çalışma koşulları sağlanmıyor → önce 4M baz hattı kurulmalı",
+    because: "Temel çalışma koşulları sağlanmıyor; önce 4M baz hattı kurulmalı",
     reads: ["basicConditionsStable"],
     traceFeature: "basicConditionsStable",
     when: (p) => p.features.basicConditionsStable === false,
@@ -435,7 +435,7 @@ export const RULES: Rule[] = [
     // seçimdir. Reaktif/teşhis yöntemleri (RCA/8D/DMAIC/FMEA) burada yanlış kapıdır;
     // doğru araç Kepner-Tregoe Karar Analizi'dir (ağırlıklı MUST/WANT).
     id: "KD1",
-    because: "Bu bir hata teşhisi değil, tanımlı alternatifler arasından seçim → Kepner-Tregoe Karar Analizi",
+    because: "Bu bir hata teşhisi değil, tanımlı alternatifler arasından yapılacak bir seçim; araç karar analizidir",
     reads: ["decisionBetweenOptions"],
     traceFeature: "decisionBetweenOptions",
     when: (p) => p.features.decisionBetweenOptions === true,
@@ -443,7 +443,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "KD1b",
-    because: "Tanımlı seçenekler arasında seçim yapılmıyor → karar analizi problem çözme yönteminin yerini alamaz",
+    because: "Tanımlı seçenekler arasında bir seçim yapılmıyor; karar analizi problem çözme yönteminin yerini alamaz",
     reads: ["decisionBetweenOptions"],
     traceFeature: "decisionBetweenOptions",
     when: (p) => p.features.decisionBetweenOptions === false,
@@ -483,7 +483,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "KD6",
-    because: "Seçimden önce çözülmesi gereken bilinmeyen nedenli problem var → karar puanlamasından önce teşhis gerekir",
+    because: "Seçimden önce çözülmesi gereken, nedeni bilinmeyen bir problem var; karar puanlamasından önce teşhis gerekir",
     reads: ["unresolvedCauseBeforeDecision"],
     traceFeature: "unresolvedCauseBeforeDecision",
     when: (p) => p.features.unresolvedCauseBeforeDecision === true,
@@ -491,7 +491,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "KD7",
-    because: "Kararı engelleyen ayrı bir bilinmeyen nedenli problem yok → alternatif seçimi doğrudan yürütülebilir",
+    because: "Kararı engelleyen ayrı bir bilinmeyen nedenli problem yok; alternatif seçimi doğrudan yürütülebilir",
     reads: ["unresolvedCauseBeforeDecision"],
     traceFeature: "unresolvedCauseBeforeDecision",
     when: (p) => p.features.unresolvedCauseBeforeDecision === false,
@@ -499,10 +499,121 @@ export const RULES: Rule[] = [
   },
   {
     id: "S4",
-    because: "Standart, temel koşullar ve proses kararlılığı doğrulandı → stabilizasyon kapısı geçildi",
+    because: "Standart, temel koşullar ve proses kararlılığı doğrulandı; stabilizasyon kapısı geçildi",
     reads: ["standardWorkEstablished", "basicConditionsStable", "processStable"],
     when: (p) => p.features.standardWorkEstablished === true && p.features.basicConditionsStable === true && p.features.processStable === true,
     effect: { SDCA: -3, PDCA_A3: 1, DMAIC: 1 },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // AYRIM KURALLARI (D*) — bu blok "doğru yöntemi seç"ten çok "yanlış yöntemin
+  // kolayca tetiklenmesini engelle" işini yapar. Yüzeyde benzer görünen iki
+  // yöntem arasındaki farkı tek bir sinyal değil, sinyal BİLEŞİMİ belirler.
+  // Her kural bir çift içindir ve karşılığı discrimination.test.ts'te sabittir.
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    // 8D ↔ RCA/PDCA. Müşteri etkisi TEK BAŞINA 8D demek değildir. 8D'nin varlık
+    // nedeni koruma + bilinmeyen nedeni disiplinle kapatma + tekrarı önlemedir.
+    // Kök neden zaten biliniyor, koruma gerekmiyor ve olay tekrar etmiyorsa
+    // geriye kalan iş sekiz disiplinli bir yönetim akışı değil, bilinen karşı
+    // önlemi uygulayıp etkinliğini doğrulamaktır.
+    id: "D1",
+    because: "Müşteriye ulaşmış hata var ama kök neden biliniyor, koruma gerekmiyor ve olay tekrar etmiyor; 8D'nin disiplin yükü karşılıksız kalır",
+    reads: ["externalNonconformance", "rootCauseKnown", "containmentNeeded", "previouslyOccurred"],
+    when: (p) =>
+      p.features.externalNonconformance === true &&
+      p.features.rootCauseKnown === true &&
+      p.features.containmentNeeded === false &&
+      p.features.previouslyOccurred === false,
+    effect: { EIGHT_D: -5, PDCA_A3: 2 },
+  },
+  {
+    id: "D1b",
+    because: "Müşteri etkisi var fakat ne koruma ihtiyacı ne de tekrar söz konusu; 8D tek sinyalle tetiklenmemeli",
+    reads: ["customerAffected", "containmentNeeded", "previouslyOccurred", "externalNonconformance"],
+    when: (p) =>
+      p.features.customerAffected === true &&
+      p.features.containmentNeeded === false &&
+      p.features.previouslyOccurred === false &&
+      p.features.externalNonconformance !== true,
+    effect: { EIGHT_D: -3 },
+  },
+  {
+    id: "D2",
+    // TPM ↔ RCA/KT. TPM bir bakım YÖNETİM SİSTEMİdir; tekil bir arıza onu
+    // gerektirmez. Tekil arızanın doğru cevabı o arızanın nedenini bulmaktır.
+    because: "Ekipman arızası tekil: ne tekrar ediyor ne de kronik kayıp var; bir bakım sistemi kurmak için erken",
+    reads: ["equipmentBreakdown", "chronicEquipmentLoss", "previouslyOccurred"],
+    when: (p) =>
+      p.features.equipmentBreakdown === true &&
+      p.features.chronicEquipmentLoss === false &&
+      p.features.previouslyOccurred === false,
+    effect: { TPM: -3, RCA: 1 },
+  },
+  {
+    id: "D3",
+    // TOC ↔ Lean/VSM. Kısıt kapasite-talep karşılaştırmasıyla SAYISAL olarak
+    // doğrulandıysa kayıp akış boyunca dağınık değildir; uçtan uca haritalama
+    // yerine kısıt yönetimi öncelenir.
+    because: "Kısıt sayısal olarak doğrulandı; kayıp akışa dağılmış değil, tek noktada toplanıyor",
+    reads: ["bottleneckThroughput", "constraintMeasured"],
+    when: (p) =>
+      p.features.bottleneckThroughput === true && p.features.constraintMeasured === true,
+    effect: { LEAN_VSM: -2 },
+  },
+  {
+    id: "D4",
+    because: "Akış kaybı var ama ne kısıt önünde kuyruk ne de sonrasında açlık görülüyor; baskın tek kısıt kanıtı yok",
+    reads: ["flowOrWaste", "constraintQueue", "downstreamStarvation"],
+    when: (p) =>
+      p.features.flowOrWaste === true &&
+      p.features.constraintQueue === false &&
+      p.features.downstreamStarvation === false,
+    effect: { TOC: -3, LEAN_VSM: 2 },
+  },
+  {
+    id: "D5",
+    // SPC ↔ DMAIC. Kararlı ve varyasyonu sorun olmayan bir süreçte yapılacak iş
+    // iyileştirme projesi açmak değil, kazanılmış performansı kontrol altında
+    // tutmaktır.
+    because: "Proses kararlı, varyasyon sorun değil ve ihtiyaç izleme; iyileştirme projesi değil kontrol gerekir",
+    reads: ["processStable", "monitoringNeed", "highVariation"],
+    when: (p) =>
+      p.features.processStable === true &&
+      p.features.monitoringNeed === true &&
+      p.features.highVariation === false,
+    effect: { DMAIC: -3, SPC: 2 },
+  },
+  {
+    id: "D6",
+    because: "Ölçülebilir yüksek varyasyon var ve nedeni bilinmiyor; kontrol kartı izler ama nedeni bulmaz",
+    reads: ["hasMeasurementData", "highVariation", "rootCauseKnown"],
+    when: (p) =>
+      p.features.hasMeasurementData === true &&
+      p.features.highVariation === true &&
+      p.features.rootCauseKnown === false,
+    effect: { DMAIC: 2, SPC: -2 },
+  },
+  {
+    id: "D7",
+    // FMEA ↔ DMADV. İkisi de "hata henüz yok" tarafındadır; ayrım tasarımın
+    // yeni olup olmadığıdır. Mevcut proses için DMADV, sıfırdan tasarım
+    // projesi açmak demektir — kanıt yokken pahalı bir yanlış yönlendirme.
+    because: "Mevcut proses riski değerlendiriliyor, yeni bir tasarım projesi yok; risk analizi yeterlidir",
+    reads: ["isNewDesign", "defectOccurred"],
+    when: (p) => p.features.isNewDesign === false && p.features.defectOccurred === false,
+    effect: { FMEA: 2, DMADV: -4 },
+  },
+  {
+    id: "D8",
+    // PDCA ↔ SDCA. İyileştirme niyeti varken standart yoksa iyileştirilecek bir
+    // taban yoktur: PDCA'nın "Plan" adımı ölçülemeyen bir başlangıca dayanır.
+    because: "İyileştirme isteniyor fakat standart iş yerleşik değil; iyileştirilecek kararlı bir taban yok",
+    reads: ["isImprovementInitiative", "standardWorkEstablished"],
+    when: (p) =>
+      p.features.isImprovementInitiative === true &&
+      p.features.standardWorkEstablished === false,
+    effect: { SDCA: 2, PDCA_A3: -1 },
   },
 ];
 

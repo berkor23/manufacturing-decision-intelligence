@@ -1,3 +1,3 @@
 import {WorkspaceImporter} from "@/components/workspace-importer";
-export const metadata={title:"Veri Aktarımı · Manufacturing Diagnosis Engine"};
+export const metadata={title:"Veri Aktarımı · MDE"};
 export default function ImportPage(){return <main className="page-shell max-w-3xl"><p className="eyebrow">Taşınabilirlik</p><h1 className="page-heading mt-1">Çalışmayı içe aktar</h1><p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">Yedeklenen veya başka bir kurulumdan alınan sürümlü JSON paketini doğrular ve mevcut kaydı ezmeden yeni çalışma oluşturur.</p><div className="alert alert-warn mt-5 text-[11px]"><strong>Güvenli aktarım:</strong> Yalnız sistemin JSON dışa aktarma çıktısını kullanın. CSV dosyaları denetim ve toplantı içindir; içe aktarılamaz.</div><WorkspaceImporter/></main>}

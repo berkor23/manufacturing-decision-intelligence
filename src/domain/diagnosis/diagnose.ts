@@ -15,7 +15,8 @@ import {
   StopPolicy,
   DEFAULT_STOP_POLICY,
 } from "./question-engine";
-import { buildDecisionTrace, DecisionTrace } from "./decision-trace";
+import { buildDecisionTrace, buildContrastiveTrace, DecisionTrace, ContrastiveEntry } from "./decision-trace";
+import { detectContestedSignals, ContestedSignal } from "./contested-signals";
 import { composeMethodologyPlan, MethodologyPlan } from "./methodology-composition";
 import { explainRivals, RivalExplanation } from "./rival-analysis";
 import { evaluateStabilizationGate, StabilizationGate } from "./stabilization";
@@ -210,6 +211,8 @@ export interface NextQuestion {
   /** LLM'in doğal soruya çevirmesi için tema; UI fallback olarak da kullanılabilir. */
   theme: string;
   informationGain: number;
+  /** Bu sorunun ayırdığı yöntem çifti — yoksa null. */
+  separates: { ifYes: Methodology; ifNo: Methodology } | null;
 }
 
 export interface DiagnosisSnapshot {
@@ -225,6 +228,10 @@ export interface DiagnosisSnapshot {
   /** Önerilmeyen yöntemler için "neden değil" gerekçeleri (deterministik). */
   rivalAnalysis: RivalExplanation[];
   stabilization: StabilizationGate;
+  /** Lider ve en yakın rakip için destek/itiraz sinyalleri yan yana. */
+  contrastive: ContrastiveEntry[];
+  /** İki bağımsız kanıt gövdesi birden varsa çakışma ve birleştirme sırası. */
+  contested: ContestedSignal | null;
 }
 
 export interface DiagnosisEvidence {
@@ -255,6 +262,8 @@ export function diagnose(
   const trace = buildDecisionTrace(p, evaluation, ranking);
   const methodPlan = composeMethodologyPlan(ranking);
   const rivalAnalysis = explainRivals(p, evaluation, ranking);
+  const contrastive = buildContrastiveTrace(p, evaluation, ranking);
+  const contested = detectContestedSignals(p, evaluation, ranking);
   const stabilization = evaluateStabilizationGate(p);
   const leader = ranking[0];
   const unconfirmed = new Set(config.unconfirmedFeatures ?? []);
@@ -321,6 +330,7 @@ export function diagnose(
           featureKey: candidate.featureKey,
           theme: FEATURE_META[candidate.featureKey].questionTheme,
           informationGain: candidate.informationGain,
+          separates: candidate.separates,
         };
 
   return {
@@ -333,5 +343,7 @@ export function diagnose(
     methodPlan,
     rivalAnalysis,
     stabilization,
+    contrastive,
+    contested,
   };
 }

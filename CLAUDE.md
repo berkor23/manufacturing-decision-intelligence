@@ -1,4 +1,4 @@
-# Manufacturing Decision Intelligence
+# Manufacturing Decision Engine (MDE)
 
 Üretim/kalite ekipleri için AI destekli karar destek aracı. İlke:
 **önce problemi teşhis et, doğru metodolojiyi öner (FMEA/KT/RCA/8D/PDCA/DMAIC),
@@ -22,6 +22,15 @@ Mimari sözleşme: `docs/ARCHITECTURE.md` · Plan ve fazlar: `docs/PLAN.md` · V
 
 ## Katmanlı yapı (bağımlılık içeri doğru)
 - `src/domain/diagnosis/` — SAF çekirdek: features, rules, rule-engine, confidence-engine, question-engine, decision-trace, diagnose (fasad). LLM/DB YOK. `index.ts` barrel.
+  - `contested-signals.ts` — iki bağımsız kanıt gövdesi aynı anda varsa (ör. kronik arızalı
+    darboğaz: TPM × TOC) çakışmayı ve birleştirme SIRASINI üretir. Skoru DEĞİŞTİRMEZ.
+  - `decision-trace.ts` → `buildContrastiveTrace` — lider ve en yakın rakip için destek (+)
+    ve itiraz (−) sinyalleri yan yana. "Neden bu" kadar "neden öteki değil" de kanıta dayanır.
+  - `showcase-cases.ts` — landing vitrini ve /diagnoz vaka kütüphanesinin TEK kaynağı.
+    Landing bu vakaları gerçek `diagnose()` ile çalıştırıp basar; `showcase-cases.test.ts`
+    her vakanın beklenen yöntemini sabitler — vitrin sessizce yanlış iddiaya dönüşemez.
+  - `methodologies.ts` → `METHODOLOGY_DISCRIMINATION` — her yöntem için ne zaman uygun,
+    ne zaman DEĞİL, en çok hangisiyle karıştırılır ve ikisini ayıran soru.
 - `src/domain/playbook/` — SAF playbook kataloğu: desteklenen her metodolojinin profesyonel uygulama şablonu (adımlar + yapılandırılmış alanlar). Workspace bu şablondan tohumlanır; AI taslağı ve rapor buna dayanır.
 - `src/domain/access/` — SAF erişim çekirdeği. `ownership.ts`: kim hangi kaydı okur/yazar (girdi yalnız `AccessIdentity` + `RecordOwner`). `account-policy.ts`: giriş kararı, jeton geçerliliği/TTL, koltuk limiti, davet ve üyelik kuralları. DB/oturum/e-posta YOK; `lib/account-auth.ts` ve route'lar yalnız uygular.
 - `src/application/` — orkestrasyon: `diagnosis-service.ts`, `account-service.ts`, `wiring.ts` (composition root), `ports/` (IAIProvider, IProblemParser, IConversationRepository, IAccountRepository, IPasswordHasher, IEmailSender, IAttachmentStorage)
@@ -68,7 +77,20 @@ Mimari sözleşme: `docs/ARCHITECTURE.md` · Plan ve fazlar: `docs/PLAN.md` · V
 
 ## Kurallar
 - Arayüz metinleri Türkçe. Karar mantığının tek kaynağı `src/domain/diagnosis/rules.ts`.
+- **Marka tek biçimdir: `MDE` — Manufacturing Decision Engine** (domain: manufacturingdecisionengine.com).
+  Header, başlık, metadata, e-posta konusu ve dokümanlar bunu kullanır. `MDI_MASTER` ve
+  `MDI_GUEST_WORKSPACE` KALICI VERİ DEĞERLERİdir; onları değiştirme, yalnız etiketlerini.
+- **Skor terminolojisi:** gösterilen yüzde "güven" ya da başarı olasılığı DEĞİL,
+  **karar desteği skoru**dur (kural desteğinin göreli ölçüsü). Arayüzde bu adla anılır.
+- `/en` İngilizce genel bakış sayfasıdır (konumlandırma, mimari, ayrım tablosu, TR↔EN sözlük).
+  Uygulamanın kendisi Türkçedir; tam i18n yapılmadı — `/en` bunu açıkça söyler.
 - Yeni kural/ağırlık değişikliğinde golden-case testleri (`diagnose.test.ts`) kalkandır.
+- **Ayrım kuralları (`D*`) çift yönlüdür.** `discrimination.test.ts` her benzer yöntem çifti
+  için iki vaka tutar: yöntemi hak eden VE hak etmeyen. Bir yöntemin ağırlığını yükseltmek,
+  ikizinin negatif vakasını bozmadan yapılmalıdır — "doğru seçildi mi" kadar "yanlış olan
+  gereksiz tetiklendi mi" de sabitlenir.
+- **Kural `because` metinleri arayüzde birinci sınıf içeriktir** (landing vitrini + sonuç
+  ekranı). Düz Türkçe cümle yaz; metne gömülü `→` oku kullanma.
 - Kiracılık kararının tek kaynağı `src/domain/access/ownership.ts`; erişim kuralını
   route veya sayfa içine kopyalama.
 - Playbook alan tipleri (`table`/`fivewhy`/`fishbone`) AYNI veri şeklini (TableRow[]) paylaşır;

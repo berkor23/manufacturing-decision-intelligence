@@ -9,7 +9,7 @@ import { accountAuthEnabled, allowedWorkspaceIds, currentAccount } from "@/lib/a
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Çalışmalar · Manufacturing Diagnosis Engine" };
+export const metadata = { title: "Çalışmalar · MDE" };
 
 export default async function WorkspacesPage() {
   let scope: Awaited<ReturnType<typeof allowedWorkspaceIds>> | undefined;

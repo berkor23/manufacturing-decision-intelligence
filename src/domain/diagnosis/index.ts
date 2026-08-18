@@ -14,6 +14,8 @@ export * from "./diagnose";
 export * from "./sequence";
 export * from "./counterfactual";
 export * from "./rival-analysis";
+export * from "./contested-signals";
+export * from "./showcase-cases";
 export * from "./decision-analysis";
 export * from "./methodology-composition";
 export * from "./stabilization";

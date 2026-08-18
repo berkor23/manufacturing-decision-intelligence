@@ -1,4 +1,4 @@
-# Manufacturing Decision Intelligence
+# Manufacturing Decision Engine (MDE)
 
 > **Önce problemi teşhis et, sonra doğru metodolojiyi seç.**
 > *Diagnose the problem first, then pick the right methodology.*

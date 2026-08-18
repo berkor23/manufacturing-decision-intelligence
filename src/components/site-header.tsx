@@ -10,9 +10,11 @@ const MEMBER_LINKS = [
 ];
 
 const GUEST_LINKS = [
-  { href: "/#nasil-calisir", label: "Nasıl çalışır?" },
-  { href: "/#ornek-vakalar", label: "Örnek vakalar" },
+  { href: "/#ornek-teshis", label: "Örnek teşhis" },
+  { href: "/#nasil-calisir", label: "Karar nasıl oluşuyor?" },
+  { href: "/#yontemler", label: "Yöntemler" },
   { href: "/yerel-calismalar", label: "Yerel çalışmalarım" },
+  { href: "/en", label: "EN" },
 ];
 
 /**
@@ -53,18 +55,18 @@ export function SiteHeader({
         <Link
           href="/"
           className="flex min-w-0 items-center gap-2.5"
-          aria-label="Manufacturing Diagnosis Engine ana sayfa"
+          aria-label="Manufacturing Decision Engine ana sayfa"
         >
           <LogoMark />
           <span className="hidden min-w-0 sm:block">
             <strong className="block truncate text-[13px] font-semibold leading-tight tracking-[-0.012em]">
-              Manufacturing Diagnosis Engine
+              Manufacturing Decision Engine
             </strong>
             <small className="block truncate text-[10px] leading-tight text-[var(--muted-2)]">
-              Problem teşhisi ve uygulama yönetimi
+              Açıklanabilir üretim karar desteği
             </small>
           </span>
-          <span className="font-mono text-[13px] font-semibold tracking-[0.06em] sm:hidden">MDI</span>
+          <span className="font-mono text-[13px] font-semibold tracking-[0.06em] sm:hidden">MDE</span>
         </Link>
 
         <nav className="hidden items-center gap-0.5 md:flex" aria-label="Ana navigasyon">

@@ -1,4 +1,4 @@
-// Manufacturing Diagnosis Engine — kalıcılık şeması.
+// Manufacturing Decision Engine — kalıcılık şeması.
 //
 // Yaklaşım: her aggregate (Conversation, RCA, Workspace) tek satırda `data: Json`
 // (Postgres jsonb) olarak saklanır. Repository get/save desenine birebir uyar,

@@ -40,7 +40,7 @@ Projenin en önemli farklılaştırıcısı AI kullanması değil, **karar ve do
 
 ## 2. Projenin tanımı
 
-Platform, bir **Manufacturing Diagnosis Engine**, yani üretim karar destek ve problem çözme yürütme motorudur. Üç ana sistemi tek ürün içinde birleştirir:
+Platform, bir **Manufacturing Decision Engine**, yani üretim karar destek ve problem çözme yürütme motorudur. Üç ana sistemi tek ürün içinde birleştirir:
 
 1. **Teşhis sistemi:** Problemin ne tür bir problem olduğunu belirler.
 2. **Metodoloji yürütme sistemi:** Doğru yöntemin adımlarını, profesyonel araçlarını ve kayıtlarını yönetir.

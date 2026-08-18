@@ -1,11 +1,11 @@
-# Mimari — Manufacturing Diagnosis Engine
+# Mimari — Manufacturing Decision Engine
 
 > Bu doküman projenin **mimari sözleşmesidir**. Kod bu mimariye uyar; mimari koda uymaz.
 > Vizyon: `Manufacturing_Decision_Intelligence_Platform.md` · Çalışma planı: `PLAN.md`
 
 ## 0. Tek Cümlelik Kimlik
 
-Bu bir **AI chatbot değil**, bir **Manufacturing Diagnosis Engine**'dir:
+Bu bir **AI chatbot değil**, bir **Manufacturing Decision Engine**'dir:
 üretim problemini yapılandırır, belirsizliği ölçer, en fazla bilgi kazandıran soruyu
 sorarak belirsizliği azaltır ve **deterministik bir karar motoruyla** doğru metodolojiyi
 (gerekçesi ve güven skoruyla) seçer. LLM bu sistemde **beyin değil, çevre birimidir.**
