@@ -71,6 +71,9 @@ export const DEVELOPMENT_CASES: ValidationCase[] = [
     rationale:
       "Kronik taban DMAIC'i, değişiklikle örtüşen sıçrama özel neden analizini destekler. Motor tek yöntemi aşırı özgüvenle kesinleştirmemeli; iki kanıt gövdesini de göstermeli. Pratikte veri değişiklik tarihinden önce/sonra ayrılmadan analiz edilirse iki farklı proses tek dağılım sanılır.",
     pair: ["RCA", "DMAIC"],
+    // İki kanıt gövdesinin de görünür kalması bu vakanın ASIL gereğidir:
+    // birincil öneri DMAIC olsa bile RCA yok sayılmamalı.
+    expectContested: ["DMAIC", "RCA"],
   },
 
   // ───────────────────────────────────────────────────────── C · 8D × RCA
