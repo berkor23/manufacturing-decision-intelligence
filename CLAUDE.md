@@ -85,6 +85,17 @@ Mimari sözleşme: `docs/ARCHITECTURE.md` · Plan ve fazlar: `docs/PLAN.md` · V
 - `/en` İngilizce genel bakış sayfasıdır (konumlandırma, mimari, ayrım tablosu, TR↔EN sözlük).
   Uygulamanın kendisi Türkçedir; tam i18n yapılmadı — `/en` bunu açıkça söyler.
 - Yeni kural/ağırlık değişikliğinde golden-case testleri (`diagnose.test.ts`) kalkandır.
+- **SIRALAMA LİDERİ ≠ ÖNERİ.** `recommendation.ts` öneri uygunluğunu ayrı türetir
+  (`RECOMMENDED` / `CONTESTED` / `PROVISIONAL` / `INSUFFICIENT_EVIDENCE` /
+  `NO_FORMAL_METHOD_NEEDED`). Eşikler sabit değil, yöntemin kendi kanıt profilinden
+  gelir. Arayüzde öneri yapılamıyorsa yöntem adı büyük puntoyla BASILMAZ.
+- **Kroniklik ≠ varyasyon.** `chronicPerformanceGap` (uzun süre aynı seviyede duran
+  ölçülebilir açık) ile `highVariation` (aralıkta oynama) ayrı alanlardır; DMAIC'e
+  iki farklı kanıt yolundan bağlanır, SPC varyasyon tarafına duyarlı kalır.
+- **Çıkarım sözleşmesi:** `extraction-contract.ts`. Karar motoru serbest metni GÖRMEZ.
+  Şüphe kipindeki okumalar (`SUSPECTED`) değer olarak YAZILMAZ — "kök nedenin X
+  olduğunu düşünüyoruz" ≠ `rootCauseKnown=true`. Sert kural: bir alanı yanlış
+  değerle doldurmak yasak; çıkaramamak güvenlidir.
 - **Engineering Validation Suite: `src/domain/diagnosis/validation/`.** Gri bölge üretim
   vakalarıyla motorun ayrım kalitesini ölçer. Vakalar test kodundan AYRI fixture
   dosyalarındadır (bir kalite mühendisi kod bilmeden okuyabilmeli).

@@ -210,3 +210,164 @@ npx vitest run src/domain/diagnosis/validation
 Metrikler test çıktısına künye olarak basılır: vaka sayısı, birincil eşleşme,
 kabul edilebilir birincil, ilk üçte, yasaklı lider ihlali, çakışma doğruluğu —
 development ve holdout için ayrı ayrı.
+
+---
+
+# Phase 2 — Calibration & Abstention
+
+Phase 1 motorun **ayrım** yeteneğini ölçtü. Phase 2 farklı bir soru sorar:
+
+> Motor ne zaman karar vermemesi gerektiğini biliyor mu?
+
+## Ranking neden recommendation değildir
+
+Softmax her zaman bir birinci üretir. Bütün skorlar sıfıra yakınken bile bir
+yöntem öne çıkar — bu matematiğin zorunlu sonucudur, kanıtın değil.
+
+Phase 1'de M vakasında (iki yılda ilk kez kırılan sensör kablosu) RCA **net 1
+puanla** lider oluyordu. Sıralama doğruydu; ama onu "önerilen metodoloji" diye
+sunmak, sistemin bilmediğini biliyormuş gibi göstermesiydi.
+
+Phase 2'de öneri ayrı bir katmandan geliyor (`recommendation.ts`). Hüküm altı
+bileşenden türer:
+
+| Bileşen | Sorduğu soru |
+|---|---|
+| net destek | Liderin ham puanı anlamlı mı? |
+| bağımsız kanıt boyutları | Yöntemin KENDİ profilinden kaç boyut karşılandı? |
+| kanıt tamamlanma oranı | Gövde ne kadar tam? |
+| doğrulanmış cevap sayısı | Yeterince soru yanıtlandı mı? |
+| ayrım payı | İkinci adayla arasında fark var mı? |
+| çelişki yükü | Yanıtlar birbiriyle tutarlı mı? |
+
+Eşikler kör sabit **değildir**: her yöntemin "anlamlı ayrım" eşiği kendi kanıt
+profilinden (`METHOD_EVIDENCE_PROFILES`) okunur. `if (score < 3)` gibi bir
+sayı yoktur.
+
+## Abstention neden güvenilir sistem davranışıdır
+
+Beş durum ayrılır:
+
+| Durum | Anlamı |
+|---|---|
+| `RECOMMENDED` | Yeterli ayırt edici kanıt var |
+| `CONTESTED` | İki yaklaşımın da bağımsız güçlü kanıtı var; sıra kurulur |
+| `PROVISIONAL` | Aday önde ama kanıt gövdesi tamamlanmadı |
+| `INSUFFICIENT_EVIDENCE` | Sıralama var, öneri anlamsız |
+| `NO_FORMAL_METHOD_NEEDED` | Bilgi TAM; kapsamlı çalışma gerekmiyor |
+
+Son ikisinin ayrılması kritiktir ve yüzeyde birbirine benzerler:
+
+- **"Hattın performansı düştü."** → bilgi EKSİK. Problem olabilir, seçemeyiz.
+- **"Sensör kablosu kırıldı, neden doğrulandı, tekrar yok."** → bilgi TAM.
+  Kapsamlı bir metodoloji projesi açmak kaynak israfıdır.
+
+İkisini aynı kefeye koymak, kullanıcıyı ya gereksiz bir projeye sokar ya da
+gerçekten eksik olan bilgiyi görmezden gelmesine yol açar.
+
+## DMAIC için kronik performans yolu neden eklendi
+
+Phase 1'de holdout HO6 kaybediliyordu: 18 aydır %4 seviyesinde duran,
+ölçülebilir, sürücüleri bilinmeyen bir fire problemi RCA'ya gidiyordu. Sebep,
+DMAIC'in tek kanıt yolunun **"yüksek varyasyon"** olmasıydı.
+
+Oysa bu iki ifade aynı şey değildir:
+
+| İfade | Olgu |
+|---|---|
+| "Son 18 aydır fire %4 civarında." | kronik performans açığı |
+| "Fire %1 ile %9 arasında düzensiz değişiyor." | varyasyon davranışı |
+
+Phase 2'de bunlar ayrı alanlar (`chronicPerformanceGap` / `highVariation`) ve
+DMAIC'e iki farklı yoldan bağlanır. **Bu, HO6'ya özel bir düzeltme değildir**;
+"kronik + ölçülebilir + bilinmeyen sürücü" sahadaki en yaygın Six Sigma
+vakasıdır ve motor bunu hiç modellemiyordu.
+
+Yol her kronik vakayı DMAIC'e çevirmesin diye üç kapı vardır:
+
+- adım değişimi / yakın başlangıç varsa → özel neden alanı (RCA / KT),
+- kronik kayıp ekipmandaysa → güvenilirlik sistemi (TPM),
+- kayıp sistem kısıtından geliyorsa → kısıt yönetimi (TOC).
+
+SPC ise varyasyon ve kontrol-durumu tarafına duyarlı kalır.
+
+## Pair-aware questioning neden gerekli
+
+Bazı yöntemler tek cevaptan değil **kanıt bileşiminden** doğar. TOC için kısıt,
+kuyruk, açlık ve kaldıraç sinyalleri birlikte gerekir. Bu yüzden tek-adım bilgi
+kazancı miyoptur: ilk kısıt sorusunun anlık etkisi sıfıra yakındır, ama soru
+stratejik olarak çok ayırt edicidir.
+
+Soru motoru artık iki modda çalışır:
+
+- **Lider oturmamışsa** → belirsizliği azalt: bilgi kazancı, sonra ilk iki
+  adayın puan farkını en çok oynatan soru.
+- **Lider oturmuşsa** (kendi kanıt profili tamam ve ayrım payı rahat) → gözden
+  kaçan ikinci karakteri ara: henüz hiç kanıtı olmayan bir yöntemin uygunluk
+  kapısını açan soru öne geçer.
+
+İkinci modda hangi gizli rakibin öncelikli olduğu, çakışma kataloğundaki
+**birlikte görülen yöntem çiftlerinden** okunur — aynı alan bilgisi iki yerde
+ayrı ayrı kodlanmaz. Kronik arızalı bir makinenin aynı zamanda kısıt olması
+bilinen bir örüntü olduğu için, TPM oturduğunda motor kısıt sorusunu sorar.
+
+## Deterministic parser ve LLM extraction neden ayrı doğrulanıyor
+
+Karar motoru serbest metni hiç görmez:
+
+```
+ham metin → çıkarıcı → normalize alanlar → karar motoru
+```
+
+Bu ayrım (`extraction-contract.ts`) çıkarıcı değişse de karar davranışının sabit
+kalmasını sağlar ve iki yolu ayrı ayrı doğrulanabilir kılar. Aynı 15 fixture:
+
+- her koşuda **deterministik** çıkarıcıya uygulanır (CI),
+- `npm run validate:llm` ile **gerçek dil modeline** uygulanır (opsiyonel).
+
+CI'nın başarısı dış bir modele bağlanmaz: model erişilemezse betik nötr sonuç
+verir. Ölçüt her iki yolda aynıdır ve kelimesi kelimesine eşleşme değildir:
+
+> **Sert kural:** hiçbir alan YANLIŞ değerle doldurulmamalı.
+> **Metrik:** beklenen okumaların kaçı çıkarılabildi.
+
+Çıkaramamak güvenlidir — motor o alanı sorar. Yanlış çıkarmak, kullanıcının
+söylemediğini söylemiş gibi göstermektir.
+
+### Epistemik fark korunur
+
+```
+"Kök nedenin yanlış hammadde olduğu doğrulandı."          → CONFIRMED
+"Sorunun büyük ihtimalle hammaddeden olduğunu düşünüyoruz." → SUSPECTED
+```
+
+Şüpheli okumalar **değer olarak yazılmaz**; alan boş bırakılır ve kullanıcıya
+sorulur. Kaybolmazlar da: normalizasyon katmanı bunları `withheld` olarak
+kaydeder. Şüpheli bir ifadeyi `rootCauseKnown = true` diye okumak, motorun tüm
+"önce teşhis" mantığını sessizce devre dışı bırakırdı.
+
+## RCA × KT Problem × KT Karar
+
+Üç ayrı soru, üç ayrı düşünme biçimi:
+
+| Yöntem | Sorduğu soru |
+|---|---|
+| RCA | Bu sapma **neden** meydana geldi? |
+| KT Problem Analizi | **Ne değişti?** Nerede var, nerede yok? |
+| KT Karar Analizi | Tanımlı alternatiflerden **hangisini** seçmeliyiz? |
+
+İlk ikisi sık karıştırılır çünkü ikisi de neden arar. Ayrım, elde **ayırıcı bir
+karşılaştırma** (IS / IS-NOT) olup olmadığıdır: fark gösterilebiliyorsa hipotez
+havuzunu daraltmak, geniş kök neden aramasından hızlı ve ucuzdur; fark
+gösterilemiyorsa KT'nin yöntemi çalışmaz.
+
+Üçüncüsü bambaşka bir eksendir ve teşhis vakalarında yükselmemelidir. Arayüzde
+`KT Problem` ve `KT Karar` ayrı adlandırılır — bunlar yeni metodolojiler değil,
+aynı Kepner-Tregoe çerçevesinin iki alt düşünme biçimidir.
+
+## Holdout disiplini
+
+HO1–HO8 artık saf holdout sayılmaz (Phase 1'de sonuçları görüldü). Phase 2 için
+ayrı bir **kör holdout** seti (`blind-holdout-cases.ts`) yazıldı ve kural
+geliştirme sırasında hedef alınmadı; sonuç bir kez çalıştırılıp raporlandı.
+Başarısız vakalar metriği yükseltmek için tune edilmedi.

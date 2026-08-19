@@ -60,7 +60,7 @@ export const METHODOLOGY_META: Record<Methodology, MethodologyMeta> = {
   KEPNER_TREGOE: {
     code: "KEPNER_TREGOE",
     name: "Kepner-Tregoe Problem Analysis",
-    shortName: "Kepner-Tregoe",
+    shortName: "KT Problem",
     description: "Yeni başlayan, iyi tanımlı sapma; genelde bir değişiklikle ilişkili.",
     knowledgeFile: "KepnerTregoe.md",
   },

@@ -8,7 +8,7 @@ import {
   InitialParse,
   InterpretAnswerInput,
 } from "@/application/ports/problem-parser";
-import { DiagnosticFeatureKey, Ternary } from "@/domain/diagnosis";
+import { DiagnosticFeatureKey, EpistemicStatus, Ternary } from "@/domain/diagnosis";
 
 type Signal = { key: DiagnosticFeatureKey; value: boolean; patterns: RegExp[] };
 
@@ -35,6 +35,14 @@ const SIGNALS: Signal[] = [
   { key: "isImprovementInitiative", value: true, patterns: [/iyileştir/, /kaizen/, /optimize/, /geliştir(mek|me)/, /verimlilik/] },
 
   { key: "previouslyOccurred", value: true, patterns: [/tekrar/, /yine/, /daha önce.*(yaşan|old)/, /geçmişte de/, /sürekli.*(oluyor|yaşan)/] },
+  // "Son 18 aydır ... sabit" ifadesi problemin YENİ başladığını değil, tam
+  // tersine kronik olduğunu söyler. Olumsuz kalıplar önce denenir; aksi hâlde
+  // "son ... ay" eşleşmesi kronik vakaları özel neden ailesine iter.
+  { key: "startedRecently", value: false, patterns: [
+    /uzun süredir/, /aylık?ardır/, /yıllardır/,
+    /\d{2,}\s*(?:ay|yıl)(?:dır|dan beri)/,
+    /(?:olay|değişiklik)la başlamadı/, /hep böyleydi/, /başlamadı/,
+  ] },
   { key: "startedRecently", value: true, patterns: [/yeni başla/, /son.*(hafta|gün|ay)/, /geçen hafta/, /bu hafta/, /aniden/, /\dgün(dür)?/, /haftadır/, /başladı/] },
 
   { key: "processChanged", value: true, patterns: [/süreç değiş/, /parametre değiş/, /ayar değiş/, /yeni makine/, /revizyon/, /proses değiş/, /proses.*(?:geçilecek|devreye alınacak|değiştirilecek)/] },
@@ -47,12 +55,16 @@ const SIGNALS: Signal[] = [
   ] },
 
   { key: "hasMeasurementData", value: true, patterns: [/ölçüm/, /veri var/, /\bdata\b/, /kayıt(lar)?/, /\bspc\b/, /grafik/, /trend/] },
-  { key: "highVariation", value: true, patterns: [/varyasyon/, /değişkenlik/, /salınım/, /dağılım geniş/, /stabil değil/, /oynak/] },
+  { key: "highVariation", value: true, patterns: [/varyasyon/, /arasında.*değişiyor/, /değişkenlik/, /salınım/, /dağılım geniş/, /stabil değil/, /oynak/] },
 
   // Genişletilmiş metodoloji sinyalleri
   { key: "isNewDesign", value: false, patterns: [/yeni (ürün|süreç|proses|tasarım).*(değil|değildir)/, /mevcut (ürün|süreç|proses)/, /seri üretimdeki/] },
   { key: "isNewDesign", value: true, patterns: [/yeni ürün/, /yeni tasarım/, /sıfırdan tasarl/, /tasarl(ıyoruz|anıyor|amak)/, /\bdfss\b/, /\bdmadv\b/] },
   { key: "equipmentBreakdown", value: false, patterns: [
+    // Türkçe olumsuz geniş zaman: "arızalanmıyor / durmuyor / bozulmuyor"
+    // bir arıza BİLDİRMEZ; tam tersini söyler. Bu kalıp olmadan yüzeysel
+    // eşleşme güvenilirlik kaybı ile yapısal kısıtı birbirine karıştırır.
+    /(?:arızalanmıyor|arıza yapmıyor|bozulmuyor|durmuyor)/,
     /(?:makine|ekipman|tezg[aâ]h|arıza|duruş).*(?:yok|oluşmad|yaşanmad|görülmed)/,
     /henüz.*(?:arıza|duruş).*(?:yok|oluşmad|yaşanmad|görülmed)/,
     /(?:makine|ekipman|tezg[aâ]h).*(?:seçim|alternatif|teklif|satın al|yatırım)/,
@@ -75,6 +87,15 @@ const SIGNALS: Signal[] = [
   { key: "processStable", value: true, patterns: [/istatistiksel.*kararlı/, /proses.*stabil/, /kontrol altında/] },
   { key: "comparisonAvailable", value: true, patterns: [/karşılaştır/, /olan.*olmayan/, /is.?is.not/] },
   { key: "chronicEquipmentLoss", value: true, patterns: [/kronik.*(arıza|duruş|kayıp)/, /tekrar eden.*(arıza|duruş)/, /oee.*düş/] },
+  // Kronik performans açığı: uzun bir süre boyunca AYNI seviyede duran ölçülebilir
+  // açık. Varyasyondan (aralıkta oynama) ayrı bir olgudur; DMAIC'e farklı kanıt
+  // yolundan bağlanır.
+  { key: "chronicPerformanceGap", value: true, patterns: [
+    /(?:son )?\d+\s*(?:ay|yıl)(?:dır|dan beri)?.*(?:civarında|seviyesinde|sabit|değişmedi)/,
+    /uzun süredir.*(?:aynı seviyede|civarında|değişmiyor)/,
+    /kronik.*(?:fire|performans|kayıp|problem)/,
+    /(?:aylardır|yıllardır).*(?:aynı|sabit|civarında)/,
+  ] },
   { key: "failureModeKnown", value: true, patterns: [/hata modu.*(belli|biliniyor|tanımlı)/, /yanlış işlem.*tanımlı/] },
   // Standardın "var" olması YERLEŞİK olduğu anlamına gelmez. Dokümanın varlığını
   // fiilî uygulamadan ayıran kalıplar önce denenir; aksi hâlde "talimat var ama
@@ -91,7 +112,7 @@ const SIGNALS: Signal[] = [
   { key: "basicConditionsStable", value: false, patterns: [/temel koşul.*(sağlanmıyor|eksik)/, /4m.*(değişken|kararsız)/] },
   { key: "basicConditionsStable", value: true, patterns: [/temel koşul.*(sağlanıyor|kararlı)/, /4m.*(kararlı|kontrol altında)/] },
 
-  { key: "decisionBetweenOptions", value: true, patterns: [/hangisini seç/, /hangisini tercih/, /alternatifler? aras/, /seçenekler? aras/, /iki (seçenek|alternatif|tedarikçi|makine|yöntem|teklif)/, /iki .*teklif.*arasında/, /teklif.*arasında.*(?:seçim|karar)/, /karar ver(memiz|ilmesi|eceğiz)/, /kıyasl(a|ıyoruz)/, /hangi (tedarikçi|makine|yöntem|teklif|opsiyon)/] },
+  { key: "decisionBetweenOptions", value: true, patterns: [/hangisini seç/, /hangisini tercih/, /alternatifler? aras/, /seçenekler? aras/, /aras[ıi]ndan seçim/, /aras[ıi]ndan.*seç(?:im|ece)/, /iki (seçenek|alternatif|tedarikçi|makine|yöntem|teklif)/, /iki .*teklif.*arasında/, /teklif.*arasında.*(?:seçim|karar)/, /karar ver(memiz|ilmesi|eceğiz)/, /kıyasl(a|ıyoruz)/, /hangi (tedarikçi|makine|yöntem|teklif|opsiyon)/] },
   { key: "mandatoryCriteriaDefined", value: true, patterns: [/zorunlu kriter/, /olmazsa olmaz/, /mutlaka karşıla/, /eleme kriter/] },
   { key: "preferenceCriteriaDefined", value: true, patterns: [/tercih kriter/, /ağırlıklı kriter/, /ağırlıklandır/, /maliyet.*servis.*(?:çevrim|teslim)/] },
   { key: "decisionOwnerKnown", value: true, patterns: [/karar sahibi/, /son kararı .* verecek/, /karar mercii/] },
@@ -99,7 +120,7 @@ const SIGNALS: Signal[] = [
   { key: "unresolvedCauseBeforeDecision", value: false, patterns: [/kök neden problemi yok/, /önce çözülmesi gereken (?:arıza|problem) yok/, /seçimi engelleyen (?:arıza|problem) yok/] },
   { key: "unresolvedCauseBeforeDecision", value: true, patterns: [/seçimden önce.*kök neden/, /önce.*(?:arıza|sapma|problem).*(?:çöz|nedenini bul)/] },
   { key: "constraintQueue", value: true, patterns: [/(?:önünde|öncesinde).*(?:kuyruk|ara stok|birik)/, /(?:kuyruk|ara stok).*(?:önünde|öncesinde)/] },
-  { key: "downstreamStarvation", value: true, patterns: [/(?:sonraki|diğer|aşağı akış).*(?:boş kal|malzeme bekle|aç kal)/, /kısıt sonrası.*(?:boş|bekle)/] },
+  { key: "downstreamStarvation", value: true, patterns: [/(?:sonraki|sonrasında|sonrasındaki|diğer|aşağı akış).*(?:boş kal|malzeme bekle|aç kal|bekliyor)/, /kısıt sonrası.*(?:boş|bekle)/] },
   { key: "constraintMeasured", value: true, patterns: [/(?:kapasite|saatlik çıktı).*(?:talep|ihtiyaç).*(?:veri|karşılaştır)/, /kapasite ve talep ver/] },
   { key: "constraintLeverageExpected", value: true, patterns: [/kısıt.*(?:iyileş|kapasite).*(?:toplam|sistem).*(?:çıktı|throughput).*(?:artar|artacak)/, /toplam çıktı.*kısıt.*(?:artar|artacak)/] },
   { key: "potentialEffectKnown", value: true, patterns: [/potansiyel (?:etki|sonuç).*(?:belli|tanımlı|biliniyor)/, /hata gerçekleşirse.*(?:müşteri|güvenlik|kalite|proses).*(?:etki|sonuç)/] },
@@ -145,12 +166,43 @@ function scopedOccurrence(
   return explicitNegative ? false : undefined;
 }
 
+/** Şüphe kipi belirteçleri — bir olguyu kanıt değil, tahmin yapan ifadeler. */
+const SUSPICION = [
+  /büyük ihtimalle/, /muhtemelen/, /düşünüyoruz/, /sanıyoruz/, /tahmin ediyoruz/,
+  /olabilir mi/, /gibi görünüyor/, /şüpheleniyoruz/, /kanısındayız/, /öyle sanıyorum/,
+  /henüz doğrulamadık/, /doğrulanmadı/, /kesin değil/, /emin değiliz/,
+];
+
+/**
+ * İlgili alanın metinde ŞÜPHE kipinde geçip geçmediği.
+ *
+ * Cümle bazında bakılır: aynı metinde bir olgu doğrulanmış, başka bir olgu
+ * şüpheli olabilir. Yalnız alanın kendi anahtar kelimesini içeren cümleler
+ * incelenir; aksi hâlde metnin herhangi bir yerindeki "muhtemelen" tüm
+ * çıkarımı şüpheli yapardı.
+ */
+const FEATURE_HINTS: Partial<Record<DiagnosticFeatureKey, RegExp>> = {
+  rootCauseKnown: /kök neden|neden(i|ini)?|sebep/,
+  supplierChanged: /tedarikçi|hammadde|malzeme/,
+  processChanged: /süreç|proses|parametre|ayar/,
+  equipmentBreakdown: /makine|ekipman|arıza|duruş/,
+  bottleneckThroughput: /kapasite|darboğaz|dar boğaz|kısıt/,
+};
+
+function isSuspectedReading(text: string, key: DiagnosticFeatureKey): boolean {
+  const hint = FEATURE_HINTS[key];
+  if (!hint) return false;
+  const clauses = text.split(/[.!?;\n]+/).map((item) => item.trim()).filter(Boolean);
+  return clauses.some((clause) => hint.test(clause) && SUSPICION.some((re) => re.test(clause)));
+}
+
 export class KeywordProblemParser implements IProblemParser {
   readonly name = "keyword";
 
   async parseInitial(text: string): Promise<InitialParse> {
     const t = normalize(text);
     const features: Partial<Record<DiagnosticFeatureKey, Ternary>> = {};
+    const epistemic: Partial<Record<DiagnosticFeatureKey, EpistemicStatus>> = {};
 
     for (const sig of SIGNALS) {
       if (features[sig.key] !== undefined) continue; // ilk (en spesifik) eşleşme kazanır
@@ -176,10 +228,19 @@ export class KeywordProblemParser implements IProblemParser {
     );
     if (scopedEquipment !== undefined) features.equipmentBreakdown = scopedEquipment;
 
+    // ── Epistemik işaretleme ────────────────────────────────────────────
+    // "Kök nedenin X olduğunu DÜŞÜNÜYORUZ" ile "X olduğu DOĞRULANDI" aynı şey
+    // değildir. Şüphe kipinde geçen okumalar işaretlenir; normalizasyon katmanı
+    // bunları değer olarak yazmaz, kullanıcıya doğrulatır.
+    for (const key of Object.keys(features) as DiagnosticFeatureKey[]) {
+      if (isSuspectedReading(t, key)) epistemic[key] = "SUSPECTED";
+    }
+
     return {
       processName: null,
       problemDescription: text.trim() || null,
       features,
+      epistemic,
     };
   }
 

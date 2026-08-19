@@ -7,6 +7,7 @@ import type { Conversation } from "@/application/ports/conversation-repository";
 import { FEATURE_META, PROBLEM_TEXT_MIN, PROBLEM_TEXT_TOO_LONG, problemTextAcceptable, type DiagnosticFeatureKey } from "@/domain/diagnosis";
 import { METHODOLOGY_META, METHODOLOGY_ROLES, type Methodology } from "@/domain/diagnosis/methodologies";
 import { closeAlternatives, nextMethodologies } from "@/domain/diagnosis/sequence";
+import { isRecommendable } from "@/domain/diagnosis/recommendation";
 import { Markdown } from "@/components/markdown";
 import { LocalStorageNotice } from "@/components/local-storage-notice";
 import {
@@ -975,6 +976,9 @@ function ResultView({
 }) {
   const result = view.result!;
   const meta = METHODOLOGY_META[result.methodology];
+  // Öneri hükmü eski kayıtlarda bulunmayabilir; yokluğunda mevcut davranış korunur.
+  const verdict = view.recommendation;
+  const recommendable = verdict ? isRecommendable(verdict.status) : true;
   const [report, setReport] = useState<string | null>(null);
   const [busy, setBusy] = useState<"report" | "workspace" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -1050,29 +1054,57 @@ function ResultView({
       <div className="card card-accent-emerald">
         <div className="p-5 sm:p-6">
           <p className="eyebrow">
-            {view.evidence.status === "CONFIRMED"
-              ? "Kanıtlarla doğrulanan metodoloji"
-              : view.evidence.status === "INCONCLUSIVE"
-                ? "Yöntemler henüz kesin olarak ayrılamadı"
-                : "Mevcut kanıtlara göre ön aday"}
+            {!recommendable
+              ? "Öneri için yeterli kanıt yok"
+              : view.evidence.status === "CONFIRMED"
+                ? "Kanıtlarla doğrulanan metodoloji"
+                : view.evidence.status === "INCONCLUSIVE"
+                  ? "Yöntemler henüz kesin olarak ayrılamadı"
+                  : "Mevcut kanıtlara göre ön aday"}
           </p>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
             <div className="min-w-0">
-              <h2 className="font-mono text-[2rem] font-semibold leading-none tracking-[-0.01em]">
-                {meta.shortName}
-              </h2>
-              <p className="mt-2.5 text-[13px] text-[var(--ink-soft)]">{meta.name}</p>
-              <p className="mt-1 text-[11px] text-[var(--muted-2)]">
-                Rol: {METHODOLOGY_ROLES[result.methodology].label}
-              </p>
+              {recommendable ? (
+                <>
+                  <h2 className="font-mono text-[2rem] font-semibold leading-none tracking-[-0.01em]">
+                    {meta.shortName}
+                  </h2>
+                  <p className="mt-2.5 text-[13px] text-[var(--ink-soft)]">{meta.name}</p>
+                  <p className="mt-1 text-[11px] text-[var(--muted-2)]">
+                    Rol: {METHODOLOGY_ROLES[result.methodology].label}
+                  </p>
+                </>
+              ) : (
+                <>
+                  {/* Sıralamanın bir birincisi olması, onu ÖNERMEK için yeterli
+                      kanıt olduğu anlamına gelmez. Kanıt gövdesi zayıfsa yöntem
+                      adını büyük puntoyla basmak, sistemin bilmediğini biliyormuş
+                      gibi göstermesidir. */}
+                  <h2 className="text-[1.25rem] font-semibold leading-snug tracking-[-0.012em]">
+                    {verdict?.status === "NO_FORMAL_METHOD_NEEDED"
+                      ? "Bu vaka kapsamlı bir metodoloji çalışması gerektirmiyor"
+                      : "Henüz yöntem önermek için yeterli kanıt yok"}
+                  </h2>
+                  {(verdict?.candidates.length ?? 0) > 0 && (
+                    <p className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[12px] text-[var(--muted)]">
+                      <span className="eyebrow">Öne çıkan adaylar</span>
+                      {verdict!.candidates.map((candidate) => (
+                        <span key={candidate} className="code-tag">{label(candidate)}</span>
+                      ))}
+                    </p>
+                  )}
+                </>
+              )}
             </div>
-            <div className="shrink-0 border-l-2 border-[var(--st-ok)] pl-3">
+            <div className={`shrink-0 border-l-2 pl-3 ${recommendable ? "border-[var(--st-ok)]" : "border-[var(--st-warn)]"}`}>
               <p className="eyebrow">Mevcut kanıt düzeyi</p>
-              <p className="mt-1 text-[15px] font-semibold text-[var(--st-ok)]">{evidenceLevel(view)}</p>
+              <p className={`mt-1 text-[15px] font-semibold ${recommendable ? "text-[var(--st-ok)]" : "text-[var(--st-warn)]"}`}>
+                {recommendable ? evidenceLevel(view) : "Öneri eşiğinin altında"}
+              </p>
             </div>
           </div>
           <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-[var(--ink-soft)]">
-            {meta.description}
+            {recommendable ? meta.description : (verdict?.reason ?? meta.description)}
           </p>
         </div>
 
@@ -1137,7 +1169,7 @@ function ResultView({
           <button onClick={openWorkspace} disabled={busy !== null} className="btn btn-primary">
             {busy === "workspace"
               ? "Açılıyor…"
-              : view.evidence.status === "INCONCLUSIVE"
+              : !recommendable || view.evidence.status === "INCONCLUSIVE"
                 ? "Ön adayla çalışma alanını aç"
                 : "Çalışma alanını aç"}
           </button>

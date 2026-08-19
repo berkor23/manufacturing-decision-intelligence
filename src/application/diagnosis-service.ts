@@ -18,6 +18,7 @@ import {
   DiagnosisCounterfactual,
   composeMethodologyPlan,
   evaluateStabilizationGate,
+  normalizeExtraction,
 } from "@/domain/diagnosis";
 import type { RecordOwner } from "@/domain/access";
 import { IProblemParser } from "./ports/problem-parser";
@@ -72,11 +73,16 @@ export class DiagnosisService {
   /** `owner` verilirse konuşma kaydı sahibiyle birlikte tek yazımda oluşturulur. */
   async start(text: string, owner?: RecordOwner): Promise<DiagnosisView> {
     const parse = await this.parser.parseInitial(text);
+    // Şüphe kipinde okunan alanlar DEĞER OLARAK YAZILMAZ: "kök nedenin X olduğunu
+    // düşünüyoruz" ifadesi rootCauseKnown=true değildir. Alan boş kalır, motor
+    // onu sorar. Bu, çıkarıcı ne olursa olsun (anahtar kelime ya da dil modeli)
+    // aynı biçimde uygulanır.
+    const normalized = normalizeExtraction({ features: parse.features, epistemic: parse.epistemic });
     const sp: StructuredProblem = createEmptyProblem();
     // Süreç adı: parser verdiyse onu, yoksa deterministik saptama.
     sp.processName = parse.processName ?? detectProcessName(text);
     sp.problemDescription = parse.problemDescription;
-    for (const [k, v] of Object.entries(parse.features)) {
+    for (const [k, v] of Object.entries(normalized.features)) {
       if (v !== undefined && v !== null) sp.features[k as DiagnosticFeatureKey] = v;
     }
 

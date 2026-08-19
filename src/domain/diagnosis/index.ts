@@ -16,6 +16,7 @@ export * from "./counterfactual";
 export * from "./rival-analysis";
 export * from "./contested-signals";
 export * from "./recommendation";
+export * from "./extraction-contract";
 export * from "./showcase-cases";
 export * from "./decision-analysis";
 export * from "./methodology-composition";
