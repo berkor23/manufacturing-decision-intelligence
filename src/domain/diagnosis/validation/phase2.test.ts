@@ -46,6 +46,82 @@ describe("RCA × KT Problem × KT Karar sınırı", () => {
   });
 });
 
+describe("kronik yol anti-pattern: kronik problem → otomatik DMAIC DEĞİL", () => {
+  // Yeni DMAIC kanıt yolunun her kronik vakayı yutmadığını sabitler.
+  const chronicBase = { chronicPerformanceGap: true, hasMeasurementData: true } as const;
+
+  it("kronik ama kök neden biliniyor → DMAIC lider olmaz", () => {
+    const snapshot = diagnose(
+      problemWith({ ...chronicBase, rootCauseKnown: true, defectOccurred: true, previouslyOccurred: true }),
+      8,
+    );
+    expect(snapshot.ranking[0].methodology).not.toBe("DMAIC");
+  });
+
+  it("kronik ama veri yok → DMAIC kesinleşmez", () => {
+    const snapshot = diagnose(
+      problemWith({ chronicPerformanceGap: true, hasMeasurementData: false, rootCauseKnown: false, defectOccurred: true }),
+      8,
+    );
+    expect(snapshot.recommendation.status).not.toBe("RECOMMENDED");
+    expect(snapshot.ranking[0].methodology).not.toBe("DMAIC");
+  });
+
+  it("kronik ekipman güvenilirlik problemi → TPM, DMAIC'in önünde kalır", () => {
+    const snapshot = diagnose(
+      problemWith({
+        ...chronicBase,
+        rootCauseKnown: false,
+        equipmentBreakdown: true,
+        chronicEquipmentLoss: true,
+        previouslyOccurred: true,
+      }),
+      8,
+    );
+    expect(snapshot.ranking[0].methodology).toBe("TPM");
+  });
+
+  it("kronik sistem kısıtı → TOC, DMAIC'in önünde kalır", () => {
+    const snapshot = diagnose(
+      problemWith({
+        ...chronicBase,
+        rootCauseKnown: false,
+        bottleneckThroughput: true,
+        constraintQueue: true,
+        constraintMeasured: true,
+        constraintLeverageExpected: true,
+      }),
+      8,
+    );
+    expect(snapshot.ranking[0].methodology).toBe("TOC");
+  });
+
+  it("kararlı proses + yalnız izleme ihtiyacı → SPC lider kalır", () => {
+    const snapshot = diagnose(
+      problemWith({
+        processStable: true,
+        monitoringNeed: true,
+        measurementReliable: true,
+        highVariation: false,
+        chronicPerformanceGap: false,
+        defectOccurred: false,
+        isNewDesign: false,
+      }),
+      8,
+    );
+    expect(snapshot.ranking[0].methodology).toBe("SPC");
+  });
+
+  it("ani değişiklik kronik zemine binmişse özel neden ailesi korunur", () => {
+    const snapshot = diagnose(
+      problemWith({ ...chronicBase, rootCauseKnown: false, startedRecently: true, processChanged: true, defectOccurred: true }),
+      8,
+    );
+    expect(snapshot.ranking[0].methodology).not.toBe("DMAIC");
+    expect(["KEPNER_TREGOE", "RCA"]).toContain(snapshot.ranking[0].methodology);
+  });
+});
+
 describe("kör holdout — Phase 2 sonrası tek koşu", () => {
   it("yasaklı lider ihlali yok", () => {
     for (const testCase of BLIND_HOLDOUT_CASES) {
